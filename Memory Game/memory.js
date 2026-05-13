@@ -1,5 +1,5 @@
 const gameGrid = document.getElementById('gameGrid');
-const cardsArray = ['🍎', '🍊', '🍋', '🍇', '🍉', '🍓', '🍑', '🍒', '🥝', '🍌', '🍐', '🍏', '🥭', '🍍', '🥥', '🍉'];
+const cardsArray = ['🍎', '🍊', '🍋', '🍇', '🍉', '🍓', '🍑', '🍒'];
 
 let firstCard = null;
 let secondCard = null;
@@ -15,20 +15,20 @@ function shuffle(array) {
 }
 
 function createBoard() {
-  const shuffledCards = shuffle([...cardsArray]).slice(0, 16);
+  const shuffledCards = shuffle([...cardsArray, ...cardsArray]);
   shuffledCards.forEach((value, index) => {
     const cardElement = document.createElement('div');
     cardElement.classList.add('card');
     cardElement.dataset.value = value;
-    
+
     const cardBack = document.createElement('div');
     cardBack.classList.add('card-face', 'card-back');
     cardBack.textContent = '?';
-    
+
     const cardFront = document.createElement('div');
     cardFront.classList.add('card-face', 'card-front');
     cardFront.textContent = value;
-    
+
     cardElement.appendChild(cardBack);
     cardElement.appendChild(cardFront);
     cardElement.addEventListener('click', handleCardClick);
@@ -40,9 +40,9 @@ function handleCardClick(event) {
   if (lockBoard) return;
   const clickedCard = event.target.closest('.card');
   if (!clickedCard || clickedCard === firstCard) return;
-  
+
   clickedCard.classList.add('flipped');
-  
+
   if (!firstCard) {
     firstCard = clickedCard;
   } else {
@@ -67,7 +67,7 @@ function unflipCards() {
   lockBoard = true;
   firstCard.classList.add('wrong');
   secondCard.classList.add('wrong');
-  
+
   setTimeout(() => {
     firstCard.classList.remove('flipped', 'wrong');
     secondCard.classList.remove('flipped', 'wrong');
@@ -78,5 +78,3 @@ function unflipCards() {
 function resetBoard() {
   [firstCard, secondCard, lockBoard] = [null, null, false];
 }
-
-createBoard();

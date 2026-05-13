@@ -36,6 +36,57 @@
       transition: background 0.3s, color 0.3s;
     }
 
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+
+    .intro-modal {
+      background: var(--card-bg);
+      color: var(--text);
+      padding: 40px;
+      border-radius: 20px;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .intro-rules {
+      text-align: left;
+      margin: 20px 0;
+      line-height: 2;
+      font-size: 16px;
+    }
+
+    .intro-rules ul {
+      padding-left: 20px;
+    }
+
+    .start-btn {
+      padding: 12px 40px;
+      border: none;
+      border-radius: 25px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .start-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px var(--card-shadow);
+    }
+
     h1 {
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       -webkit-background-clip: text;
@@ -136,6 +187,19 @@
 <body>
   <button class="theme-toggle" id="themeToggle">🌙 暗色</button>
   <h1>Memory Game</h1>
+  <div id="introOverlay" class="overlay">
+    <div class="intro-modal">
+      <div class="intro-rules">
+        <p>翻开卡片，找到所有配对的图案！</p>
+        <ul>
+          <li>每次点击翻开两张卡片</li>
+          <li>两张图案相同即为配对成功</li>
+          <li>配对全部 8 对卡片即为胜利</li>
+        </ul>
+      </div>
+      <button class="start-btn" id="startBtn">开始游戏</button>
+    </div>
+  </div>
   <div class="grid" id="gameGrid"></div>
   <script src="memory.js"></script>
   <script>
@@ -155,6 +219,11 @@
     function updateThemeButton(theme) {
       themeToggle.textContent = theme === 'light' ? '🌙 暗色' : '☀️ 亮色';
     }
+
+    document.getElementById('startBtn').addEventListener('click', () => {
+      document.getElementById('introOverlay').remove();
+      createBoard();
+    });
   </script>
 </body>
 </html>
