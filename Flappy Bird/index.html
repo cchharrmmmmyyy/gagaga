@@ -65,6 +65,8 @@
     canvas {
       display: block;
       margin: 0 auto;
+      max-width: 100%;
+      height: auto;
       border-radius: 15px;
       box-shadow: 0 10px 40px var(--card-shadow);
     }
@@ -73,7 +75,7 @@
 <body>
   <button class="theme-toggle" id="themeToggle">🌙 暗色</button>
   <h1>Flappy Bird</h1>
-  <canvas id="gameCanvas" width="320" height="480"></canvas>
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
   <script src="flappybird.js"></script>
   <script>
     const themeToggle = document.getElementById('themeToggle');
