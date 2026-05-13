@@ -2,9 +2,10 @@ const gameGrid = document.getElementById('gameGrid');
 const cardsArray = ['🍎', '🍊', '🍋', '🍇', '🍉', '🍓', '🍑', '🍒'];
 
 const DIFFICULTIES = {
-  easy:   { timeLimit: 60, flipDelay: 800, label: '简单' },
-  normal: { timeLimit: 45, flipDelay: 600, label: '普通' },
-  hard:   { timeLimit: 30, flipDelay: 400, label: '困难' },
+  casual: { timeLimit: null, flipDelay: 1000, label: '娱乐模式' },
+  easy:   { timeLimit: 60,   flipDelay: 800,  label: '简单' },
+  normal: { timeLimit: 45,   flipDelay: 600,  label: '普通' },
+  hard:   { timeLimit: 30,   flipDelay: 400,  label: '困难' },
 };
 
 let firstCard = null;
@@ -12,8 +13,8 @@ let secondCard = null;
 let lockBoard = false;
 let matchedPairs = 0;
 let moves = 0;
-let currentDifficulty = DIFFICULTIES.normal;
-let timeLeft = 45;
+let currentDifficulty = DIFFICULTIES.casual;
+let timeLeft = null;
 let timer = null;
 const movesDisplay = document.getElementById('movesCount');
 const timerDisplay = document.getElementById('timerDisplay');
@@ -121,11 +122,17 @@ function stopTimer() {
 function startGame(difficultyKey) {
   currentDifficulty = DIFFICULTIES[difficultyKey];
   timeLeft = currentDifficulty.timeLimit;
-  timerDisplay.textContent = timeLeft;
-  timerDisplay.style.color = '';
-  document.getElementById('introOverlay').remove();
+  document.getElementById('introScreen').style.display = 'none';
+  document.getElementById('gameScreen').style.display = 'block';
+  if (timeLeft !== null) {
+    timerDisplay.textContent = timeLeft;
+    timerDisplay.parentElement.style.display = 'inline';
+    timerDisplay.style.color = '';
+    startTimer();
+  } else {
+    timerDisplay.parentElement.style.display = 'none';
+  }
   createBoard();
-  startTimer();
 }
 
 function gameOver() {

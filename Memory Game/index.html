@@ -8,10 +8,11 @@
       --text: #333;
       --card-bg: #fff;
       --card-shadow: rgba(0,0,0,0.1);
-      --primary: #667eea;
-      --secondary: #764ba2;
-      --card-back: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --primary: #FF7F00;
+      --secondary: #FF4500;
+      --card-back: linear-gradient(135deg, #FF7F00 0%, #FF4500 100%);
       --card-front: #fff;
+      --beige: #FFF8E7;
     }
 
     [data-theme="dark"] {
@@ -19,9 +20,9 @@
       --text: #e0e0e0;
       --card-bg: #16213e;
       --card-shadow: rgba(0,0,0,0.3);
-      --primary: #a18cd1;
-      --secondary: #fbc2eb;
-      --card-back: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+      --primary: #FF9D33;
+      --secondary: #FF6B33;
+      --card-back: linear-gradient(135deg, #FF9D33 0%, #FF6B33 100%);
       --card-front: #1a1a2e;
     }
 
@@ -60,24 +61,14 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     }
 
-    .intro-rules {
-      text-align: left;
-      margin: 20px 0;
-      line-height: 2;
-      font-size: 16px;
-    }
-
-    .intro-rules ul {
-      padding-left: 20px;
-    }
-
     .start-btn {
-      padding: 12px 40px;
+      padding: 14px 48px;
       border: none;
       border-radius: 25px;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: white;
+      color: var(--beige);
       font-size: 18px;
+      font-weight: bold;
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
     }
@@ -134,42 +125,121 @@
       margin-left: 16px;
     }
 
-    .difficulty-selector {
-      margin: 20px 0;
-    }
-
-    .difficulty-selector p {
-      margin-bottom: 12px;
-      font-size: 16px;
-    }
-
-    .diff-options {
+    .mode-selector {
       display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .mode-btn {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
       gap: 10px;
-      justify-content: center;
-    }
-
-    .diff-btn {
-      flex: 1;
-      padding: 10px 0;
+      padding: 12px 32px;
       border: 2px solid var(--primary);
-      border-radius: 12px;
-      background: transparent;
+      border-radius: 10px;
+      background: var(--card-bg);
       color: var(--text);
-      font-size: 14px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.25s;
+      font-size: 15px;
     }
 
-    .diff-btn:hover {
-      background: var(--primary);
-      color: white;
+    .mode-btn .mode-icon {
+      font-size: 20px;
     }
 
-    .diff-btn.active {
+    .mode-btn .mode-label {
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .mode-btn .mode-desc {
+      font-size: 12px;
+      opacity: 0.6;
+      margin-left: auto;
+    }
+
+    .mode-btn:hover {
+      border-color: var(--secondary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px var(--card-shadow);
+    }
+
+    .mode-btn.active {
       background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: white;
+      color: var(--beige);
       border-color: transparent;
+    }
+
+    .mode-btn.active .mode-desc {
+      opacity: 0.85;
+    }
+
+    .intro-screen {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: calc(100vh - 40px);
+      padding: 20px 0;
+    }
+
+    .intro-container {
+      display: flex;
+      gap: 60px;
+      align-items: center;
+      max-width: 960px;
+      width: 100%;
+      padding: 0 20px;
+    }
+
+    .intro-left {
+      flex: 1;
+      text-align: left;
+    }
+
+    .intro-left h1 {
+      text-align: left;
+      margin-bottom: 16px;
+    }
+
+    .intro-desc {
+      font-size: 16px;
+      line-height: 1.8;
+      color: var(--text);
+    }
+
+    .intro-desc .tagline {
+      font-size: 17px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .intro-desc p {
+      margin: 0 0 10px;
+    }
+
+    .intro-desc ul {
+      padding-left: 18px;
+      margin: 6px 0 0;
+    }
+
+    .intro-desc li {
+      margin-bottom: 4px;
+    }
+
+    .intro-right {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 18px;
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .game-screen {
+      padding-top: 20px;
     }
 
     .card {
@@ -234,25 +304,53 @@
 </head>
 <body>
   <button class="theme-toggle" id="themeToggle">🌙 暗色</button>
-  <h1>Memory Game</h1>
-  <div class="stats">
-    步数：<span id="movesCount">0</span>
-    <span class="timer">⏱ <span id="timerDisplay">45</span>s</span>
-  </div>
-  <div id="introOverlay" class="overlay">
-    <div class="intro-modal">
-      <div class="difficulty-selector">
-        <p>选择难度：</p>
-        <div class="diff-options">
-          <button class="diff-btn" data-diff="easy">简单<br><small>60秒</small></button>
-          <button class="diff-btn active" data-diff="normal">普通<br><small>45秒</small></button>
-          <button class="diff-btn" data-diff="hard">困难<br><small>30秒</small></button>
+
+  <div id="introScreen" class="intro-screen">
+    <div class="intro-container">
+      <div class="intro-left">
+        <h1>Memory Game</h1>
+        <div class="intro-desc">
+          <p class="tagline">经典翻牌配对游戏，考验你的记忆力与专注力！</p>
+          <p>记忆游戏（Concentration）起源于 1959 年，由德国 Ravensburger 出版的桌游《Memory®》风靡全球。你需要记住每张牌的位置，以最少的步数找出所有配对。</p>
+          <p>每局棋盘随机排列，永远不重复。8 步完美通关 —— 你能做到吗？</p>
         </div>
       </div>
-      <button class="start-btn" id="startBtn">开始游戏</button>
+      <div class="intro-right">
+        <div class="mode-selector">
+          <button class="mode-btn active" data-diff="casual">
+            <span class="mode-icon">🎮</span>
+            <span class="mode-label">娱乐模式</span>
+            <span class="mode-desc">不限时</span>
+          </button>
+          <button class="mode-btn" data-diff="easy">
+            <span class="mode-icon">⏱</span>
+            <span class="mode-label">简单</span>
+            <span class="mode-desc">60秒</span>
+          </button>
+          <button class="mode-btn" data-diff="normal">
+            <span class="mode-icon">⏱</span>
+            <span class="mode-label">普通</span>
+            <span class="mode-desc">45秒</span>
+          </button>
+          <button class="mode-btn" data-diff="hard">
+            <span class="mode-icon">⏱</span>
+            <span class="mode-label">困难</span>
+            <span class="mode-desc">30秒</span>
+          </button>
+        </div>
+        <button class="start-btn" id="startBtn">开始游戏</button>
+      </div>
     </div>
   </div>
-  <div class="grid" id="gameGrid"></div>
+
+  <div id="gameScreen" class="game-screen" style="display:none">
+    <div class="stats">
+      步数：<span id="movesCount">0</span>
+      <span class="timer">⏱ <span id="timerDisplay">45</span>s</span>
+    </div>
+    <div class="grid" id="gameGrid"></div>
+  </div>
+
   <script src="memory.js"></script>
   <script>
     const themeToggle = document.getElementById('themeToggle');
@@ -272,15 +370,15 @@
       themeToggle.textContent = theme === 'light' ? '🌙 暗色' : '☀️ 亮色';
     }
 
-    document.querySelectorAll('.diff-btn').forEach(btn => {
+    document.querySelectorAll('.mode-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelector('.diff-btn.active').classList.remove('active');
+        document.querySelector('.mode-btn.active').classList.remove('active');
         btn.classList.add('active');
       });
     });
 
     document.getElementById('startBtn').addEventListener('click', () => {
-      const selected = document.querySelector('.diff-btn.active').dataset.diff;
+      const selected = document.querySelector('.mode-btn.active').dataset.diff;
       startGame(selected);
     });
   </script>
