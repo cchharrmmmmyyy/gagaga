@@ -124,6 +124,54 @@
       perspective: 1000px;
     }
 
+    .stats {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    .stats .timer {
+      margin-left: 16px;
+    }
+
+    .difficulty-selector {
+      margin: 20px 0;
+    }
+
+    .difficulty-selector p {
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+
+    .diff-options {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .diff-btn {
+      flex: 1;
+      padding: 10px 0;
+      border: 2px solid var(--primary);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .diff-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .diff-btn.active {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-color: transparent;
+    }
+
     .card {
       width: 100px;
       height: 100px;
@@ -187,15 +235,19 @@
 <body>
   <button class="theme-toggle" id="themeToggle">🌙 暗色</button>
   <h1>Memory Game</h1>
+  <div class="stats">
+    步数：<span id="movesCount">0</span>
+    <span class="timer">⏱ <span id="timerDisplay">45</span>s</span>
+  </div>
   <div id="introOverlay" class="overlay">
     <div class="intro-modal">
-      <div class="intro-rules">
-        <p>翻开卡片，找到所有配对的图案！</p>
-        <ul>
-          <li>每次点击翻开两张卡片</li>
-          <li>两张图案相同即为配对成功</li>
-          <li>配对全部 8 对卡片即为胜利</li>
-        </ul>
+      <div class="difficulty-selector">
+        <p>选择难度：</p>
+        <div class="diff-options">
+          <button class="diff-btn" data-diff="easy">简单<br><small>60秒</small></button>
+          <button class="diff-btn active" data-diff="normal">普通<br><small>45秒</small></button>
+          <button class="diff-btn" data-diff="hard">困难<br><small>30秒</small></button>
+        </div>
       </div>
       <button class="start-btn" id="startBtn">开始游戏</button>
     </div>
@@ -220,9 +272,16 @@
       themeToggle.textContent = theme === 'light' ? '🌙 暗色' : '☀️ 亮色';
     }
 
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelector('.diff-btn.active').classList.remove('active');
+        btn.classList.add('active');
+      });
+    });
+
     document.getElementById('startBtn').addEventListener('click', () => {
-      document.getElementById('introOverlay').remove();
-      createBoard();
+      const selected = document.querySelector('.diff-btn.active').dataset.diff;
+      startGame(selected);
     });
   </script>
 </body>
