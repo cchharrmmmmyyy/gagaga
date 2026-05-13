@@ -3,13 +3,95 @@
 <head>
   <title>Flappy Bird</title>
   <style>
-    body { text-align: center; font-family: Arial, sans-serif; }
-    canvas { background: #87CEEB; display: block; margin: 0 auto; }
+    :root {
+      --bg: #87CEEB;
+      --text: #333;
+      --card-bg: #fff;
+      --card-shadow: rgba(0,0,0,0.1);
+      --primary: #667eea;
+      --secondary: #764ba2;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f0f23;
+      --text: #e0e0e0;
+      --card-bg: #1a1a2e;
+      --card-shadow: rgba(0,0,0,0.3);
+      --primary: #a18cd1;
+      --secondary: #fbc2eb;
+    }
+
+    body {
+      text-align: center;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    h1 {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 25px;
+      background: var(--card-bg);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 0 4px 15px var(--card-shadow);
+      transition: all 0.3s;
+      z-index: 100;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px var(--card-shadow);
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border-radius: 15px;
+      box-shadow: 0 10px 40px var(--card-shadow);
+    }
   </style>
 </head>
 <body>
+  <button class="theme-toggle" id="themeToggle">🌙 暗色</button>
   <h1>Flappy Bird</h1>
   <canvas id="gameCanvas" width="320" height="480"></canvas>
   <script src="flappybird.js"></script>
+  <script>
+    const themeToggle = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('flappyTheme') || 'light';
+    document.documentElement.dataset.theme = savedTheme;
+    updateThemeButton(savedTheme);
+
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = document.documentElement.dataset.theme;
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      document.documentElement.dataset.theme = newTheme;
+      localStorage.setItem('flappyTheme', newTheme);
+      updateThemeButton(newTheme);
+    });
+
+    function updateThemeButton(theme) {
+      themeToggle.textContent = theme === 'light' ? '🌙 暗色' : '☀️ 亮色';
+    }
+  </script>
 </body>
 </html>
