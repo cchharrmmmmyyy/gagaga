@@ -1,9 +1,10 @@
 const gameGrid = document.getElementById('gameGrid');
-const cardsArray = ['A', 'A', 'B', 'B', 'C', 'C', 'D', 'D', 'E', 'E', 'F', 'F', 'G', 'G', 'H', 'H'];
+const cardsArray = ['🍎', '🍊', '🍋', '🍇', '🍉', '🍓', '🍑', '🍒', '🥝', '🍌', '🍐', '🍏', '🥭', '🍍', '🥥', '🍉'];
 
 let firstCard = null;
 let secondCard = null;
 let lockBoard = false;
+let matchedPairs = 0;
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -14,11 +15,22 @@ function shuffle(array) {
 }
 
 function createBoard() {
-  const shuffledCards = shuffle([...cardsArray]);
+  const shuffledCards = shuffle([...cardsArray]).slice(0, 16);
   shuffledCards.forEach((value, index) => {
     const cardElement = document.createElement('div');
     cardElement.classList.add('card');
     cardElement.dataset.value = value;
+    
+    const cardBack = document.createElement('div');
+    cardBack.classList.add('card-face', 'card-back');
+    cardBack.textContent = '?';
+    
+    const cardFront = document.createElement('div');
+    cardFront.classList.add('card-face', 'card-front');
+    cardFront.textContent = value;
+    
+    cardElement.appendChild(cardBack);
+    cardElement.appendChild(cardFront);
     cardElement.addEventListener('click', handleCardClick);
     gameGrid.appendChild(cardElement);
   });
@@ -26,12 +38,10 @@ function createBoard() {
 
 function handleCardClick(event) {
   if (lockBoard) return;
-  const clickedCard = event.target;
-  
-  if (clickedCard === firstCard) return;
+  const clickedCard = event.target.closest('.card');
+  if (!clickedCard || clickedCard === firstCard) return;
   
   clickedCard.classList.add('flipped');
-  clickedCard.textContent = clickedCard.dataset.value;
   
   if (!firstCard) {
     firstCard = clickedCard;
@@ -47,20 +57,22 @@ function checkForMatch() {
 }
 
 function disableCards() {
-  firstCard.removeEventListener('click', handleCardClick);
-  secondCard.removeEventListener('click', handleCardClick);
+  firstCard.classList.add('matched');
+  secondCard.classList.add('matched');
+  matchedPairs++;
   resetBoard();
 }
 
 function unflipCards() {
   lockBoard = true;
+  firstCard.classList.add('wrong');
+  secondCard.classList.add('wrong');
+  
   setTimeout(() => {
-    firstCard.classList.remove('flipped');
-    secondCard.classList.remove('flipped');
-    firstCard.textContent = '';
-    secondCard.textContent = '';
+    firstCard.classList.remove('flipped', 'wrong');
+    secondCard.classList.remove('flipped', 'wrong');
     resetBoard();
-  }, 1500);
+  }, 1000);
 }
 
 function resetBoard() {
