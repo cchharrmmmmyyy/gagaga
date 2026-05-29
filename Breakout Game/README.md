@@ -1,9 +1,19 @@
-# Game Name: Breakout
+# Breakout Adventure Pixel
 
-# Game Description
-"Breakout" is a classic arcade game where the player controls a paddle at the bottom of the screen, using it to bounce a ball upwards to break bricks. The objective is to break all the bricks without letting the ball fall off the screen. The player’s score increases for every brick broken.
+Breakout Adventure Pixel is a canvas Breakout game with an original 8/16-bit platform arcade look. It keeps the classic paddle-and-ball loop, then adds themed stages, special bricks, power-ups, touch controls, and a hard-edged pixel HUD.
 
+## Features
 
-# Game Photo :
+- 5 themed levels: grassland, cavern, lagoon, skyway, and castle.
+- Special bricks: normal, hard, question, coin, moving, bomb, and boss bricks.
+- Power-ups: wide paddle, multi-ball, slow ball, fireball, magnet, shield, extra life, and coin bonus.
+- Keyboard, mouse, and touch input.
+- Canvas-drawn pixel backgrounds, bricks, power-ups, paddle, ball, HUD, and menus.
+- Original assets only; no copied third-party characters, logos, sounds, tiles, or level layouts.
 
-![Screenshot (470)](https://github.com/user-attachments/assets/e94de815-7116-4c83-a087-63e1cca81ccb)
+## Controls
+
+- Arrow keys or A/D: move paddle.
+- Mouse or touch drag: move paddle.
+- Space, click, or tap: start and launch.
+- P: pause or resume.
