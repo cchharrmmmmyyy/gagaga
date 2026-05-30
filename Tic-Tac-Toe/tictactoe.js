@@ -1,7 +1,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const cellSize = 100;
+const cellSize = 90;
 let board = [
   ['', '', ''],
   ['', '', ''],
@@ -57,7 +57,7 @@ function checkWinner() {
 
   for (const line of lines) {
     if (line[0] !== '' && line[0] === line[1] && line[1] === line[2]) {
-      alert(`${line[0]} wins!`);
+      alert(`${line[0]} 获胜!`);
       resetGame();
       return;
     }
