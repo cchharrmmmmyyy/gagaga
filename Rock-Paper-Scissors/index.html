@@ -1,19 +1,349 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-  <title>Rock-Paper-Scissors Game</title>
+  <meta charset="UTF-8">
+  <title>中国象棋</title>
   <style>
-    body { text-align: center; font-family: Arial, sans-serif; }
-    button { font-size: 20px; margin: 10px; padding: 10px 20px; }
-    #result { font-size: 24px; margin-top: 20px; }
+    :root {
+      --board-bg: #f4e4c1;
+      --board-line: #5a3a1a;
+      --river-bg: #e8d5a8;
+      --red-piece: #c0392b;
+      --black-piece: #1c1c1c;
+      --highlight: #f1c40f;
+      --legal-move: #27ae60;
+      --check-color: #e74c3c;
+      --bg-dark: #2c3e50;
+      --bg-medium: #34495e;
+      --pixel-shadow: 4px 4px 0 #1a1a1a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: linear-gradient(180deg, #5099c5 0%, #87ceeb 60%, #4a7c2a 60%, #6ab04c 100%);
+      min-height: 100vh;
+      color: #fff;
+      image-rendering: pixelated;
+      overflow-x: hidden;
+    }
+
+    .header {
+      text-align: center;
+      padding: 16px;
+      background: #8b4513;
+      border-bottom: 6px solid #5a2d0c;
+      box-shadow: 0 6px 0 #d4a574 inset;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      letter-spacing: 4px;
+      text-shadow: 3px 3px 0 #1a1a1a;
+      color: #ffd700;
+    }
+
+    .header a.back-link {
+      position: absolute;
+      left: 16px;
+      top: 22px;
+      color: #fff;
+      background: #c0392b;
+      padding: 8px 14px;
+      text-decoration: none;
+      border: 3px solid #1a1a1a;
+      box-shadow: var(--pixel-shadow);
+      font-size: 14px;
+    }
+
+    .header a.back-link:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #1a1a1a; }
+
+    /* Screen containers */
+    .screen {
+      display: none;
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 16px;
+    }
+    .screen.active { display: block; }
+
+    /* Menu screen */
+    #menu-screen { text-align: center; }
+    .menu-card {
+      background: var(--bg-medium);
+      border: 4px solid #1a1a1a;
+      box-shadow: var(--pixel-shadow);
+      padding: 32px;
+      margin: 20px auto;
+      max-width: 560px;
+    }
+    .menu-card h2 {
+      font-size: 24px;
+      margin-bottom: 24px;
+      color: #ffd700;
+      text-shadow: 2px 2px 0 #1a1a1a;
+    }
+    .menu-btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      margin: 12px 0;
+      font-size: 18px;
+      font-family: inherit;
+      background: #c0392b;
+      color: #fff;
+      border: 4px solid #1a1a1a;
+      box-shadow: var(--pixel-shadow);
+      cursor: pointer;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .menu-btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #1a1a1a; }
+    .menu-btn.secondary { background: #2980b9; }
+    .menu-btn.green { background: #27ae60; }
+
+    .difficulty-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 12px;
+    }
+    .difficulty-btn {
+      flex: 1;
+      padding: 10px;
+      background: #7f8c8d;
+      border: 3px solid #1a1a1a;
+      color: #fff;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .difficulty-btn.active { background: #f39c12; }
+
+    /* LAN sub-screen */
+    .lan-input {
+      width: 100%;
+      padding: 12px;
+      font-size: 18px;
+      font-family: inherit;
+      background: #1a1a1a;
+      color: #ffd700;
+      border: 3px solid #ffd700;
+      text-align: center;
+      letter-spacing: 8px;
+      margin: 12px 0;
+    }
+    .room-code-display {
+      font-size: 36px;
+      letter-spacing: 12px;
+      color: #ffd700;
+      text-shadow: 3px 3px 0 #1a1a1a;
+      padding: 16px;
+      background: #1a1a1a;
+      margin: 16px 0;
+      border: 4px solid #ffd700;
+    }
+    .lan-status {
+      padding: 10px;
+      background: #1a1a1a;
+      color: #2ecc71;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    /* Game screen */
+    #game-screen {
+      display: none;
+      max-width: 1100px;
+      margin: 16px auto;
+    }
+    #game-screen.active { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+
+    .board-wrap {
+      background: #8b4513;
+      border: 6px solid #1a1a1a;
+      box-shadow: var(--pixel-shadow);
+      padding: 12px;
+    }
+    #chessBoard {
+      display: block;
+      background: var(--board-bg);
+      image-rendering: pixelated;
+      cursor: pointer;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: var(--bg-medium);
+      border: 4px solid #1a1a1a;
+      box-shadow: var(--pixel-shadow);
+      padding: 16px;
+      color: #fff;
+    }
+    .sidebar h3 {
+      font-size: 16px;
+      margin-bottom: 10px;
+      color: #ffd700;
+      border-bottom: 2px solid #ffd700;
+      padding-bottom: 4px;
+    }
+    .status-block {
+      padding: 10px;
+      background: #1a1a1a;
+      margin-bottom: 12px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .turn-indicator { font-weight: bold; }
+    .turn-red { color: #e74c3c; }
+    .turn-black { color: #95a5a6; }
+    .check-warning {
+      color: #f1c40f;
+      animation: blink 0.7s infinite alternate;
+    }
+    @keyframes blink { from { opacity: 1; } to { opacity: 0.3; } }
+
+    .move-history {
+      max-height: 200px;
+      overflow-y: auto;
+      background: #1a1a1a;
+      padding: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .move-history div { padding: 2px 4px; }
+    .move-history div:nth-child(odd) { background: #2c2c2c; }
+
+    .sidebar button {
+      width: 100%;
+      padding: 10px;
+      margin: 4px 0;
+      font-family: inherit;
+      font-size: 13px;
+      background: #c0392b;
+      color: #fff;
+      border: 3px solid #1a1a1a;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+    .sidebar button:hover { background: #e74c3c; }
+    .sidebar button.secondary { background: #2980b9; }
+    .sidebar button.secondary:hover { background: #3498db; }
+
+    /* Result modal */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: var(--bg-medium);
+      border: 6px solid #ffd700;
+      box-shadow: var(--pixel-shadow);
+      padding: 32px;
+      text-align: center;
+      min-width: 320px;
+    }
+    .modal-content h2 {
+      font-size: 28px;
+      color: #ffd700;
+      margin-bottom: 16px;
+      text-shadow: 3px 3px 0 #1a1a1a;
+    }
+    .modal-content p { margin-bottom: 16px; font-size: 16px; }
+
+    @media (max-width: 720px) {
+      #game-screen.active { flex-direction: column; align-items: center; }
+      .sidebar { width: 100%; max-width: 480px; }
+    }
   </style>
 </head>
 <body>
-  <h1>Rock-Paper-Scissors</h1>
-  <button onclick="playGame('rock')">Rock</button>
-  <button onclick="playGame('paper')">Paper</button>
-  <button onclick="playGame('scissors')">Scissors</button>
-  <div id="result"></div>
-  <script src="rockpaperscissors.js"></script>
+  <header class="header">
+    <a href="../index.html" class="back-link">← 返回</a>
+    <h1>中国象棋 Chinese Chess</h1>
+  </header>
+
+  <!-- Menu Screen -->
+  <div id="menu-screen" class="screen active">
+    <div class="menu-card" id="main-menu">
+      <h2>选择模式</h2>
+      <button class="menu-btn" data-mode="ai">人机对战</button>
+      <div class="difficulty-row" id="difficulty-row">
+        <button class="difficulty-btn" data-depth="2">简单</button>
+        <button class="difficulty-btn active" data-depth="3">中等</button>
+        <button class="difficulty-btn" data-depth="4">困难</button>
+      </div>
+      <button class="menu-btn secondary" data-mode="local">本地双人对战</button>
+      <button class="menu-btn green" data-mode="lan">联机对战</button>
+    </div>
+
+    <div class="menu-card" id="lan-menu" style="display:none;">
+      <h2>联机对战</h2>
+      <p style="margin: 10px 0; font-size: 14px;">双方打开同一页面，一方创建房间，另一方输入房间号加入</p>
+      <button class="menu-btn green" id="lan-create-btn">创建房间（主机）</button>
+      <button class="menu-btn secondary" id="lan-join-btn">加入房间（客人）</button>
+      <button class="menu-btn" id="lan-back-btn" style="background:#7f8c8d;">返回</button>
+    </div>
+
+    <div class="menu-card" id="lan-create" style="display:none;">
+      <h2>房间已创建</h2>
+      <p>将房间号发给对手：</p>
+      <div class="room-code-display" id="room-code">----</div>
+      <div class="lan-status" id="create-status">等待对手加入...</div>
+      <button class="menu-btn" id="create-cancel-btn" style="background:#7f8c8d;">取消</button>
+    </div>
+
+    <div class="menu-card" id="lan-join" style="display:none;">
+      <h2>加入房间</h2>
+      <p>输入主机给你的4位房间号：</p>
+      <input type="text" id="join-code-input" class="lan-input" maxlength="4" placeholder="ABCD">
+      <button class="menu-btn green" id="join-confirm-btn">连接</button>
+      <div class="lan-status" id="join-status"></div>
+      <button class="menu-btn" id="join-cancel-btn" style="background:#7f8c8d;">返回</button>
+    </div>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="game-screen" class="screen">
+    <div class="board-wrap">
+      <canvas id="chessBoard" width="540" height="600"></canvas>
+    </div>
+    <div class="sidebar">
+      <h3>状态</h3>
+      <div class="status-block" id="status-block">
+        <div>模式：<span id="mode-label">-</span></div>
+        <div>走棋：<span id="turn-label" class="turn-indicator turn-red">红方</span></div>
+        <div id="check-label" style="display:none;" class="check-warning">⚠ 将军！</div>
+      </div>
+
+      <h3>走棋记录</h3>
+      <div class="move-history" id="move-history"></div>
+
+      <h3>操作</h3>
+      <button id="undo-btn" class="secondary">悔棋</button>
+      <button id="resign-btn">认输</button>
+      <button id="menu-btn-game" class="secondary">返回菜单</button>
+    </div>
+  </div>
+
+  <!-- Result Modal -->
+  <div class="modal" id="result-modal">
+    <div class="modal-content">
+      <h2 id="result-title">游戏结束</h2>
+      <p id="result-text">-</p>
+      <button class="menu-btn green" id="play-again-btn">再来一局</button>
+      <button class="menu-btn secondary" id="modal-menu-btn">主菜单</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="chinesechess.js"></script>
 </body>
 </html>
