@@ -437,8 +437,7 @@ function evaluatePieceMaterial(type) {
   return PIECE_VALUES[type] || 0;
 }
 
-function evaluateBoard(gameState) {
-  const board = gameState.board;
+function evaluateBoard(board) {
   let score = 0;
 
   for (let r = 0; r < BOARD_ROWS; r++) {
@@ -497,7 +496,7 @@ function orderMoves(color, moves, board) {
 
 function minimax(board, depth, alpha, beta, maximizing, aiColor, gameState) {
   if (depth === 0) {
-    return { score: evaluateBoard(gameState) };
+    return { score: evaluateBoard(board) };
   }
 
   const color = maximizing ? aiColor : opponent(aiColor);
@@ -1018,7 +1017,7 @@ function handleBoardClick(mx, my) {
     }
 
     // Trigger AI move
-    if (currentGame.mode === 'ai' && currentGame.turn === currentGame.aiColor && currentGame.status === 'playing') {
+    if (currentGame.mode === 'ai' && currentGame.turn === currentGame.aiColor && (currentGame.status === 'playing' || currentGame.status === 'check')) {
       aiThinking = true;
       setTimeout(() => {
         doAIMove();
@@ -1033,7 +1032,7 @@ function handleBoardClick(mx, my) {
 }
 
 function doAIMove() {
-  if (!currentGame || currentGame.status !== 'playing') {
+  if (!currentGame || (currentGame.status !== 'playing' && currentGame.status !== 'check')) {
     aiThinking = false;
     return;
   }
@@ -1078,11 +1077,10 @@ function generateRoomCode() {
   return code;
 }
 
-// ---- PeerJS P2P Network Manager ----
+// ---- WebSocket Network Manager ----
 class NetworkManager {
   constructor() {
-    this.peer = null;
-    this.conn = null;
+    this.socket = null;
     this.roomCode = null;
     this.myColor = RED;
     this.connected = false;
@@ -1093,94 +1091,73 @@ class NetworkManager {
     this.onStart = null;
   }
 
-  connect(url, roomCode, isHost, callback) {
+  connect(url, roomCode, isHost) {
+    if (!url) {
+      if (this.onStatus) this.onStatus('请输入服务器地址');
+      return;
+    }
     this.isHost = isHost;
     this.myColor = isHost ? RED : BLACK;
+    this.roomCode = roomCode || null;
 
-    if (isHost) {
-      // Host: create a Peer with a 4-char room code as ID
-      const code = roomCode || generateRoomCode();
-      this.roomCode = code;
-      const peerId = 'gaga-cc-' + code;
+    if (this.onStatus) this.onStatus('正在连接...');
 
-      if (this.onStatus) this.onStatus('正在创建房间...');
-
-      try {
-        this.peer = new Peer(peerId);
-      } catch (e) {
-        if (this.onStatus) this.onStatus('创建失败：' + e.message);
-        return;
-      }
-
-      this.peer.on('open', () => {
-        this.connected = true;
-        if (this.onCreate) this.onCreate(this.roomCode);
-        if (this.onStatus) this.onStatus('等待对手加入...');
-      });
-
-      this.peer.on('connection', (conn) => {
-        this.conn = conn;
-        this.bindConn();
-        if (this.onStatus) this.onStatus('对手已加入！游戏开始，你是红方。');
-        if (this.onStart) this.onStart();
-      });
-
-      this.peer.on('error', (err) => {
-        if (err.type === 'unavailable-id') {
-          if (this.onStatus) this.onStatus('房间号被占用，请重试');
-        } else {
-          if (this.onStatus) this.onStatus('错误：' + err.type);
-        }
-      });
-    } else {
-      // Joiner: connect to host's Peer ID
-      const peerId = 'gaga-cc-' + roomCode;
-      this.roomCode = roomCode;
-
-      if (this.onStatus) this.onStatus('正在连接...');
-
-      try {
-        this.peer = new Peer();
-      } catch (e) {
-        if (this.onStatus) this.onStatus('连接失败：' + e.message);
-        return;
-      }
-
-      this.peer.on('open', () => {
-        this.connected = true;
-        this.conn = this.peer.connect(peerId);
-        this.bindConn();
-
-        this.conn.on('open', () => {
-          if (this.onStatus) this.onStatus('已加入房间，游戏开始！你是黑方。');
-          if (this.onStart) this.onStart();
-        });
-
-        this.conn.on('error', (err) => {
-          if (this.onStatus) this.onStatus('连接错误：' + (err.message || err.type));
-        });
-      });
-
-      this.peer.on('error', (err) => {
-        if (this.onStatus) this.onStatus('连接失败：' + (err.message || err.type));
-      });
+    try {
+      this.socket = new WebSocket(url);
+    } catch (e) {
+      if (this.onStatus) this.onStatus('连接失败：' + e.message);
+      return;
     }
-  }
 
-  bindConn() {
-    if (!this.conn) return;
-    this.conn.on('data', (data) => { this.handleMessage(data); });
-    this.conn.on('close', () => {
+    this.socket.onopen = () => {
+      this.connected = true;
+      if (this.isHost) {
+        this.socket.send(JSON.stringify({ type: 'create_room' }));
+        if (this.onStatus) this.onStatus('正在创建房间...');
+      } else {
+        this.socket.send(JSON.stringify({ type: 'join_room', roomCode: this.roomCode }));
+        if (this.onStatus) this.onStatus('正在加入房间...');
+      }
+    };
+
+    this.socket.onmessage = (event) => {
+      let msg;
+      try { msg = JSON.parse(event.data); } catch { return; }
+      this.handleMessage(msg);
+    };
+
+    this.socket.onclose = () => {
       this.connected = false;
-      if (this.onStatus) this.onStatus('对手已断开连接。');
-    });
+      if (this.onStatus) this.onStatus('连接已断开。');
+    };
+
+    this.socket.onerror = () => {
+      if (this.onStatus) this.onStatus('连接错误');
+    };
   }
 
   handleMessage(msg) {
     switch (msg.type) {
+      case 'room_created':
+        this.roomCode = msg.roomCode;
+        if (this.onCreate) this.onCreate(msg.roomCode);
+        if (this.onStatus) this.onStatus('等待对手加入...');
+        break;
+
+      case 'opponent_joined':
+        if (this.onStatus) this.onStatus('对手已加入！游戏开始，你是红方。');
+        if (this.onStart) this.onStart();
+        break;
+
+      case 'joined':
+        if (this.onStatus) this.onStatus('已加入房间，游戏开始！你是黑方。');
+        if (this.onStart) this.onStart();
+        break;
+
       case 'move':
         if (this.onMove) this.onMove(msg);
         break;
+
       case 'resign':
         if (currentGame) {
           currentGame.status = 'resigned';
@@ -1188,18 +1165,29 @@ class NetworkManager {
           showResult('认输', `${winner}获胜！`);
         }
         break;
+
+      case 'opponent_disconnected':
+        this.connected = false;
+        if (this.onStatus) this.onStatus('对手已断开连接。');
+        break;
+
+      case 'error':
+        if (this.onStatus) this.onStatus('错误：' + (msg.message || '未知错误'));
+        break;
     }
   }
 
   send(data) {
-    if (this.conn && this.conn.open) {
-      this.conn.send(data);
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify(data));
     }
   }
 
   disconnect() {
-    if (this.conn) this.conn.close();
-    if (this.peer) this.peer.destroy();
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
+    }
     this.connected = false;
   }
 }
@@ -1259,7 +1247,9 @@ document.getElementById('lan-create-btn').addEventListener('click', () => {
       render();
     }
   };
-  netManager.connect(null, null, true);
+  const url = serverUrlInput.value.trim();
+  if (!url) { createStatus.textContent = '请输入服务器地址'; return; }
+  netManager.connect(url, null, true);
 });
 
 document.getElementById('lan-join-btn').addEventListener('click', () => {
@@ -1300,7 +1290,9 @@ document.getElementById('join-confirm-btn').addEventListener('click', () => {
       render();
     }
   };
-  netManager.connect(null, code, false);
+  const url = serverUrlInput.value.trim();
+  if (!url) { joinStatus.textContent = '请输入服务器地址'; joinStatus.style.color = '#e74c3c'; return; }
+  netManager.connect(url, code, false);
 });
 
 document.getElementById('lan-back-btn').addEventListener('click', () => {

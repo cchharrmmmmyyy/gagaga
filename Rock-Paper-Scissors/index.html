@@ -287,6 +287,10 @@
     <div class="menu-card" id="lan-menu" style="display:none;">
       <h2>联机对战</h2>
       <p style="margin: 10px 0; font-size: 14px;">双方打开同一页面，一方创建房间，另一方输入房间号加入</p>
+      <div style="margin: 10px 0;">
+        <label style="font-size: 12px; display: block; margin-bottom: 4px; color: #ccc;">服务器地址：</label>
+        <input type="text" id="server-url-input" class="lan-input" value="ws://你的VPS_IP:8080" placeholder="ws://ip:port" style="letter-spacing: 1px; font-size: 14px; text-align: left; padding: 10px;">
+      </div>
       <button class="menu-btn green" id="lan-create-btn">创建房间（主机）</button>
       <button class="menu-btn secondary" id="lan-join-btn">加入房间（客人）</button>
       <button class="menu-btn" id="lan-back-btn" style="background:#7f8c8d;">返回</button>
@@ -343,7 +347,6 @@
     </div>
   </div>
 
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="chinesechess.js"></script>
 </body>
 </html>
