@@ -1,16 +1,16 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const basketWidth = 80;
+const basketWidth = 70;
 const basketHeight = 20;
 let basketX = (canvas.width - basketWidth) / 2;
 let rightPressed = false;
 let leftPressed = false;
 
-const ballRadius = 10;
+const ballRadius = 14;
 let ballX = Math.random() * (canvas.width - ballRadius * 2) + ballRadius;
 let ballY = ballRadius;
-let ballDY = 2;
+let ballDY = 3.6;
 
 let score = 0;
 let gameOver = false;
