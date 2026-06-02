@@ -22,6 +22,12 @@ body {
     max-width: 500px;
     width: 100%;
     backdrop-filter: blur(10px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.game-wrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
 }
 
 .game-header {
@@ -197,88 +203,112 @@ body {
 }
 
 .tile-2 {
-    background: linear-gradient(135deg, #eee4da, #f0e6dc);
+    background: linear-gradient(145deg, #eee4da, #f0e6dc);
     box-shadow: 0 4px 12px rgba(238, 228, 218, 0.5);
 }
 
 .tile-4 {
-    background: linear-gradient(135deg, #ede0c8, #f5e8d8);
+    background: linear-gradient(145deg, #ede0c8, #f5e8d8);
     box-shadow: 0 4px 12px rgba(237, 224, 200, 0.5);
 }
 
 .tile-8 {
-    background: linear-gradient(135deg, #f2b179, #f8c179);
+    background: linear-gradient(145deg, #f2b179, #f8c179);
     color: #f9f6f2;
     box-shadow: 0 4px 15px rgba(242, 177, 121, 0.5);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .tile-16 {
-    background: linear-gradient(135deg, #f59563, #faa573);
+    background: linear-gradient(145deg, #f59563, #faa573);
     color: #f9f6f2;
     box-shadow: 0 4px 15px rgba(245, 149, 99, 0.5);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .tile-32 {
-    background: linear-gradient(135deg, #f67c5f, #fa8c6f);
+    background: linear-gradient(145deg, #f67c5f, #fa8c6f);
     color: #f9f6f2;
     box-shadow: 0 4px 15px rgba(246, 124, 95, 0.5);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .tile-64 {
-    background: linear-gradient(135deg, #f65e3b, #fa6e4b);
+    background: linear-gradient(145deg, #f65e3b, #fa6e4b);
     color: #f9f6f2;
     box-shadow: 0 4px 15px rgba(246, 94, 59, 0.5);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .tile-128 {
-    background: linear-gradient(135deg, #edcf72, #f5df82);
+    background: linear-gradient(145deg, #edcf72, #f5df82);
     color: #f9f6f2;
     box-shadow: 0 4px 15px rgba(237, 207, 114, 0.5);
     font-size: clamp(20px, 6vw, 36px);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .tile-256 {
-    background: linear-gradient(135deg, #edcc61, #f5dc71);
+    background: linear-gradient(145deg, #edcc61, #f5dc71);
     color: #f9f6f2;
     box-shadow: 0 4px 15px rgba(237, 204, 97, 0.5);
     font-size: clamp(20px, 6vw, 36px);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .tile-512 {
-    background: linear-gradient(135deg, #edc850, #f4d860);
+    background: linear-gradient(145deg, #edc850, #f4d860);
     color: #f9f6f2;
     box-shadow: 0 4px 15px rgba(237, 200, 80, 0.5);
     font-size: clamp(20px, 6vw, 36px);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .tile-1024 {
-    background: linear-gradient(135deg, #edc53f, #f5d54f);
+    background: linear-gradient(145deg, #edc53f, #f5d54f);
     color: #f9f6f2;
     box-shadow: 0 6px 20px rgba(237, 197, 63, 0.6);
     font-size: clamp(16px, 5vw, 28px);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .tile-2048 {
-    background: linear-gradient(135deg, #edc22e, #f5d23e);
+    background: linear-gradient(145deg, #edc22e, #f5d23e);
     color: #f9f6f2;
     box-shadow: 0 6px 25px rgba(237, 194, 46, 0.6);
     font-size: clamp(16px, 5vw, 28px);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     animation: tileGlow 1.5s ease-in-out infinite;
 }
 
 .tile-super {
-    background: linear-gradient(135deg, #3c3a32, #4a473e);
+    background: linear-gradient(145deg, #3c3a32, #4a473e);
     color: #f9f6f2;
     box-shadow: 0 6px 25px rgba(60, 58, 50, 0.6);
     font-size: clamp(14px, 4vw, 22px);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    animation: tileGlowSuper 2s ease-in-out infinite;
 }
 
 @keyframes tileGlow {
     0%, 100% {
         box-shadow: 0 6px 25px rgba(237, 194, 46, 0.6);
+        transform: scale(1);
     }
     50% {
         box-shadow: 0 6px 35px rgba(237, 194, 46, 0.9);
+        transform: scale(1.02);
+    }
+}
+
+@keyframes tileGlowSuper {
+    0%, 100% {
+        box-shadow: 0 6px 25px rgba(60, 58, 50, 0.6);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 6px 40px rgba(60, 58, 50, 0.9);
+        transform: scale(1.03);
     }
 }
 
@@ -315,11 +345,14 @@ body {
 @keyframes overlayFadeIn {
     from {
         opacity: 0;
-        transform: scale(0.9);
+        transform: scale(0.8) translateY(-20px);
+    }
+    60% {
+        transform: scale(1.05) translateY(5px);
     }
     to {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) translateY(0);
     }
 }
 
@@ -430,6 +463,11 @@ body {
     .game-container {
         gap: 8px;
         padding: 10px;
+        border-radius: 12px;
+    }
+
+    .tile {
+        border-radius: 8px;
     }
 
     .instructions {
