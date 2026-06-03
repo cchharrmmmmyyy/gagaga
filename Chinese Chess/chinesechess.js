@@ -834,6 +834,7 @@ let currentGame = null;
 let aiThinking = false;
 let netManager = null;
 let animating = false;
+let chessLeaderboardSubmitted = false;
 
 // DOM Elements
 const menuScreen = document.getElementById('menu-screen');
@@ -883,6 +884,7 @@ function startGame(mode, aiDepth, aiColor) {
   showScreen(gameScreen);
   aiThinking = false;
   animating = false;
+  chessLeaderboardSubmitted = false;
   updateUI();
   render();
 }
@@ -946,6 +948,20 @@ function showResult(title, text) {
   resultModal.classList.add('active');
 }
 
+function localChessColor() {
+  if (!currentGame) return RED;
+  if (currentGame.mode === 'lan' && netManager) return netManager.myColor;
+  if (currentGame.mode === 'ai') return opponent(currentGame.aiColor);
+  return RED;
+}
+
+function submitChessResult(winner) {
+  if (chessLeaderboardSubmitted || !window.GagagaPlatform) return;
+  chessLeaderboardSubmitted = true;
+  const result = winner === 'draw' ? 'draw' : (winner === localChessColor() ? 'win' : 'loss');
+  window.GagagaPlatform.submitScore('chinese-chess', { result }, `chess:${Date.now()}:${result}`);
+}
+
 function handleBoardClick(mx, my) {
   if (!currentGame || aiThinking || animating) return;
   if (currentGame.status === 'checkmate' || currentGame.status === 'stalemate') return;
@@ -997,6 +1013,7 @@ function handleBoardClick(mx, my) {
 
     // Check game end
     if (currentGame.status === 'checkmate') {
+      submitChessResult(currentGame.winner);
       showResult('将杀！', `${color === RED ? '红方' : '黑方'}获胜！`);
       if (netManager && currentGame.mode === 'lan') {
         netManager.send({ type: 'move', fromR, fromC, toR: r, toC: c, status: 'checkmate', winner: currentGame.winner });
@@ -1004,6 +1021,7 @@ function handleBoardClick(mx, my) {
       return;
     }
     if (currentGame.status === 'stalemate') {
+      submitChessResult('draw');
       showResult('和棋！', '双方平局。');
       if (netManager && currentGame.mode === 'lan') {
         netManager.send({ type: 'move', fromR, fromC, toR: r, toC: c, status: 'stalemate' });
@@ -1046,11 +1064,13 @@ function doAIMove() {
       currentGame.winner = RED;
       updateUI();
       render();
+      submitChessResult(RED);
       showResult('将杀！', '红方获胜！');
     } else {
       currentGame.status = 'stalemate';
       updateUI();
       render();
+      submitChessResult('draw');
       showResult('和棋！', '双方平局。');
     }
     return;
@@ -1063,8 +1083,10 @@ function doAIMove() {
 
   if (currentGame.status === 'checkmate') {
     const winner = currentGame.winner;
+    submitChessResult(winner);
     showResult('将杀！', `${winner === RED ? '红方' : '黑方'}获胜！`);
   } else if (currentGame.status === 'stalemate') {
+    submitChessResult('draw');
     showResult('和棋！', '双方平局。');
   }
 }
@@ -1162,6 +1184,7 @@ class NetworkManager {
         if (currentGame) {
           currentGame.status = 'resigned';
           const winner = this.myColor === RED ? '黑方' : '红方';
+          submitChessResult(this.myColor);
           showResult('认输', `${winner}获胜！`);
         }
         break;
@@ -1232,10 +1255,12 @@ document.getElementById('lan-create-btn').addEventListener('click', () => {
   };
   netManager.onMove = (msg) => {
     if (msg.status === 'checkmate') {
+      submitChessResult(msg.winner);
       showResult('将杀！', `${msg.winner === RED ? '红方' : '黑方'}获胜！`);
       return;
     }
     if (msg.status === 'stalemate') {
+      submitChessResult('draw');
       showResult('和棋！', '双方平局。');
       return;
     }
@@ -1275,10 +1300,12 @@ document.getElementById('join-confirm-btn').addEventListener('click', () => {
   };
   netManager.onMove = (msg) => {
     if (msg.status === 'checkmate') {
+      submitChessResult(msg.winner);
       showResult('将杀！', `${msg.winner === RED ? '红方' : '黑方'}获胜！`);
       return;
     }
     if (msg.status === 'stalemate') {
+      submitChessResult('draw');
       showResult('和棋！', '双方平局。');
       return;
     }
@@ -1324,6 +1351,7 @@ document.getElementById('resign-btn').addEventListener('click', () => {
   }
   const winner = currentGame.turn === RED ? '黑方' : '红方';
   currentGame.status = 'resigned';
+  submitChessResult(opponent(currentGame.turn));
   showResult('认输', `${winner}获胜！`);
 });
 

@@ -8,10 +8,12 @@ let board = [
   ['', '', '']
 ];
 let currentPlayer = 'X';
+let gameFinished = false;
 
 canvas.addEventListener('click', handleClick);
 
 function handleClick(event) {
+  if (gameFinished) return;
   const x = Math.floor(event.offsetX / cellSize);
   const y = Math.floor(event.offsetY / cellSize);
 
@@ -57,6 +59,8 @@ function checkWinner() {
 
   for (const line of lines) {
     if (line[0] !== '' && line[0] === line[1] && line[1] === line[2]) {
+      gameFinished = true;
+      submitTicTacToeResult(line[0] === 'X' ? 'win' : 'loss');
       alert(`${line[0]} wins!`);
       resetGame();
       return;
@@ -64,9 +68,16 @@ function checkWinner() {
   }
 
   if (board.flat().every(cell => cell !== '')) {
+    gameFinished = true;
+    submitTicTacToeResult('draw');
     alert('Draw!');
     resetGame();
   }
+}
+
+function submitTicTacToeResult(result) {
+  if (!window.GagagaPlatform) return;
+  window.GagagaPlatform.submitScore('tic-tac-toe', { result }, `tic:${Date.now()}:${result}`);
 }
 
 function resetGame() {
@@ -76,6 +87,7 @@ function resetGame() {
     ['', '', '']
   ];
   currentPlayer = 'X';
+  gameFinished = false;
   draw();
 }
 
