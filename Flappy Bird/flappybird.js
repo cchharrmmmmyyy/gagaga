@@ -632,12 +632,16 @@ function renderGameOverOverlay() {
   ctx.font = `bold ${Math.round(36 * s)}px Arial`;
   ctx.fillText('得分: ' + score, canvas.width / 2, canvas.height / 2 - Math.round(30 * s));
 
+  ctx.fillStyle = '#FFD54F';
+  ctx.font = `bold ${Math.round(24 * s)}px Arial`;
+  ctx.fillText('$ 金币: ' + coinCount, canvas.width / 2, canvas.height / 2 + Math.round(2 * s));
+
   ctx.fillStyle = '#FFD700';
   ctx.font = `bold ${Math.round(28 * s)}px Arial`;
-  ctx.fillText('\u{1F3C6} 最高分: ' + highScore, canvas.width / 2, canvas.height / 2 + Math.round(20 * s));
+  ctx.fillText('\u{1F3C6} 最高分: ' + highScore, canvas.width / 2, canvas.height / 2 + Math.round(35 * s));
 
   const btnX = canvas.width / 2 - Math.round(120 * s);
-  const btnY = canvas.height / 2 + Math.round(70 * s);
+  const btnY = canvas.height / 2 + Math.round(82 * s);
   const btnW = Math.round(240 * s);
   const btnH = Math.round(60 * s);
 
@@ -698,7 +702,7 @@ function update() {
 function submitFlappyScore() {
   if (leaderboardSubmitted || !window.GagagaPlatform) return;
   leaderboardSubmitted = true;
-  window.GagagaPlatform.submitScore('flappy-bird', { score }, `flappy:${Date.now()}:${score}`);
+  window.GagagaPlatform.submitScore('flappy-bird', { score, coins: coinCount }, `flappy:${Date.now()}:${score}:${coinCount}`);
 }
 
 // ====== 主循环 ======
