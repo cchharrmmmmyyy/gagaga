@@ -13,6 +13,7 @@ GEMINI.md
 copilot-instructions.md
 
 # Local game server data
-Chinese Chess/server/data/
+server/data/
+node_modules/
 __pycache__/
 *.pyc
