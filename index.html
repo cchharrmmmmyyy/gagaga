@@ -189,6 +189,169 @@
         box-shadow: inset 0 -5px 0 #d17c15;
       }
 
+      .account-panel {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 10px;
+        min-width: 260px;
+      }
+
+      .account-name {
+        max-width: 180px;
+        padding: 8px 10px;
+        overflow: hidden;
+        color: #fff;
+        font-size: .9rem;
+        font-weight: 900;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        background: #1f6f35;
+        border: 4px solid var(--ink);
+        box-shadow: inset 0 -4px 0 #144923;
+      }
+
+      .pixel-btn {
+        padding: 8px 12px;
+        color: #fff;
+        font: inherit;
+        font-size: .86rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        background: #2f8ee6;
+        border: 4px solid var(--ink);
+        box-shadow: inset 0 -4px 0 #1b5794;
+        cursor: pointer;
+      }
+
+      .pixel-btn:hover,
+      .pixel-btn:focus {
+        color: var(--ink);
+        background: var(--gold);
+        box-shadow: inset 0 -4px 0 #e09c24;
+      }
+
+      .pixel-btn.danger {
+        background: #e33a25;
+        box-shadow: inset 0 -4px 0 #9f2215;
+      }
+
+      .arcade-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(25, 19, 12, .72);
+      }
+
+      .arcade-modal.active {
+        display: flex;
+      }
+
+      .arcade-dialog {
+        width: min(720px, 100%);
+        max-height: min(760px, calc(100vh - 40px));
+        overflow: auto;
+        color: var(--ink);
+        background: #fff8df;
+        border: 6px solid var(--ink);
+        box-shadow: 10px 10px 0 rgba(32, 19, 11, .38);
+      }
+
+      .arcade-dialog-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        background: #fff2a3;
+        border-bottom: 5px solid var(--ink);
+      }
+
+      .arcade-dialog-title {
+        margin: 0;
+        color: #e33a25;
+        font-size: 1.35rem;
+        font-weight: 900;
+      }
+
+      .arcade-dialog-body {
+        padding: 18px;
+      }
+
+      .auth-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .auth-box {
+        padding: 14px;
+        background: #fff2a3;
+        border: 4px solid var(--ink);
+      }
+
+      .auth-box h3 {
+        margin: 0 0 12px;
+        font-size: 1rem;
+        font-weight: 900;
+      }
+
+      .arcade-input,
+      .arcade-select {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 10px;
+        color: var(--ink);
+        font: inherit;
+        font-weight: 800;
+        background: #fff8df;
+        border: 4px solid var(--ink);
+      }
+
+      .service-message {
+        min-height: 24px;
+        margin-top: 12px;
+        font-size: .92rem;
+        font-weight: 900;
+      }
+
+      .leaderboard-toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff2a3;
+        border: 4px solid var(--ink);
+      }
+
+      .leaderboard-table th,
+      .leaderboard-table td {
+        padding: 10px;
+        border-bottom: 3px solid var(--ink);
+        font-size: .92rem;
+        font-weight: 900;
+      }
+
+      .leaderboard-table th {
+        color: #fff;
+        background: #2f8ee6;
+      }
+
+      .leaderboard-table tr:last-child td {
+        border-bottom: 0;
+      }
+
       @media (max-width: 640px) {
         .pixel-header {
           margin-top: 14px;
@@ -207,6 +370,19 @@
 
         .coin {
           width: 22px;
+        }
+
+        .account-panel {
+          justify-content: flex-start;
+          min-width: 0;
+        }
+
+        .auth-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .leaderboard-toolbar {
+          flex-direction: column;
         }
       }
 
@@ -427,22 +603,7 @@
       }
 
       .header-bar::before {
-        content: "?";
-        position: absolute;
-        right: 80px;
-        top: 50%;
-        width: 44px; height: 44px;
-        transform: translateY(-50%);
-        display: grid;
-        place-items: center;
-        border: 5px solid var(--ink);
-        background: var(--gold);
-        color: #fff;
-        font-size: 1.55rem;
-        font-weight: 900;
-        text-shadow: 2px 2px 0 var(--ink);
-        box-shadow: inset -6px -6px 0 #b96f16;
-        animation: questionBounce 1.45s ease-in-out infinite;
+        content: none;
       }
 
       @keyframes questionBounce {
@@ -570,10 +731,11 @@
         <header class="pixel-header" aria-label="Games arcade header">
           <div class="header-bar">
             <h1 class="games-heading">Simple JavaScript Games</h1>
-            <div class="coin-row" aria-hidden="true">
-              <span class="coin"></span>
-              <span class="coin"></span>
-              <span class="coin"></span>
+            <div class="account-panel" aria-label="Account and leaderboards">
+              <span class="account-name" id="account-name">Guest</span>
+              <button class="pixel-btn" id="auth-open-btn" type="button">Login</button>
+              <button class="pixel-btn" id="leaderboard-open-btn" type="button">Ranks</button>
+              <button class="pixel-btn danger" id="logout-btn" type="button" hidden>Logout</button>
             </div>
           </div>
         </header>
@@ -645,7 +807,7 @@
     </svg>
     <div class="card-body">
       <h5 class="card-title">Chinese Chess Game</h5>
-      <a href="Rock-Paper-Scissors/index.html" class="btn btn-primary">Tap to Play <span class="play-arrow">▶</span></a>
+      <a href="Chinese Chess/index.html" class="btn btn-primary">Tap to Play <span class="play-arrow">▶</span></a>
     </div>
   </div>
 <div class="card">
@@ -660,6 +822,62 @@
         </div>
     </main>
 
+    <div class="arcade-modal" id="auth-modal" aria-hidden="true">
+      <div class="arcade-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <div class="arcade-dialog-header">
+          <h2 class="arcade-dialog-title" id="auth-title">Player Account</h2>
+          <button class="pixel-btn danger" type="button" data-close-modal="auth-modal">Close</button>
+        </div>
+        <div class="arcade-dialog-body">
+          <div class="auth-grid">
+            <form class="auth-box" id="login-form">
+              <h3>Login</h3>
+              <input class="arcade-input" id="login-username" name="username" autocomplete="username" placeholder="Username" required>
+              <input class="arcade-input" id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Password" required>
+              <button class="pixel-btn" type="submit">Login</button>
+            </form>
+            <form class="auth-box" id="register-form">
+              <h3>Register</h3>
+              <input class="arcade-input" id="register-username" name="username" autocomplete="username" placeholder="3-20 characters" required>
+              <input class="arcade-input" id="register-password" name="password" type="password" autocomplete="new-password" placeholder="At least 6 characters" required>
+              <button class="pixel-btn" type="submit">Create</button>
+            </form>
+          </div>
+          <div class="service-message" id="auth-message" role="status"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arcade-modal" id="leaderboard-modal" aria-hidden="true">
+      <div class="arcade-dialog" role="dialog" aria-modal="true" aria-labelledby="leaderboard-title">
+        <div class="arcade-dialog-header">
+          <h2 class="arcade-dialog-title" id="leaderboard-title">Leaderboards</h2>
+          <button class="pixel-btn danger" type="button" data-close-modal="leaderboard-modal">Close</button>
+        </div>
+        <div class="arcade-dialog-body">
+          <div class="leaderboard-toolbar">
+            <select class="arcade-select" id="leaderboard-game"></select>
+            <button class="pixel-btn" id="leaderboard-refresh-btn" type="button">Refresh</button>
+          </div>
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Player</th>
+                <th>Score</th>
+                <th>Extra</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+              <tr><td colspan="4">No records yet</td></tr>
+            </tbody>
+          </table>
+          <div class="service-message" id="leaderboard-message" role="status"></div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="platform.js"></script>
   </body>
 </html>
