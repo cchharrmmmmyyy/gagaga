@@ -488,6 +488,55 @@ function goToStart() {
 }
 
 // ====== 倒计时 ======
+function drawStartPowerupLegend(centerX, y, s) {
+  const items = [
+    { color: '#FFD54F', label: '$ 金币加分' },
+    { color: POWERUP_COLORS[POWERUPS.SHIELD], label: '盾 挡一次' },
+    { color: POWERUP_COLORS[POWERUPS.DASH], label: '冲 撞碎管道' },
+    { color: POWERUP_COLORS[POWERUPS.SHRINK], label: '小 缩小身体' }
+  ];
+  const textSize = Math.max(12, Math.round(15 * s));
+  const gap = Math.round(10 * s);
+  const chipH = Math.round(28 * s);
+
+  ctx.save();
+  ctx.font = `bold ${textSize}px Arial`;
+  const chipWidths = items.map(item => Math.round(ctx.measureText(item.label).width + 28 * s));
+  const maxRowW = canvas.width - Math.round(32 * s);
+  const rows = [];
+  let currentRow = [];
+  let currentWidth = 0;
+  items.forEach((item, index) => {
+    const width = chipWidths[index];
+    const nextWidth = currentRow.length === 0 ? width : currentWidth + gap + width;
+    if (currentRow.length > 0 && nextWidth > maxRowW) {
+      rows.push({ items: currentRow, width: currentWidth });
+      currentRow = [];
+      currentWidth = 0;
+    }
+    currentRow.push({ item, width });
+    currentWidth = currentRow.length === 1 ? width : currentWidth + gap + width;
+  });
+  if (currentRow.length > 0) rows.push({ items: currentRow, width: currentWidth });
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  rows.forEach((row, rowIndex) => {
+    let x = centerX - row.width / 2;
+    const rowY = y + rowIndex * (chipH + Math.round(8 * s));
+    row.items.forEach(({ item, width }) => {
+      ctx.fillStyle = item.color;
+      ctx.beginPath();
+      ctx.roundRect(x, rowY, width, chipH, Math.round(14 * s));
+      ctx.fill();
+      ctx.fillStyle = '#FFF';
+      ctx.fillText(item.label, x + width / 2, rowY + chipH / 2);
+      x += width + gap;
+    });
+  });
+  ctx.restore();
+}
+
 function renderCountdown() {
   drawBackground();
   updateClouds();
@@ -559,6 +608,7 @@ function renderStartScreen() {
   ctx.textAlign = 'center';
   ctx.fillText('点击或按空格键', canvas.width / 2, boxY + Math.round(50 * s));
   ctx.fillText('开始游戏', canvas.width / 2, boxY + Math.round(86 * s));
+  drawStartPowerupLegend(canvas.width / 2, boxY + Math.round(150 * s), s);
 
   if (highScore > 0) {
     ctx.fillStyle = isDark() ? '#FFD700' : '#E65100';
