@@ -145,6 +145,8 @@ const game = {
   pausedFrom: STATE.MENU
 };
 
+let leaderboardSubmitted = false;
+
 function makePaddle(id, x) {
   return {
     id,
@@ -191,6 +193,7 @@ function setState(next, message = '') {
   game.state = next;
   game.stateTime = 0;
   game.message = message;
+  if (next === STATE.GAME_OVER || next === STATE.WIN) submitPongResult(next);
 }
 
 function startQuest() {
@@ -206,6 +209,7 @@ function startVersus() {
 }
 
 function startLevel() {
+  leaderboardSubmitted = false;
   const level = currentLevel();
   game.score = { p1: 0, p2: 0 };
   game.rally = 0;
@@ -222,6 +226,16 @@ function startLevel() {
   game.obstacles = level.obstacles.map(ob => ({ ...ob }));
   resetBall(rand(0, 1) > 0.5 ? 1 : -1);
   setState(STATE.INTRO, level.name);
+}
+
+function submitPongResult(finalState) {
+  if (leaderboardSubmitted || !window.GagagaPlatform) return;
+  leaderboardSubmitted = true;
+  const p1Won = finalState === STATE.WIN || game.score.p1 > game.score.p2;
+  window.GagagaPlatform.submitScore('pong', {
+    result: p1Won ? 'win' : 'loss',
+    mode: game.mode,
+  }, `pong:${Date.now()}:${game.score.p1}-${game.score.p2}`);
 }
 
 function resetBall(dir) {
