@@ -16,6 +16,8 @@ let moves = 0;
 let currentDifficulty = DIFFICULTIES.casual;
 let timeLeft = null;
 let timer = null;
+let gameStartedAt = null;
+let leaderboardSubmitted = false;
 const movesDisplay = document.getElementById('movesCount');
 const timerDisplay = document.getElementById('timerDisplay');
 
@@ -122,6 +124,8 @@ function stopTimer() {
 function startGame(difficultyKey) {
   currentDifficulty = DIFFICULTIES[difficultyKey];
   timeLeft = currentDifficulty.timeLimit;
+  gameStartedAt = Date.now();
+  leaderboardSubmitted = false;
   document.getElementById('introScreen').style.display = 'none';
   document.getElementById('gameScreen').style.display = 'block';
   if (timeLeft !== null) {
@@ -149,6 +153,7 @@ function gameOver() {
 }
 
 function showVictory() {
+  submitMemoryScore();
   const overlay = document.createElement('div');
   overlay.className = 'overlay';
   overlay.innerHTML = `
@@ -160,4 +165,15 @@ function showVictory() {
     </div>
   `;
   document.body.appendChild(overlay);
+}
+
+function submitMemoryScore() {
+  if (leaderboardSubmitted || !window.GagagaPlatform) return;
+  leaderboardSubmitted = true;
+  const elapsedMs = gameStartedAt ? Date.now() - gameStartedAt : 0;
+  window.GagagaPlatform.submitScore('memory', {
+    moves,
+    elapsedMs,
+    mode: currentDifficulty.label,
+  }, `memory:${Date.now()}:${moves}`);
 }
