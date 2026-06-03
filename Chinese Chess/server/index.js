@@ -38,11 +38,11 @@ wss.on('connection', (ws) => {
 
   ws.on('message', (raw) => {
     let msg;
-    try { msg = JSON.parse(raw); } catch { return send(ws, { type: 'error', message: '无效消息' }); }
+    try { msg = JSON.parse(raw); } catch { return send(ws, { type: 'error', message: 'Invalid message' }); }
 
     switch (msg.type) {
       case 'create_room': {
-        if (role) return send(ws, { type: 'error', message: '已在房间中' });
+        if (role) return send(ws, { type: 'error', message: 'Already in a room' });
         const code = generateRoomCode();
         rooms.set(code, { host: ws, joiner: null });
         roomCode = code;
@@ -53,11 +53,11 @@ wss.on('connection', (ws) => {
       }
 
       case 'join_room': {
-        if (role) return send(ws, { type: 'error', message: '已在房间中' });
-        const code = msg.roomCode;
+        if (role) return send(ws, { type: 'error', message: 'Already in a room' });
+        const code = String(msg.roomCode || '').toUpperCase();
         const room = rooms.get(code);
-        if (!room) return send(ws, { type: 'error', message: '房间不存在' });
-        if (room.joiner) return send(ws, { type: 'error', message: '房间已满' });
+        if (!room) return send(ws, { type: 'error', message: 'Room does not exist' });
+        if (room.joiner) return send(ws, { type: 'error', message: 'Room is full' });
         room.joiner = ws;
         roomCode = code;
         role = 'joiner';
@@ -69,16 +69,16 @@ wss.on('connection', (ws) => {
 
       case 'move':
       case 'resign': {
-        if (!roomCode || !role) return send(ws, { type: 'error', message: '不在房间中' });
+        if (!roomCode || !role) return send(ws, { type: 'error', message: 'Not in a room' });
         const room = rooms.get(roomCode);
-        if (!room) return send(ws, { type: 'error', message: '房间不存在' });
+        if (!room) return send(ws, { type: 'error', message: 'Room does not exist' });
         const other = getOtherPeer(room, ws);
         if (other) send(other, msg);
         break;
       }
 
       default:
-        send(ws, { type: 'error', message: '未知消息类型' });
+        send(ws, { type: 'error', message: 'Unknown message type' });
     }
   });
 
