@@ -14,9 +14,27 @@ const birdSize = 30;
 const gravity = 0.4;
 const lift = -9;
 const pipeWidth = 80;
-const pipeGap = 220;
+const pipeGap = 245;
 const pipeSpeed = 2.5;
 const groundHeight = 50;
+const coinRadius = 10;
+const powerupSize = 28;
+const POWERUPS = {
+  SHIELD: 'shield',
+  DASH: 'dash',
+  SHRINK: 'shrink'
+};
+const POWERUP_TYPES = [POWERUPS.SHIELD, POWERUPS.DASH, POWERUPS.SHRINK];
+const POWERUP_LABELS = {
+  [POWERUPS.SHIELD]: '盾',
+  [POWERUPS.DASH]: '冲',
+  [POWERUPS.SHRINK]: '小'
+};
+const POWERUP_COLORS = {
+  [POWERUPS.SHIELD]: '#29B6F6',
+  [POWERUPS.DASH]: '#EF5350',
+  [POWERUPS.SHRINK]: '#AB47BC'
+};
 
 // 帧率归一化（参考网站做法）
 const PHYSICS_DT = 1000 / 60; // 16.67ms，基准 60fps
@@ -40,6 +58,14 @@ let pipes = [];
 let pipeSpawnTimer = 0;
 let frame = 0;
 let score = 0;
+let coins = [];
+let coinCount = 0;
+let powerups = [];
+let activePowerups = {
+  [POWERUPS.SHIELD]: 0,
+  [POWERUPS.DASH]: 0,
+  [POWERUPS.SHRINK]: 0
+};
 let highScore = parseInt(localStorage.getItem('flappyHighScore')) || 0;
 let leaderboardSubmitted = false;
 let groundOffset = 0;
@@ -53,6 +79,14 @@ function resetGameState() {
   pipeSpawnTimer = 0;
   frame = 0;
   score = 0;
+  coins = [];
+  coinCount = 0;
+  powerups = [];
+  activePowerups = {
+    [POWERUPS.SHIELD]: 0,
+    [POWERUPS.DASH]: 0,
+    [POWERUPS.SHRINK]: 0
+  };
   leaderboardSubmitted = false;
   groundOffset = 0;
   clouds = [];
@@ -140,8 +174,28 @@ function updateGround() {
 // ====== 鸟 ======
 function drawBird(x, y, speed) {
   ctx.save();
+  const shrinkScale = activePowerups[POWERUPS.SHRINK] > 0 ? 0.68 : 1;
   ctx.translate(x + birdSize / 2, y + birdSize / 2);
   ctx.rotate(Math.min(Math.max(speed * 0.1, -0.5), 1));
+  ctx.scale(shrinkScale, shrinkScale);
+
+  if (activePowerups[POWERUPS.SHIELD] > 0) {
+    ctx.strokeStyle = 'rgba(41, 182, 246, 0.75)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(0, 0, birdSize * 0.72, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  if (activePowerups[POWERUPS.DASH] > 0) {
+    ctx.fillStyle = 'rgba(239, 83, 80, 0.28)';
+    ctx.beginPath();
+    ctx.moveTo(-birdSize * 0.9, 0);
+    ctx.lineTo(-birdSize * 1.8, -birdSize * 0.35);
+    ctx.lineTo(-birdSize * 1.8, birdSize * 0.35);
+    ctx.closePath();
+    ctx.fill();
+  }
 
   ctx.fillStyle = '#FFD700';
   ctx.beginPath();
@@ -178,6 +232,131 @@ function drawBird(x, y, speed) {
 }
 
 // ====== 管道 ======
+function drawCoin(coin) {
+  ctx.save();
+  ctx.translate(coin.x, coin.y);
+  ctx.fillStyle = '#FFC107';
+  ctx.beginPath();
+  ctx.arc(0, 0, coinRadius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#F57F17';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = '#FFF8E1';
+  ctx.font = 'bold 13px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('$', 0, 1);
+  ctx.restore();
+}
+
+function drawPowerup(powerup) {
+  const half = powerupSize / 2;
+  ctx.save();
+  ctx.translate(powerup.x, powerup.y);
+  ctx.fillStyle = POWERUP_COLORS[powerup.type];
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.roundRect(-half, -half, powerupSize, powerupSize, 8);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#FFF';
+  ctx.font = 'bold 16px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(POWERUP_LABELS[powerup.type], 0, 1);
+  ctx.restore();
+}
+
+function spawnCollectiblesForPipe(pipe) {
+  const gapTop = pipe.height;
+  const gapBottom = pipe.height + pipeGap;
+  const centerY = gapTop + pipeGap / 2;
+  const wave = Math.random() > 0.5 ? 1 : -1;
+
+  coins.push({
+    x: pipe.x + pipeWidth + 95,
+    y: Math.max(gapTop + 28, Math.min(gapBottom - 28, centerY + wave * 42)),
+    r: coinRadius
+  });
+
+  if (Math.random() < 0.45) {
+    powerups.push({
+      x: pipe.x + pipeWidth + 170,
+      y: Math.max(gapTop + 36, Math.min(gapBottom - 36, centerY - wave * 38)),
+      type: POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)]
+    });
+  }
+}
+
+function getBirdRadius() {
+  const baseRadius = birdSize / 2 * 0.8;
+  return activePowerups[POWERUPS.SHRINK] > 0 ? baseRadius * 0.65 : baseRadius;
+}
+
+function collectByDistance(item, radius) {
+  const birdCenterX = birdX + birdSize / 2;
+  const birdCenterY = birdY + birdSize / 2;
+  return Math.hypot(birdCenterX - item.x, birdCenterY - item.y) <= getBirdRadius() + radius;
+}
+
+function activatePowerup(type) {
+  if (type === POWERUPS.SHIELD) {
+    activePowerups[type] = Math.max(activePowerups[type], 600);
+  } else if (type === POWERUPS.DASH) {
+    activePowerups[type] = Math.max(activePowerups[type], 300);
+  } else if (type === POWERUPS.SHRINK) {
+    activePowerups[type] = Math.max(activePowerups[type], 480);
+  }
+}
+
+function updatePowerupTimers() {
+  Object.keys(activePowerups).forEach(type => {
+    activePowerups[type] = Math.max(0, activePowerups[type] - _dt);
+  });
+}
+
+function updateCollectibles() {
+  coins.forEach(coin => {
+    coin.x -= pipeSpeed * _dt;
+    if (!coin.collected && collectByDistance(coin, coin.r)) {
+      coin.collected = true;
+      coinCount++;
+      score++;
+    }
+  });
+  coins = coins.filter(coin => !coin.collected && coin.x + coin.r > 0);
+
+  powerups.forEach(powerup => {
+    powerup.x -= pipeSpeed * _dt;
+    if (!powerup.collected && collectByDistance(powerup, powerupSize * 0.55)) {
+      powerup.collected = true;
+      activatePowerup(powerup.type);
+    }
+  });
+  powerups = powerups.filter(powerup => !powerup.collected && powerup.x + powerupSize > 0);
+}
+
+function absorbPipeHit(pipe) {
+  if (activePowerups[POWERUPS.DASH] > 0) {
+    pipe.destroyed = true;
+    score += 2;
+    coinCount += 1;
+    birdSpeed = Math.min(birdSpeed, -2);
+    return true;
+  }
+
+  if (activePowerups[POWERUPS.SHIELD] > 0) {
+    activePowerups[POWERUPS.SHIELD] = 0;
+    pipe.destroyed = true;
+    birdSpeed = lift * 0.45;
+    return true;
+  }
+
+  return false;
+}
+
 function drawPipe(pipe) {
   const topGradient = ctx.createLinearGradient(pipe.x, 0, pipe.x + pipeWidth, 0);
   const bottomGradient = ctx.createLinearGradient(pipe.x, 0, pipe.x + pipeWidth, 0);
@@ -212,7 +391,9 @@ function updatePipes() {
     pipeSpawnTimer -= 120;
     const maxPipe = canvas.height - pipeGap - groundHeight - 100;
     const height = Math.random() * Math.max(maxPipe, 1) + 50;
-    pipes.push({ x: canvas.width, height });
+    const pipe = { x: canvas.width, height };
+    pipes.push(pipe);
+    spawnCollectiblesForPipe(pipe);
   }
 
   pipes.forEach(pipe => {
@@ -223,7 +404,7 @@ function updatePipes() {
     }
   });
 
-  pipes = pipes.filter(pipe => pipe.x + pipeWidth > 0);
+  pipes = pipes.filter(pipe => !pipe.destroyed && pipe.x + pipeWidth > 0);
 }
 
 function checkCollision() {
@@ -231,13 +412,16 @@ function checkCollision() {
 
   const birdCenterX = birdX + birdSize / 2;
   const birdCenterY = birdY + birdSize / 2;
-  const birdRadius = birdSize / 2 * 0.8;
+  const birdRadius = getBirdRadius();
 
-  return pipes.some(pipe => {
-    if (birdCenterX + birdRadius < pipe.x || birdCenterX - birdRadius > pipe.x + pipeWidth) return false;
-    if (birdCenterY - birdRadius < pipe.height || birdCenterY + birdRadius > pipe.height + pipeGap) return true;
-    return false;
-  });
+  for (const pipe of pipes) {
+    if (birdCenterX + birdRadius < pipe.x || birdCenterX - birdRadius > pipe.x + pipeWidth) continue;
+    if (birdCenterY - birdRadius < pipe.height || birdCenterY + birdRadius > pipe.height + pipeGap) {
+      return !absorbPipeHit(pipe);
+    }
+  }
+
+  return false;
 }
 
 // ====== 分数 ======
@@ -250,6 +434,31 @@ function drawScore() {
   ctx.font = `bold ${Math.round(64 * s)}px Arial`;
   ctx.textAlign = 'center';
   ctx.fillText(score, canvas.width / 2, Math.round(55 * s));
+
+  ctx.shadowBlur = 3;
+  ctx.font = `bold ${Math.round(22 * s)}px Arial`;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#FFD54F';
+  ctx.fillText('$ ' + coinCount, Math.round(24 * s), Math.round(44 * s));
+
+  let badgeX = Math.round(24 * s);
+  const badgeY = Math.round(76 * s);
+  Object.keys(activePowerups).forEach(type => {
+    if (activePowerups[type] <= 0) return;
+    const seconds = Math.ceil(activePowerups[type] / 60);
+    const badgeW = Math.round(74 * s);
+    const badgeH = Math.round(28 * s);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = POWERUP_COLORS[type];
+    ctx.beginPath();
+    ctx.roundRect(badgeX, badgeY, badgeW, badgeH, Math.round(14 * s));
+    ctx.fill();
+    ctx.fillStyle = '#FFF';
+    ctx.font = `bold ${Math.round(15 * s)}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.fillText(POWERUP_LABELS[type] + ' ' + seconds + 's', badgeX + badgeW / 2, badgeY + Math.round(20 * s));
+    badgeX += badgeW + Math.round(8 * s);
+  });
   ctx.restore();
 }
 
@@ -262,6 +471,14 @@ function startPlaying() {
   birdSpeed = 0;
   pipes = [];
   score = 0;
+  coins = [];
+  coinCount = 0;
+  powerups = [];
+  activePowerups = {
+    [POWERUPS.SHIELD]: 0,
+    [POWERUPS.DASH]: 0,
+    [POWERUPS.SHRINK]: 0
+  };
   leaderboardSubmitted = false;
 }
 
@@ -415,6 +632,8 @@ function update() {
   birdSpeed += gravity * _dt;
   birdY += birdSpeed * _dt;
   updatePipes();
+  updateCollectibles();
+  updatePowerupTimers();
 
   if (checkCollision()) {
     if (score > highScore) {
@@ -466,6 +685,8 @@ function gameLoop(timestamp) {
       drawBackground();
       updateClouds();
       drawClouds();
+      coins.forEach(drawCoin);
+      powerups.forEach(drawPowerup);
       drawBird(birdX, birdY, birdSpeed);
       pipes.forEach(drawPipe);
       updateGround();
@@ -475,6 +696,8 @@ function gameLoop(timestamp) {
     case STATE.PAUSED:
       drawBackground();
       drawClouds();
+      coins.forEach(drawCoin);
+      powerups.forEach(drawPowerup);
       drawBird(birdX, birdY, birdSpeed);
       pipes.forEach(drawPipe);
       drawGround();
@@ -484,6 +707,8 @@ function gameLoop(timestamp) {
     case STATE.GAME_OVER:
       drawBackground();
       drawClouds();
+      coins.forEach(drawCoin);
+      powerups.forEach(drawPowerup);
       drawBird(birdX, birdY, birdSpeed);
       pipes.forEach(drawPipe);
       drawGround();
