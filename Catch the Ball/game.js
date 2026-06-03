@@ -1,19 +1,22 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const basketWidth = 80;
+const basketWidth = 70;
 const basketHeight = 20;
 let basketX = (canvas.width - basketWidth) / 2;
 let rightPressed = false;
 let leftPressed = false;
 
-const ballRadius = 10;
+const ballRadius = 14;
 let ballX = Math.random() * (canvas.width - ballRadius * 2) + ballRadius;
 let ballY = ballRadius;
-let ballDY = 2;
+let ballDY = 3.6;
+let baseSpeed = 3.6; // 基础下落速度
 
 let score = 0;
+let lives = 3; // 新增3条生命
 let gameOver = false;
+let ballColor = "#0095DD"; // 小球颜色
 
 document.addEventListener('keydown', keyDownHandler, false);
 document.addEventListener('keyup', keyUpHandler, false);
@@ -45,7 +48,7 @@ function drawBasket() {
 function drawBall() {
   ctx.beginPath();
   ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
-  ctx.fillStyle = '#0095DD';
+  ctx.fillStyle = ballColor;
   ctx.fill();
   ctx.closePath();
 }
@@ -54,15 +57,25 @@ function drawScore() {
   ctx.font = '16px Arial';
   ctx.fillStyle = '#0095DD';
   ctx.fillText('Score: ' + score, 8, 20);
+  ctx.fillText('Lives: ' + lives, 8, 40); // 绘制生命值
 }
 
 function detectCollision() {
   if(ballY + ballRadius > canvas.height - basketHeight &&
      ballX > basketX && ballX < basketX + basketWidth) {
     score++;
+    // 接球随机变色
+    ballColor = `#${Math.floor(Math.random()*16777215).toString(16)}`;
+    // 得分越高下落越快
+    ballDY = baseSpeed + score * 0.12;
     resetBall();
   } else if(ballY + ballRadius > canvas.height) {
-    gameOver = true;
+    lives--;
+    if(lives <= 0){
+      gameOver = true;
+    }else{
+      resetBall(); // 丢球扣命，剩命就重置球
+    }
   }
 }
 

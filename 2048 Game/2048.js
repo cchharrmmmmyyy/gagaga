@@ -1,3 +1,4 @@
+// 测试修改：完成了分数统计功能
 const gameContainer = document.getElementById('game-container');
 const currentScoreEl = document.getElementById('current-score');
 const bestScoreEl = document.getElementById('best-score');
