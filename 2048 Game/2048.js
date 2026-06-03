@@ -14,6 +14,7 @@ let bestScore = parseInt(localStorage.getItem('2048BestScore')) || 0;
 let hasWon = false;
 let isGameOver = false;
 let isContinuing = false;
+let leaderboardSubmitted = false;
 
 bestScoreEl.textContent = bestScore;
 
@@ -37,6 +38,7 @@ function initializeBoard() {
     hasWon = false;
     isGameOver = false;
     isContinuing = false;
+    leaderboardSubmitted = false;
     currentScoreEl.textContent = score;
     gameOverOverlay.style.display = 'none';
     winOverlay.style.display = 'none';
@@ -189,6 +191,7 @@ function checkWin() {
         if (parseInt(tiles[i].textContent) === 2048) {
             hasWon = true;
             winOverlay.style.display = 'flex';
+            submit2048Score('win');
             return;
         }
     }
@@ -198,6 +201,13 @@ function gameOver() {
     isGameOver = true;
     finalScoreEl.textContent = score;
     gameOverOverlay.style.display = 'flex';
+    submit2048Score('game-over');
+}
+
+function submit2048Score(mode) {
+    if (leaderboardSubmitted || !window.GagagaPlatform) return;
+    leaderboardSubmitted = true;
+    window.GagagaPlatform.submitScore('2048', { score, mode }, `2048:${Date.now()}:${score}`);
 }
 
 function handleKeyPress(event) {

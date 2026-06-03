@@ -41,6 +41,7 @@ let pipeSpawnTimer = 0;
 let frame = 0;
 let score = 0;
 let highScore = parseInt(localStorage.getItem('flappyHighScore')) || 0;
+let leaderboardSubmitted = false;
 let groundOffset = 0;
 let clouds = [];
 
@@ -52,6 +53,7 @@ function resetGameState() {
   pipeSpawnTimer = 0;
   frame = 0;
   score = 0;
+  leaderboardSubmitted = false;
   groundOffset = 0;
   clouds = [];
   for (let i = 0; i < 3; i++) {
@@ -260,6 +262,7 @@ function startPlaying() {
   birdSpeed = 0;
   pipes = [];
   score = 0;
+  leaderboardSubmitted = false;
 }
 
 function goToStart() {
@@ -418,8 +421,15 @@ function update() {
       highScore = score;
       localStorage.setItem('flappyHighScore', highScore);
     }
+    submitFlappyScore();
     state = STATE.GAME_OVER;
   }
+}
+
+function submitFlappyScore() {
+  if (leaderboardSubmitted || !window.GagagaPlatform) return;
+  leaderboardSubmitted = true;
+  window.GagagaPlatform.submitScore('flappy-bird', { score }, `flappy:${Date.now()}:${score}`);
 }
 
 // ====== 主循环 ======

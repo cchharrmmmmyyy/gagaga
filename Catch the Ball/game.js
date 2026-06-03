@@ -14,6 +14,7 @@ let ballDY = 2;
 
 let score = 0;
 let gameOver = false;
+let leaderboardSubmitted = false;
 
 document.addEventListener('keydown', keyDownHandler, false);
 document.addEventListener('keyup', keyUpHandler, false);
@@ -63,7 +64,14 @@ function detectCollision() {
     resetBall();
   } else if(ballY + ballRadius > canvas.height) {
     gameOver = true;
+    submitCatchScore();
   }
+}
+
+function submitCatchScore() {
+  if (leaderboardSubmitted || !window.GagagaPlatform) return;
+  leaderboardSubmitted = true;
+  window.GagagaPlatform.submitScore('catch-the-ball', { score }, `catch:${Date.now()}:${score}`);
 }
 
 function resetBall() {
