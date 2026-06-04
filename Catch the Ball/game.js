@@ -11,12 +11,13 @@ const ballRadius = 14;
 let ballX = Math.random() * (canvas.width - ballRadius * 2) + ballRadius;
 let ballY = ballRadius;
 let ballDY = 3.6;
-let baseSpeed = 3.6; // 基础下落速度
+let baseSpeed = 3.6;
 
 let score = 0;
-let lives = 3; // 新增3条生命
+let lives = 3;
 let gameOver = false;
-let ballColor = "#0095DD"; // 小球颜色
+let ballColor = "#0095DD";
+let pause = false;
 
 document.addEventListener('keydown', keyDownHandler, false);
 document.addEventListener('keyup', keyUpHandler, false);
@@ -26,6 +27,12 @@ function keyDownHandler(e) {
     rightPressed = true;
   } else if(e.key === 'Left' || e.key === 'ArrowLeft') {
     leftPressed = true;
+  }
+  // P暂停
+  if(e.key.toLowerCase() === 'p' && !gameOver) pause = !pause;
+  // 空格重启
+  if(e.key === ' ' && gameOver){
+    score=0;lives=3;gameOver=false;resetBall();
   }
 }
 
@@ -57,16 +64,15 @@ function drawScore() {
   ctx.font = '16px Arial';
   ctx.fillStyle = '#0095DD';
   ctx.fillText('Score: ' + score, 8, 20);
-  ctx.fillText('Lives: ' + lives, 8, 40); // 绘制生命值
+  ctx.fillText('Lives: ' + lives, 8, 40);
+  ctx.fillText('P暂停 空格重开',8,60);
 }
 
 function detectCollision() {
   if(ballY + ballRadius > canvas.height - basketHeight &&
      ballX > basketX && ballX < basketX + basketWidth) {
     score++;
-    // 接球随机变色
     ballColor = `#${Math.floor(Math.random()*16777215).toString(16)}`;
-    // 得分越高下落越快
     ballDY = baseSpeed + score * 0.12;
     resetBall();
   } else if(ballY + ballRadius > canvas.height) {
@@ -74,7 +80,7 @@ function detectCollision() {
     if(lives <= 0){
       gameOver = true;
     }else{
-      resetBall(); // 丢球扣命，剩命就重置球
+      resetBall();
     }
   }
 }
@@ -97,6 +103,16 @@ function draw() {
     ctx.font = '24px Arial';
     ctx.fillStyle = '#0095DD';
     ctx.fillText('Game Over! Score: ' + score, 50, canvas.height / 2);
+    ctx.fillText('按空格重新游戏',30,canvas.height/2+35);
+    requestAnimationFrame(draw);
+    return;
+  }
+
+  if(pause){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillText('已暂停，按P继续',canvas.width/2-80,canvas.height/2);
+    drawBasket();drawBall();drawScore();
+    requestAnimationFrame(draw);
     return;
   }
 
