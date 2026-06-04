@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', 'Microsoft YaHei', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-color: #faf8ef;
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -22,6 +22,12 @@ body {
     max-width: 500px;
     width: 100%;
     backdrop-filter: blur(10px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.game-wrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
 }
 
 .game-header {
@@ -121,7 +127,7 @@ body {
 .game-container {
     width: 100%;
     aspect-ratio: 1;
-    background: linear-gradient(135deg, #bbada0, #a89b8c);
+    background: linear-gradient(145deg, #cdc1b4, #b8a898);
     border-radius: 16px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -129,7 +135,16 @@ body {
     padding: 12px;
     box-sizing: border-box;
     position: relative;
-    box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 
+        inset 0 4px 8px rgba(0, 0, 0, 0.1),
+        0 8px 32px rgba(187, 173, 160, 0.4);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.game-container:hover {
+    box-shadow: 
+        inset 0 4px 8px rgba(0, 0, 0, 0.1),
+        0 12px 40px rgba(187, 173, 160, 0.5);
 }
 
 .tile {
@@ -149,107 +164,151 @@ body {
 }
 
 .tile:not(:empty) {
-    animation: tileAppear 0.2s ease-out;
+    animation: tileAppear 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.tile:not(:empty):hover {
+    transform: scale(1.05);
+    z-index: 10;
 }
 
 @keyframes tileAppear {
     0% {
-        transform: scale(0);
+        transform: scale(0) rotate(-10deg);
         opacity: 0;
     }
-    50% {
-        transform: scale(1.1);
+    60% {
+        transform: scale(1.15) rotate(2deg);
+    }
+    80% {
+        transform: scale(0.95) rotate(-1deg);
     }
     100% {
-        transform: scale(1);
+        transform: scale(1) rotate(0deg);
         opacity: 1;
     }
 }
 
+@keyframes tileMerge {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
 .tile-2 {
-    background: linear-gradient(135deg, #eee4da, #f0e6dc);
+    background: linear-gradient(145deg, #eee4da, #f0e6dc);
     box-shadow: 0 4px 12px rgba(238, 228, 218, 0.5);
 }
 
 .tile-4 {
-    background: linear-gradient(135deg, #ede0c8, #f5e8d8);
+    background: linear-gradient(145deg, #ede0c8, #f5e8d8);
     box-shadow: 0 4px 12px rgba(237, 224, 200, 0.5);
 }
 
 .tile-8 {
-    background: linear-gradient(135deg, #f2b179, #f8c179);
+    background: linear-gradient(145deg, #f2b179, #f8c179);
     color: #f9f6f2;
     box-shadow: 0 4px 15px rgba(242, 177, 121, 0.5);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .tile-16 {
-    background: linear-gradient(135deg, #f59563, #faa573);
+    background: linear-gradient(145deg, #f59563, #faa573);
     color: #f9f6f2;
     box-shadow: 0 4px 15px rgba(245, 149, 99, 0.5);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .tile-32 {
-    background: linear-gradient(135deg, #f67c5f, #fa8c6f);
+    background: linear-gradient(145deg, #f67c5f, #fa8c6f);
     color: #f9f6f2;
     box-shadow: 0 4px 15px rgba(246, 124, 95, 0.5);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .tile-64 {
-    background: linear-gradient(135deg, #f65e3b, #fa6e4b);
+    background: linear-gradient(145deg, #f65e3b, #fa6e4b);
     color: #f9f6f2;
     box-shadow: 0 4px 15px rgba(246, 94, 59, 0.5);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .tile-128 {
-    background: linear-gradient(135deg, #edcf72, #f5df82);
+    background: linear-gradient(145deg, #edcf72, #f5df82);
     color: #f9f6f2;
     box-shadow: 0 4px 15px rgba(237, 207, 114, 0.5);
     font-size: clamp(20px, 6vw, 36px);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .tile-256 {
-    background: linear-gradient(135deg, #edcc61, #f5dc71);
+    background: linear-gradient(145deg, #edcc61, #f5dc71);
     color: #f9f6f2;
     box-shadow: 0 4px 15px rgba(237, 204, 97, 0.5);
     font-size: clamp(20px, 6vw, 36px);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .tile-512 {
-    background: linear-gradient(135deg, #edc850, #f4d860);
+    background: linear-gradient(145deg, #edc850, #f4d860);
     color: #f9f6f2;
     box-shadow: 0 4px 15px rgba(237, 200, 80, 0.5);
     font-size: clamp(20px, 6vw, 36px);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .tile-1024 {
-    background: linear-gradient(135deg, #edc53f, #f5d54f);
+    background: linear-gradient(145deg, #edc53f, #f5d54f);
     color: #f9f6f2;
     box-shadow: 0 6px 20px rgba(237, 197, 63, 0.6);
     font-size: clamp(16px, 5vw, 28px);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .tile-2048 {
-    background: linear-gradient(135deg, #edc22e, #f5d23e);
+    background: linear-gradient(145deg, #edc22e, #f5d23e);
     color: #f9f6f2;
     box-shadow: 0 6px 25px rgba(237, 194, 46, 0.6);
     font-size: clamp(16px, 5vw, 28px);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     animation: tileGlow 1.5s ease-in-out infinite;
 }
 
 .tile-super {
-    background: linear-gradient(135deg, #3c3a32, #4a473e);
+    background: linear-gradient(145deg, #3c3a32, #4a473e);
     color: #f9f6f2;
     box-shadow: 0 6px 25px rgba(60, 58, 50, 0.6);
     font-size: clamp(14px, 4vw, 22px);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    animation: tileGlowSuper 2s ease-in-out infinite;
 }
 
 @keyframes tileGlow {
     0%, 100% {
         box-shadow: 0 6px 25px rgba(237, 194, 46, 0.6);
+        transform: scale(1);
     }
     50% {
         box-shadow: 0 6px 35px rgba(237, 194, 46, 0.9);
+        transform: scale(1.02);
+    }
+}
+
+@keyframes tileGlowSuper {
+    0%, 100% {
+        box-shadow: 0 6px 25px rgba(60, 58, 50, 0.6);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 6px 40px rgba(60, 58, 50, 0.9);
+        transform: scale(1.03);
     }
 }
 
@@ -286,11 +345,14 @@ body {
 @keyframes overlayFadeIn {
     from {
         opacity: 0;
-        transform: scale(0.9);
+        transform: scale(0.8) translateY(-20px);
+    }
+    60% {
+        transform: scale(1.05) translateY(5px);
     }
     to {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) translateY(0);
     }
 }
 
@@ -347,6 +409,52 @@ body {
     border-left: 4px solid #667eea;
 }
 
+.rules-section {
+    color: #555;
+}
+
+.rules-title {
+    font-size: 16px;
+    color: #667eea;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.rules-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.rules-list li {
+    font-size: 14px;
+    line-height: 1.8;
+    padding-left: 20px;
+    position: relative;
+}
+
+.rules-list li::before {
+    content: "•";
+    color: #667eea;
+    font-weight: bold;
+    position: absolute;
+    left: 5px;
+}
+
+.rules-list li strong {
+    color: #444;
+}
+
+.highlight {
+    display: inline-block;
+    background: linear-gradient(135deg, #edc22e, #f5d23e);
+    color: #f9f6f2;
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
 .instructions p {
     font-size: 14px;
     color: #555;
@@ -401,13 +509,265 @@ body {
     .game-container {
         gap: 8px;
         padding: 10px;
+        border-radius: 12px;
+    }
+
+    .tile {
+        border-radius: 8px;
     }
 
     .instructions {
         padding: 12px;
     }
 
+    .rules-title {
+        font-size: 15px;
+    }
+
+    .rules-list li {
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
     .instructions p {
         font-size: 13px;
+    }
+}
+
+/* 登录注册弹窗样式 */
+.auth-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.auth-container {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: authSlideIn 0.3s ease;
+}
+
+@keyframes authSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-title {
+    font-size: 28px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+    font-weight: 800;
+}
+
+.auth-subtitle {
+    font-size: 14px;
+    color: #888;
+}
+
+.auth-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #eee;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 12px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    color: #999;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.auth-tab.active {
+    color: #667eea;
+}
+
+.auth-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.auth-form {
+    display: none;
+}
+
+.auth-form.active {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #eee;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.form-group input::placeholder {
+    color: #bbb;
+}
+
+.form-hint {
+    display: block;
+    font-size: 12px;
+    color: #999;
+    margin-top: 5px;
+}
+
+.form-error {
+    color: #e74c3c;
+    font-size: 13px;
+    margin-bottom: 15px;
+    min-height: 20px;
+}
+
+.auth-submit {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.auth-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.auth-submit:active {
+    transform: translateY(0);
+}
+
+/* 用户信息栏 */
+.user-bar {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 12px 20px;
+    border-radius: 50px;
+    display: none;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 500;
+}
+
+.user-bar.show {
+    display: flex;
+}
+
+.user-info {
+    font-size: 14px;
+    color: #555;
+}
+
+.user-info span {
+    color: #667eea;
+    font-weight: 600;
+}
+
+.logout-btn {
+    padding: 8px 16px;
+    background: #f5f5f5;
+    border: none;
+    border-radius: 20px;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+    background: #e74c3c;
+    color: white;
+}
+
+@media (max-width: 480px) {
+    .auth-container {
+        margin: 20px;
+        padding: 30px 25px;
+    }
+
+    .auth-title {
+        font-size: 24px;
+    }
+
+    .user-bar {
+        top: 10px;
+        right: 10px;
+        padding: 10px 15px;
+    }
+
+    .user-info {
+        font-size: 13px;
+    }
+
+    .logout-btn {
+        padding: 6px 12px;
+        font-size: 12px;
     }
 }
