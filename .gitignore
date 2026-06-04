@@ -6,6 +6,9 @@
 .windsurf/
 .roo/
 
+# Local chat server data
+Rock-Paper-Scissors/server/chat-data.json
+
 # Assistant instruction files
 CLAUDE.md
 AGENTS.md
