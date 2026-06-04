@@ -746,6 +746,192 @@ body {
     color: white;
 }
 
+/* 排行榜按钮 */
+.ranking-btn {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    border: none;
+    border-radius: 20px;
+    font-size: 13px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.ranking-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+}
+
+/* 排行榜弹窗 */
+.ranking-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.ranking-overlay.show {
+    display: flex;
+}
+
+.ranking-container {
+    background: white;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 450px;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: rankingSlideIn 0.3s ease;
+}
+
+@keyframes rankingSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.ranking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.ranking-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.ranking-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.ranking-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.ranking-list {
+    padding: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.ranking-item:hover {
+    background: #f0f0f0;
+    transform: translateX(5px);
+}
+
+.ranking-item.current-user {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+    border: 2px solid #667eea;
+}
+
+.ranking-rank {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 700;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+
+.ranking-rank.gold {
+    background: linear-gradient(135deg, #ffd700, #ffb347);
+    color: white;
+}
+
+.ranking-rank.silver {
+    background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+    color: white;
+}
+
+.ranking-rank.bronze {
+    background: linear-gradient(135deg, #cd7f32, #b87333);
+    color: white;
+}
+
+.ranking-rank.normal {
+    background: #e0e0e0;
+    color: #666;
+}
+
+.ranking-info {
+    flex: 1;
+}
+
+.ranking-user {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.ranking-score {
+    font-size: 13px;
+    color: #888;
+    margin-top: 2px;
+}
+
+.ranking-medal {
+    font-size: 24px;
+}
+
+.ranking-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+}
+
+.ranking-empty-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.ranking-empty-text {
+    font-size: 14px;
+}
+
 @media (max-width: 480px) {
     .auth-container {
         margin: 20px;
@@ -768,6 +954,41 @@ body {
 
     .logout-btn {
         padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .ranking-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .ranking-container {
+        width: 95%;
+    }
+
+    .ranking-header {
+        padding: 15px 20px;
+    }
+
+    .ranking-title {
+        font-size: 18px;
+    }
+
+    .ranking-item {
+        padding: 10px 12px;
+    }
+
+    .ranking-rank {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+
+    .ranking-user {
+        font-size: 14px;
+    }
+
+    .ranking-score {
         font-size: 12px;
     }
 }
