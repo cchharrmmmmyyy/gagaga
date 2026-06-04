@@ -20,6 +20,12 @@ const registerForm = document.getElementById('register-form');
 const loginError = document.getElementById('login-error');
 const registerError = document.getElementById('register-error');
 
+// 排行榜相关元素
+const rankingBtn = document.getElementById('ranking-btn');
+const rankingOverlay = document.getElementById('ranking-overlay');
+const rankingClose = document.getElementById('ranking-close');
+const rankingList = document.getElementById('ranking-list');
+
 let tiles = [];
 let score = 0;
 let hasWon = false;
@@ -421,6 +427,88 @@ continueBtn.addEventListener('click', () => {
 newGameBtn.addEventListener('click', initializeBoard);
 document.addEventListener('keydown', handleKeyPress);
 gameContainer.addEventListener('touchstart', handleTouch);
+
+// 排行榜功能
+function getRankingData() {
+    const users = JSON.parse(localStorage.getItem('2048Users') || '{}');
+    const rankings = [];
+    
+    for (const qq in users) {
+        const userScore = parseInt(localStorage.getItem(`2048BestScore_${qq}`)) || 0;
+        if (userScore > 0) {
+            rankings.push({
+                qq: qq,
+                score: userScore
+            });
+        }
+    }
+    
+    // 按分数降序排序
+    rankings.sort((a, b) => b.score - a.score);
+    
+    return rankings;
+}
+
+function renderRanking() {
+    const rankings = getRankingData();
+    
+    if (rankings.length === 0) {
+        rankingList.innerHTML = `
+            <div class="ranking-empty">
+                <div class="ranking-empty-icon">📊</div>
+                <div class="ranking-empty-text">暂无排行榜数据<br>快去玩游戏上榜吧！</div>
+            </div>
+        `;
+        return;
+    }
+    
+    const medals = ['🥇', '🥈', '🥉'];
+    const rankClasses = ['gold', 'silver', 'bronze', 'normal', 'normal', 'normal', 'normal', 'normal', 'normal', 'normal'];
+    
+    rankingList.innerHTML = rankings.slice(0, 10).map((item, index) => {
+        const isCurrentUser = item.qq === currentUser;
+        const rankClass = rankClasses[index] || 'normal';
+        const medal = medals[index] || '';
+        
+        return `
+            <div class="ranking-item ${isCurrentUser ? 'current-user' : ''}">
+                <div class="ranking-rank ${rankClass}">${index + 1}</div>
+                <div class="ranking-info">
+                    <div class="ranking-user">
+                        ${isCurrentUser ? '<span style="color: #667eea;">★ </span>' : ''}${item.qq}${isCurrentUser ? ' (你)' : ''}
+                    </div>
+                    <div class="ranking-score">最高分: ${item.score}</div>
+                </div>
+                ${medal ? `<div class="ranking-medal">${medal}</div>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+function showRanking() {
+    renderRanking();
+    rankingOverlay.classList.add('show');
+}
+
+function hideRanking() {
+    rankingOverlay.classList.remove('show');
+}
+
+// 排行榜事件监听
+rankingBtn.addEventListener('click', showRanking);
+rankingClose.addEventListener('click', hideRanking);
+rankingOverlay.addEventListener('click', (e) => {
+    if (e.target === rankingOverlay) {
+        hideRanking();
+    }
+});
+
+// ESC键关闭排行榜
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && rankingOverlay.classList.contains('show')) {
+        hideRanking();
+    }
+});
 
 // 初始化认证状态
 initAuth();
