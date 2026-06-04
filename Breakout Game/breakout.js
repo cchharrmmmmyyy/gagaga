@@ -138,6 +138,8 @@ const game = {
   readyPulse: 0
 };
 
+let leaderboardSubmitted = false;
+
 const POWERUPS = [
   {
     id: 'wide', label: 'WIDE', glyph: 'W', color: '#38d66b', duration: 10000, weight: 16,
@@ -239,9 +241,11 @@ function setState(next, message = '') {
   game.state = next;
   game.stateTime = 0;
   game.message = message;
+  if (next === STATE.GAME_OVER || next === STATE.WIN) submitBreakoutScore(next);
 }
 
 function resetRun() {
+  leaderboardSubmitted = false;
   game.levelIndex = 0;
   game.score = 0;
   game.lives = 3;
@@ -252,6 +256,17 @@ function resetRun() {
   game.paddle = { x: W / 2 - CONFIG.paddle.baseW / 2, w: CONFIG.paddle.baseW };
   loadLevel(0);
   setState(STATE.LEVEL_INTRO, LEVELS[0].name);
+}
+
+function submitBreakoutScore(finalState) {
+  if (leaderboardSubmitted || !window.GagagaPlatform) return;
+  leaderboardSubmitted = true;
+  window.GagagaPlatform.submitScore('breakout', {
+    score: game.score,
+    level: game.levelIndex + 1,
+    elapsedMs: Math.round(game.time * 1000),
+    mode: finalState === STATE.WIN ? 'victory' : 'game-over',
+  }, `breakout:${Date.now()}:${game.score}`);
 }
 
 function loadLevel(index) {

@@ -6,11 +6,14 @@
 .windsurf/
 .roo/
 
-# Local chat server data
-Rock-Paper-Scissors/server/chat-data.json
-
 # Assistant instruction files
 CLAUDE.md
 AGENTS.md
 GEMINI.md
 copilot-instructions.md
+
+# Local game server data
+server/data/
+node_modules/
+__pycache__/
+*.pyc

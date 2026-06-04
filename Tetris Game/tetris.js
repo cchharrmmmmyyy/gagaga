@@ -5,6 +5,9 @@ const COLS = 10;
 const ROWS = 20;
 const SQ = 30;
 const VACANT = 'black'; // color of an empty square
+let score = 0;
+let lines = 0;
+let leaderboardSubmitted = false;
 
 // draw a square
 function drawSquare(x, y, color) {
@@ -304,6 +307,7 @@ Piece.prototype.lock = function() {
         alert('Game Over');
         // stop request animation frame
         gameOver = true;
+        submitTetrisScore();
         break;
       }
       // we lock the piece
@@ -317,6 +321,8 @@ Piece.prototype.lock = function() {
       isRowFull = isRowFull && board[r][c] !== VACANT;
     }
     if (isRowFull) {
+      lines++;
+      score += 100;
       // if the row is full
       // we move down all the rows above it
       for (let y = r; y > 1; y--) {
@@ -333,6 +339,16 @@ Piece.prototype.lock = function() {
   // update the board
   drawBoard();
 };
+
+function submitTetrisScore() {
+  if (leaderboardSubmitted || !window.GagagaPlatform) return;
+  leaderboardSubmitted = true;
+  window.GagagaPlatform.submitScore('tetris', {
+    score,
+    lines,
+    level: Math.floor(lines / 10) + 1,
+  }, `tetris:${Date.now()}:${score}`);
+}
 
 // collision detection
 Piece.prototype.collision = function(x, y, piece) {

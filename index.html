@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -189,196 +189,167 @@
         box-shadow: inset 0 -5px 0 #d17c15;
       }
 
-      .chat-panel {
-        position: fixed;
-        top: 168px;
-        right: 24px;
-        z-index: 5;
+      .account-panel {
+        position: relative;
+        z-index: 2;
         display: flex;
-        width: min(320px, calc(100vw - 32px));
-        max-height: calc(100vh - 210px);
-        min-height: 430px;
-        flex-direction: column;
-        background: #fff8df;
-        border: 5px solid var(--ink);
-        box-shadow: 8px 8px 0 rgba(32, 19, 11, .32);
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 10px;
+        min-width: 260px;
       }
 
-      .chat-header {
+      .account-name {
+        max-width: 180px;
+        padding: 8px 10px;
+        overflow: hidden;
+        color: #fff;
+        font-size: .9rem;
+        font-weight: 900;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        background: #1f6f35;
+        border: 4px solid var(--ink);
+        box-shadow: inset 0 -4px 0 #144923;
+      }
+
+      .pixel-btn {
+        padding: 8px 12px;
+        color: #fff;
+        font: inherit;
+        font-size: .86rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        background: #2f8ee6;
+        border: 4px solid var(--ink);
+        box-shadow: inset 0 -4px 0 #1b5794;
+        cursor: pointer;
+      }
+
+      .pixel-btn:hover,
+      .pixel-btn:focus {
+        color: var(--ink);
+        background: var(--gold);
+        box-shadow: inset 0 -4px 0 #e09c24;
+      }
+
+      .pixel-btn.danger {
+        background: #e33a25;
+        box-shadow: inset 0 -4px 0 #9f2215;
+      }
+
+      .arcade-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(25, 19, 12, .72);
+      }
+
+      .arcade-modal.active {
+        display: flex;
+      }
+
+      .arcade-dialog {
+        width: min(720px, 100%);
+        max-height: min(760px, calc(100vh - 40px));
+        overflow: auto;
+        color: var(--ink);
+        background: #fff8df;
+        border: 6px solid var(--ink);
+        box-shadow: 10px 10px 0 rgba(32, 19, 11, .38);
+      }
+
+      .arcade-dialog-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
-        padding: 10px 12px;
-        color: #fff;
-        background:
-          linear-gradient(90deg, var(--brick-dark) 0 6px, transparent 6px 100%) 0 0 / 24px 24px,
-          var(--brick);
+        gap: 12px;
+        padding: 14px 16px;
+        background: #fff2a3;
         border-bottom: 5px solid var(--ink);
       }
 
-      .chat-title {
+      .arcade-dialog-title {
         margin: 0;
-        font-size: 1rem;
+        color: #e33a25;
+        font-size: 1.35rem;
         font-weight: 900;
-        text-transform: uppercase;
-        text-shadow: 2px 2px 0 var(--ink);
       }
 
-      .chat-status {
-        font-size: .72rem;
-        font-weight: 900;
-        text-align: right;
+      .arcade-dialog-body {
+        padding: 18px;
       }
 
-      .chat-body {
-        display: flex;
-        min-height: 0;
-        flex: 1;
-        flex-direction: column;
-        gap: 10px;
-        padding: 12px;
+      .auth-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
       }
 
-      .chat-auth,
-      .chat-room {
-        display: flex;
-        min-height: 0;
-        flex: 1;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .chat-room[hidden],
-      .chat-auth[hidden] {
-        display: none;
-      }
-
-      .chat-field {
-        width: 100%;
-        padding: 9px 10px;
-        color: var(--ink);
-        font: inherit;
-        font-weight: 800;
+      .auth-box {
+        padding: 14px;
         background: #fff2a3;
         border: 4px solid var(--ink);
-        border-radius: 0;
-        outline: none;
       }
 
-      .chat-field:focus {
-        box-shadow: 0 0 0 4px #ffd64a;
-      }
-
-      .chat-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-      }
-
-      .chat-btn {
-        min-height: 42px;
-        padding: 8px 10px;
-        color: #fff;
-        font: inherit;
-        font-weight: 900;
-        text-transform: uppercase;
-        background: #e33a25;
-        border: 4px solid var(--ink);
-        border-radius: 0;
-        box-shadow: inset 0 -5px 0 #9f2215;
-        cursor: pointer;
-      }
-
-      .chat-btn.secondary {
-        color: var(--ink);
-        background: var(--gold);
-        box-shadow: inset 0 -5px 0 #b96f16;
-      }
-
-      .chat-btn:hover,
-      .chat-btn:focus {
-        filter: saturate(1.15);
-        transform: translateY(-1px);
-      }
-
-      .chat-help,
-      .chat-error {
-        margin: 0;
-        min-height: 18px;
-        font-size: .78rem;
-        font-weight: 800;
-        line-height: 1.25;
-      }
-
-      .chat-error {
-        color: #c8221a;
-      }
-
-      .chat-userbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        font-size: .82rem;
+      .auth-box h3 {
+        margin: 0 0 12px;
+        font-size: 1rem;
         font-weight: 900;
       }
 
-      .chat-logout {
-        padding: 3px 8px;
-        color: var(--ink);
-        font: inherit;
-        font-size: .72rem;
-        font-weight: 900;
-        background: var(--gold);
-        border: 3px solid var(--ink);
-        cursor: pointer;
-      }
-
-      .chat-messages {
-        min-height: 180px;
-        flex: 1;
-        overflow-y: auto;
-        padding: 10px;
-        background: #20130b;
-        border: 4px solid var(--ink);
-      }
-
-      .chat-message {
+      .arcade-input,
+      .arcade-select {
+        width: 100%;
         margin-bottom: 10px;
-        padding-bottom: 8px;
-        color: #fff8df;
-        border-bottom: 2px solid rgba(255, 248, 223, .18);
-        overflow-wrap: anywhere;
+        padding: 10px;
+        color: var(--ink);
+        font: inherit;
+        font-weight: 800;
+        background: #fff8df;
+        border: 4px solid var(--ink);
       }
 
-      .chat-meta {
-        display: flex;
-        justify-content: space-between;
-        gap: 8px;
-        margin-bottom: 3px;
-        color: #ffd64a;
-        font-size: .72rem;
+      .service-message {
+        min-height: 24px;
+        margin-top: 12px;
+        font-size: .92rem;
         font-weight: 900;
       }
 
-      .chat-text {
-        font-size: .85rem;
-        line-height: 1.3;
+      .leaderboard-toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
       }
 
-      .chat-compose {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 8px;
+      .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff2a3;
+        border: 4px solid var(--ink);
       }
 
-      .chat-compose .chat-field {
-        min-width: 0;
+      .leaderboard-table th,
+      .leaderboard-table td {
+        padding: 10px;
+        border-bottom: 3px solid var(--ink);
+        font-size: .92rem;
+        font-weight: 900;
       }
 
-      .chat-compose .chat-btn {
-        min-width: 72px;
+      .leaderboard-table th {
+        color: #fff;
+        background: #2f8ee6;
+      }
+
+      .leaderboard-table tr:last-child td {
+        border-bottom: 0;
       }
 
       @media (max-width: 640px) {
@@ -399,6 +370,19 @@
 
         .coin {
           width: 22px;
+        }
+
+        .account-panel {
+          justify-content: flex-start;
+          min-width: 0;
+        }
+
+        .auth-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .leaderboard-toolbar {
+          flex-direction: column;
         }
       }
 
@@ -619,22 +603,7 @@
       }
 
       .header-bar::before {
-        content: "?";
-        position: absolute;
-        right: 80px;
-        top: 50%;
-        width: 44px; height: 44px;
-        transform: translateY(-50%);
-        display: grid;
-        place-items: center;
-        border: 5px solid var(--ink);
-        background: var(--gold);
-        color: #fff;
-        font-size: 1.55rem;
-        font-weight: 900;
-        text-shadow: 2px 2px 0 var(--ink);
-        box-shadow: inset -6px -6px 0 #b96f16;
-        animation: questionBounce 1.45s ease-in-out infinite;
+        content: none;
       }
 
       @keyframes questionBounce {
@@ -696,15 +665,6 @@
 
       .card-img-top {
         transition: transform .24s ease;
-      }
-
-      @media (max-width: 1660px) {
-        .chat-panel {
-          position: static;
-          width: min(1120px, calc(100vw - 32px));
-          max-height: none;
-          margin: 28px auto 0;
-        }
       }
     </style>
   </head>
@@ -771,10 +731,11 @@
         <header class="pixel-header" aria-label="Games arcade header">
           <div class="header-bar">
             <h1 class="games-heading">Simple JavaScript Games</h1>
-            <div class="coin-row" aria-hidden="true">
-              <span class="coin"></span>
-              <span class="coin"></span>
-              <span class="coin"></span>
+            <div class="account-panel" aria-label="Account and leaderboards">
+              <span class="account-name" id="account-name">Guest</span>
+              <button class="pixel-btn" id="auth-open-btn" type="button">Login</button>
+              <button class="pixel-btn" id="leaderboard-open-btn" type="button">Ranks</button>
+              <button class="pixel-btn danger" id="logout-btn" type="button" hidden>Logout</button>
             </div>
           </div>
         </header>
@@ -846,7 +807,7 @@
     </svg>
     <div class="card-body">
       <h5 class="card-title">Chinese Chess Game</h5>
-      <a href="Rock-Paper-Scissors/index.html" class="btn btn-primary">Tap to Play <span class="play-arrow">▶</span></a>
+      <a href="Chinese Chess/index.html" class="btn btn-primary">Tap to Play <span class="play-arrow">▶</span></a>
     </div>
   </div>
 <div class="card">
@@ -861,209 +822,62 @@
         </div>
     </main>
 
-    <aside class="chat-panel" aria-label="Online chat">
-      <div class="chat-header">
-        <h2 class="chat-title">Online Chat</h2>
-        <span class="chat-status" id="chat-status">Connecting</span>
-      </div>
-      <div class="chat-body">
-        <form class="chat-auth" id="chat-auth">
-          <input class="chat-field" id="chat-username" autocomplete="username" maxlength="16" placeholder="Username" required>
-          <input class="chat-field" id="chat-password" autocomplete="current-password" type="password" maxlength="64" placeholder="Password" required>
-          <div class="chat-actions">
-            <button class="chat-btn" id="chat-login" type="submit">Login</button>
-            <button class="chat-btn secondary" id="chat-register" type="button">Register</button>
+    <div class="arcade-modal" id="auth-modal" aria-hidden="true">
+      <div class="arcade-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <div class="arcade-dialog-header">
+          <h2 class="arcade-dialog-title" id="auth-title">Player Account</h2>
+          <button class="pixel-btn danger" type="button" data-close-modal="auth-modal">Close</button>
+        </div>
+        <div class="arcade-dialog-body">
+          <div class="auth-grid">
+            <form class="auth-box" id="login-form">
+              <h3>Login</h3>
+              <input class="arcade-input" id="login-username" name="username" autocomplete="username" placeholder="Username" required>
+              <input class="arcade-input" id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Password" required>
+              <button class="pixel-btn" type="submit">Login</button>
+            </form>
+            <form class="auth-box" id="register-form">
+              <h3>Register</h3>
+              <input class="arcade-input" id="register-username" name="username" autocomplete="username" placeholder="3-20 characters" required>
+              <input class="arcade-input" id="register-password" name="password" type="password" autocomplete="new-password" placeholder="At least 6 characters" required>
+              <button class="pixel-btn" type="submit">Create</button>
+            </form>
           </div>
-          <p class="chat-help">Use 2-16 letters, numbers, underscores, hyphens, or Chinese characters.</p>
-          <p class="chat-error" id="chat-error" role="alert"></p>
-        </form>
-
-        <section class="chat-room" id="chat-room" hidden>
-          <div class="chat-userbar">
-            <span>Logged in as <strong id="chat-current-user"></strong></span>
-            <button class="chat-logout" id="chat-logout" type="button">Logout</button>
-          </div>
-          <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
-          <form class="chat-compose" id="chat-compose">
-            <input class="chat-field" id="chat-input" maxlength="240" placeholder="Say something..." autocomplete="off" required>
-            <button class="chat-btn" type="submit">Send</button>
-          </form>
-        </section>
+          <div class="service-message" id="auth-message" role="status"></div>
+        </div>
       </div>
-    </aside>
+    </div>
 
-    <script>
-      (() => {
-        const CHAT_SERVER_URL = 'ws://localhost:8080';
-        const statusEl = document.getElementById('chat-status');
-        const authForm = document.getElementById('chat-auth');
-        const roomEl = document.getElementById('chat-room');
-        const usernameInput = document.getElementById('chat-username');
-        const passwordInput = document.getElementById('chat-password');
-        const registerBtn = document.getElementById('chat-register');
-        const errorEl = document.getElementById('chat-error');
-        const currentUserEl = document.getElementById('chat-current-user');
-        const messagesEl = document.getElementById('chat-messages');
-        const composeForm = document.getElementById('chat-compose');
-        const chatInput = document.getElementById('chat-input');
-        const logoutBtn = document.getElementById('chat-logout');
-
-        let socket = null;
-        let token = null;
-        let currentUser = '';
-
-        usernameInput.value = localStorage.getItem('chatUsername') || '';
-
-        function setStatus(text) {
-          statusEl.textContent = text;
-        }
-
-        function setError(text) {
-          errorEl.textContent = text || '';
-        }
-
-        function connect(onReady) {
-          if (socket && socket.readyState === WebSocket.OPEN) {
-            onReady();
-            return;
-          }
-
-          if (socket && socket.readyState === WebSocket.CONNECTING) {
-            socket.addEventListener('open', onReady, { once: true });
-            return;
-          }
-
-          setStatus('Connecting');
-          socket = new WebSocket(CHAT_SERVER_URL);
-
-          socket.addEventListener('open', () => {
-            setStatus('Online');
-            setError('');
-            if (onReady) onReady();
-          });
-
-          socket.addEventListener('message', (event) => {
-            let data;
-            try {
-              data = JSON.parse(event.data);
-            } catch {
-              return;
-            }
-
-            if (data.type === 'chat_auth_ok') {
-              token = data.token;
-              currentUser = data.username;
-              localStorage.setItem('chatUsername', currentUser);
-              currentUserEl.textContent = currentUser;
-              authForm.hidden = true;
-              roomEl.hidden = false;
-              renderMessages(data.history || []);
-              chatInput.focus();
-              setError('');
-              return;
-            }
-
-            if (data.type === 'chat_message' && data.message) {
-              appendMessage(data.message);
-              return;
-            }
-
-            if (data.type === 'chat_error') {
-              setError(data.message || 'Chat error.');
-            }
-          });
-
-          socket.addEventListener('close', () => {
-            setStatus('Offline');
-            if (token) setError('Chat server disconnected. Restart the local server, then log in again.');
-            token = null;
-          });
-
-          socket.addEventListener('error', () => {
-            setStatus('Offline');
-            setError('Cannot connect to ws://localhost:8080. Start the local server first.');
-          });
-        }
-
-        function sendChatPayload(payload) {
-          connect(() => socket.send(JSON.stringify(payload)));
-        }
-
-        function formatTime(value) {
-          const date = new Date(value);
-          if (Number.isNaN(date.getTime())) return '';
-          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        }
-
-        function renderMessages(messages) {
-          messagesEl.innerHTML = '';
-          messages.forEach(appendMessage);
-        }
-
-        function appendMessage(message) {
-          const item = document.createElement('div');
-          item.className = 'chat-message';
-
-          const meta = document.createElement('div');
-          meta.className = 'chat-meta';
-
-          const name = document.createElement('span');
-          name.textContent = message.username || 'Guest';
-
-          const time = document.createElement('span');
-          time.textContent = formatTime(message.timestamp);
-
-          const text = document.createElement('div');
-          text.className = 'chat-text';
-          text.textContent = message.text || '';
-
-          meta.append(name, time);
-          item.append(meta, text);
-          messagesEl.appendChild(item);
-          messagesEl.scrollTop = messagesEl.scrollHeight;
-        }
-
-        function authPayload(type) {
-          return {
-            type,
-            username: usernameInput.value.trim(),
-            password: passwordInput.value
-          };
-        }
-
-        authForm.addEventListener('submit', (event) => {
-          event.preventDefault();
-          setError('');
-          sendChatPayload(authPayload('chat_login'));
-        });
-
-        registerBtn.addEventListener('click', () => {
-          setError('');
-          sendChatPayload(authPayload('chat_register'));
-        });
-
-        composeForm.addEventListener('submit', (event) => {
-          event.preventDefault();
-          const text = chatInput.value.trim();
-          if (!text || !token) return;
-          sendChatPayload({ type: 'chat_message', token, text });
-          chatInput.value = '';
-        });
-
-        logoutBtn.addEventListener('click', () => {
-          token = null;
-          currentUser = '';
-          roomEl.hidden = true;
-          authForm.hidden = false;
-          passwordInput.value = '';
-          setError('');
-          usernameInput.focus();
-        });
-
-        connect(() => {});
-      })();
-    </script>
+    <div class="arcade-modal" id="leaderboard-modal" aria-hidden="true">
+      <div class="arcade-dialog" role="dialog" aria-modal="true" aria-labelledby="leaderboard-title">
+        <div class="arcade-dialog-header">
+          <h2 class="arcade-dialog-title" id="leaderboard-title">Leaderboards</h2>
+          <button class="pixel-btn danger" type="button" data-close-modal="leaderboard-modal">Close</button>
+        </div>
+        <div class="arcade-dialog-body">
+          <div class="leaderboard-toolbar">
+            <select class="arcade-select" id="leaderboard-game"></select>
+            <button class="pixel-btn" id="leaderboard-refresh-btn" type="button">Refresh</button>
+          </div>
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Player</th>
+                <th>Score</th>
+                <th>Extra</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+              <tr><td colspan="4">No records yet</td></tr>
+            </tbody>
+          </table>
+          <div class="service-message" id="leaderboard-message" role="status"></div>
+        </div>
+      </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="platform.js"></script>
   </body>
 </html>
