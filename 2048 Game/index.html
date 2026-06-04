@@ -58,8 +58,22 @@
 
     <!-- 用户信息栏 -->
     <div class="user-bar" id="user-bar">
+        <button class="ranking-btn" id="ranking-btn">🏆 排行榜</button>
         <span class="user-info">欢迎，<span id="user-qq"></span></span>
         <button class="logout-btn" id="logout-btn">退出登录</button>
+    </div>
+
+    <!-- 排行榜弹窗 -->
+    <div class="ranking-overlay" id="ranking-overlay">
+        <div class="ranking-container">
+            <div class="ranking-header">
+                <h2 class="ranking-title">🏆 排行榜</h2>
+                <button class="ranking-close" id="ranking-close">×</button>
+            </div>
+            <div class="ranking-list" id="ranking-list">
+                <!-- 动态生成 -->
+            </div>
+        </div>
     </div>
 
     <div class="game-wrapper">
