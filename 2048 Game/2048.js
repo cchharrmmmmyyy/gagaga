@@ -8,14 +8,185 @@ const tryAgainBtn = document.getElementById('try-again-btn');
 const continueBtn = document.getElementById('continue-btn');
 const newGameBtn = document.getElementById('new-game-btn');
 
+// 登录注册相关元素
+const authOverlay = document.getElementById('auth-overlay');
+const userBar = document.getElementById('user-bar');
+const userQQ = document.getElementById('user-qq');
+const logoutBtn = document.getElementById('logout-btn');
+const authTabs = document.querySelectorAll('.auth-tab');
+const loginForm = document.getElementById('login-form');
+const registerForm = document.getElementById('register-form');
+const loginError = document.getElementById('login-error');
+const registerError = document.getElementById('register-error');
+
 let tiles = [];
 let score = 0;
-let bestScore = parseInt(localStorage.getItem('2048BestScore')) || 0;
 let hasWon = false;
 let isGameOver = false;
 let isContinuing = false;
 
+// 检查是否已登录
+let currentUser = localStorage.getItem('2048CurrentUser');
+let bestScore = currentUser 
+    ? parseInt(localStorage.getItem(`2048BestScore_${currentUser}`)) || 0 
+    : parseInt(localStorage.getItem('2048BestScore')) || 0;
+
 bestScoreEl.textContent = bestScore;
+
+// 初始化登录状态
+function initAuth() {
+    if (currentUser) {
+        authOverlay.style.display = 'none';
+        userBar.classList.add('show');
+        userQQ.textContent = currentUser;
+    } else {
+        authOverlay.style.display = 'flex';
+        userBar.classList.remove('show');
+    }
+}
+
+// 切换登录/注册标签
+authTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        authTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        if (tab.dataset.tab === 'login') {
+            loginForm.classList.add('active');
+            registerForm.classList.remove('active');
+        } else {
+            loginForm.classList.remove('active');
+            registerForm.classList.add('active');
+        }
+        
+        loginError.textContent = '';
+        registerError.textContent = '';
+    });
+});
+
+// 登录处理
+loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const qq = document.getElementById('login-qq').value.trim();
+    const password = document.getElementById('login-password').value;
+    
+    loginError.textContent = '';
+    
+    // 验证输入
+    if (!qq) {
+        loginError.textContent = '请输入QQ号';
+        return;
+    }
+    
+    if (!/^\d+$/.test(qq)) {
+        loginError.textContent = 'QQ号只能是数字';
+        return;
+    }
+    
+    if (!password) {
+        loginError.textContent = '请输入密码';
+        return;
+    }
+    
+    // 检查用户是否存在
+    const users = JSON.parse(localStorage.getItem('2048Users') || '{}');
+    const user = users[qq];
+    
+    if (!user) {
+        loginError.textContent = '账号不存在，请先注册';
+        return;
+    }
+    
+    if (user.password !== password) {
+        loginError.textContent = '密码错误';
+        return;
+    }
+    
+    // 登录成功
+    currentUser = qq;
+    localStorage.setItem('2048CurrentUser', qq);
+    bestScore = parseInt(localStorage.getItem(`2048BestScore_${qq}`)) || 0;
+    bestScoreEl.textContent = bestScore;
+    
+    authOverlay.style.display = 'none';
+    userBar.classList.add('show');
+    userQQ.textContent = qq;
+    
+    // 清空表单
+    loginForm.reset();
+});
+
+// 注册处理
+registerForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const qq = document.getElementById('register-qq').value.trim();
+    const password = document.getElementById('register-password').value;
+    const confirm = document.getElementById('register-confirm').value;
+    
+    registerError.textContent = '';
+    
+    // 验证输入
+    if (!qq) {
+        registerError.textContent = '请输入QQ号';
+        return;
+    }
+    
+    if (!/^\d+$/.test(qq)) {
+        registerError.textContent = 'QQ号只能是数字';
+        return;
+    }
+    
+    if (qq.length < 5) {
+        registerError.textContent = 'QQ号至少5位';
+        return;
+    }
+    
+    if (password.length < 8) {
+        registerError.textContent = '密码至少8位';
+        return;
+    }
+    
+    if (password !== confirm) {
+        registerError.textContent = '两次密码不一致';
+        return;
+    }
+    
+    // 检查用户是否已存在
+    const users = JSON.parse(localStorage.getItem('2048Users') || '{}');
+    
+    if (users[qq]) {
+        registerError.textContent = '该QQ号已注册';
+        return;
+    }
+    
+    // 注册成功
+    users[qq] = { password: password };
+    localStorage.setItem('2048Users', JSON.stringify(users));
+    
+    // 自动登录
+    currentUser = qq;
+    localStorage.setItem('2048CurrentUser', qq);
+    bestScore = 0;
+    bestScoreEl.textContent = bestScore;
+    
+    authOverlay.style.display = 'none';
+    userBar.classList.add('show');
+    userQQ.textContent = qq;
+    
+    // 清空表单
+    registerForm.reset();
+    
+    // 切换回登录标签
+    authTabs[0].click();
+});
+
+// 退出登录
+logoutBtn.addEventListener('click', () => {
+    currentUser = null;
+    localStorage.removeItem('2048CurrentUser');
+    authOverlay.style.display = 'flex';
+    userBar.classList.remove('show');
+});
 
 function createTile(value = 0) {
     const tile = document.createElement('div');
@@ -69,7 +240,11 @@ function updateScore(points) {
     if (score > bestScore) {
         bestScore = score;
         bestScoreEl.textContent = bestScore;
-        localStorage.setItem('2048BestScore', bestScore);
+        if (currentUser) {
+            localStorage.setItem(`2048BestScore_${currentUser}`, bestScore);
+        } else {
+            localStorage.setItem('2048BestScore', bestScore);
+        }
     }
 }
 
@@ -246,4 +421,10 @@ newGameBtn.addEventListener('click', initializeBoard);
 document.addEventListener('keydown', handleKeyPress);
 gameContainer.addEventListener('touchstart', handleTouch);
 
-initializeBoard();
+// 初始化认证状态
+initAuth();
+
+// 只有登录后才能开始游戏
+if (currentUser) {
+    initializeBoard();
+}
