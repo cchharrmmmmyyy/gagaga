@@ -352,6 +352,154 @@
         border-bottom: 0;
       }
 
+      .chat-panel {
+        position: fixed;
+        top: 120px;
+        right: 24px;
+        bottom: 100px;
+        z-index: 4;
+        display: flex;
+        width: 280px;
+        min-height: 420px;
+        flex-direction: column;
+        color: #fff8df;
+        background:
+          linear-gradient(90deg, rgba(255,255,255,.08) 0 5px, transparent 5px 100%) 0 0 / 26px 26px,
+          #8b4513;
+        border: 5px solid var(--ink);
+        box-shadow: 8px 8px 0 rgba(32, 19, 11, .32), inset 0 0 0 5px #c95824;
+      }
+
+      .chat-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 12px 14px;
+        background: #5a2d0c;
+        border-bottom: 5px solid var(--ink);
+      }
+
+      .chat-panel-title {
+        margin: 0;
+        color: var(--gold);
+        font-size: 1rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 0 var(--ink);
+      }
+
+      .chat-panel-status {
+        font-size: .7rem;
+        font-weight: 900;
+        text-align: right;
+      }
+
+      .chat-panel-body {
+        display: flex;
+        min-height: 0;
+        flex: 1;
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px;
+      }
+
+      .chat-login-note {
+        margin: 0;
+        padding: 12px;
+        color: var(--ink);
+        font-size: .86rem;
+        font-weight: 900;
+        line-height: 1.35;
+        background: #fff2a3;
+        border: 4px solid var(--ink);
+      }
+
+      .chat-login-note[hidden] {
+        display: none;
+      }
+
+      .chat-messages {
+        min-height: 220px;
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+        background: #20130b;
+        border: 4px solid var(--ink);
+        box-shadow: inset 0 0 0 4px rgba(255, 214, 74, .08);
+      }
+
+      .chat-message {
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid rgba(255, 248, 223, .18);
+        overflow-wrap: anywhere;
+      }
+
+      .chat-message:last-child {
+        margin-bottom: 0;
+      }
+
+      .chat-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 3px;
+        color: var(--gold);
+        font-size: .72rem;
+        font-weight: 900;
+      }
+
+      .chat-text {
+        color: #fff8df;
+        font-size: .85rem;
+        line-height: 1.3;
+      }
+
+      .chat-compose {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+      }
+
+      .chat-compose[hidden] {
+        display: none;
+      }
+
+      .chat-input {
+        min-width: 0;
+        padding: 9px 10px;
+        color: var(--ink);
+        font: inherit;
+        font-size: .85rem;
+        font-weight: 800;
+        background: #fff8df;
+        border: 4px solid var(--ink);
+        border-radius: 0;
+        outline: none;
+      }
+
+      .chat-send {
+        min-width: 62px;
+        padding: 8px 10px;
+        color: #fff;
+        font: inherit;
+        font-size: .8rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        background: #e33a25;
+        border: 4px solid var(--ink);
+        box-shadow: inset 0 -4px 0 #9f2215;
+        cursor: pointer;
+      }
+
+      .chat-send:hover,
+      .chat-send:focus {
+        color: var(--ink);
+        background: var(--gold);
+        box-shadow: inset 0 -4px 0 #b96f16;
+      }
+
       @media (max-width: 640px) {
         .pixel-header {
           margin-top: 14px;
@@ -383,6 +531,15 @@
 
         .leaderboard-toolbar {
           flex-direction: column;
+        }
+      }
+
+      @media (max-width: 1660px) {
+        .chat-panel {
+          position: static;
+          width: min(1120px, calc(100vw - 32px));
+          min-height: 360px;
+          margin: 28px auto 0;
         }
       }
 
@@ -822,6 +979,21 @@
         </div>
     </main>
 
+    <aside class="chat-panel" aria-label="Online chat">
+      <div class="chat-panel-header">
+        <h2 class="chat-panel-title">Chat Room</h2>
+        <span class="chat-panel-status" id="chat-status">Guest</span>
+      </div>
+      <div class="chat-panel-body">
+        <p class="chat-login-note" id="chat-login-note">Login first, then everyone online can chat here.</p>
+        <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
+        <form class="chat-compose" id="chat-compose" hidden>
+          <input class="chat-input" id="chat-input" maxlength="240" autocomplete="off" placeholder="Type message..." required>
+          <button class="chat-send" type="submit">Send</button>
+        </form>
+      </div>
+    </aside>
+
     <div class="arcade-modal" id="auth-modal" aria-hidden="true">
       <div class="arcade-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
         <div class="arcade-dialog-header">
@@ -879,5 +1051,165 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="platform.js"></script>
+    <script>
+      (() => {
+        const statusEl = document.getElementById('chat-status');
+        const loginNote = document.getElementById('chat-login-note');
+        const messagesEl = document.getElementById('chat-messages');
+        const composeForm = document.getElementById('chat-compose');
+        const inputEl = document.getElementById('chat-input');
+        const authOpenBtn = document.getElementById('auth-open-btn');
+
+        let socket = null;
+        let connectedToken = null;
+
+        function chatUrl() {
+          const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+          const host = location.hostname || 'localhost';
+          return `${protocol}://${host}:8080/ws/chat`;
+        }
+
+        function setStatus(text) {
+          statusEl.textContent = text;
+        }
+
+        function setMessagesEmpty(text) {
+          messagesEl.innerHTML = '';
+          const item = document.createElement('div');
+          item.className = 'chat-message';
+          const body = document.createElement('div');
+          body.className = 'chat-text';
+          body.textContent = text;
+          item.appendChild(body);
+          messagesEl.appendChild(item);
+        }
+
+        function formatTime(value) {
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return '';
+          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function appendMessage(message) {
+          const item = document.createElement('div');
+          item.className = 'chat-message';
+
+          const meta = document.createElement('div');
+          meta.className = 'chat-meta';
+
+          const name = document.createElement('span');
+          name.textContent = message.username || 'Player';
+
+          const time = document.createElement('span');
+          time.textContent = formatTime(message.createdAt);
+
+          const text = document.createElement('div');
+          text.className = 'chat-text';
+          text.textContent = message.text || '';
+
+          meta.append(name, time);
+          item.append(meta, text);
+          messagesEl.appendChild(item);
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function renderHistory(messages) {
+          messagesEl.innerHTML = '';
+          if (!messages.length) {
+            setMessagesEmpty('No messages yet.');
+            return;
+          }
+          messages.forEach(appendMessage);
+        }
+
+        function closeSocket() {
+          if (socket) {
+            socket.close();
+            socket = null;
+          }
+          connectedToken = null;
+        }
+
+        function renderLoggedOut() {
+          closeSocket();
+          setStatus('Guest');
+          loginNote.hidden = false;
+          composeForm.hidden = true;
+          setMessagesEmpty('Please login to join the chat.');
+        }
+
+        function connectChat() {
+          const platform = window.GagagaPlatform;
+          const token = platform && platform.getToken ? platform.getToken() : null;
+          const user = platform && platform.getUser ? platform.getUser() : null;
+          if (!token || !user) {
+            renderLoggedOut();
+            return;
+          }
+
+          if (socket && socket.readyState <= 1 && connectedToken === token) return;
+          closeSocket();
+          connectedToken = token;
+          setStatus('Connecting');
+          loginNote.hidden = true;
+          composeForm.hidden = false;
+
+          socket = new WebSocket(chatUrl());
+          socket.addEventListener('open', () => {
+            setStatus(user.username);
+            socket.send(JSON.stringify({ type: 'auth', token }));
+          });
+          socket.addEventListener('message', (event) => {
+            let data;
+            try {
+              data = JSON.parse(event.data);
+            } catch {
+              return;
+            }
+
+            if (data.type === 'ready') {
+              renderHistory(data.history || []);
+              return;
+            }
+            if (data.type === 'message' && data.message) {
+              appendMessage(data.message);
+              return;
+            }
+            if (data.type === 'error') {
+              setStatus('Error');
+              setMessagesEmpty(data.message || 'Chat error.');
+            }
+          });
+          socket.addEventListener('close', () => {
+            if (connectedToken === token) setStatus('Offline');
+          });
+          socket.addEventListener('error', () => {
+            setStatus('Offline');
+            setMessagesEmpty('Start the local server to use chat.');
+          });
+        }
+
+        composeForm.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const text = inputEl.value.trim();
+          if (!text) return;
+          if (!socket || socket.readyState !== WebSocket.OPEN) {
+            connectChat();
+            return;
+          }
+          socket.send(JSON.stringify({ type: 'message', text }));
+          inputEl.value = '';
+        });
+
+        loginNote.addEventListener('click', () => {
+          if (authOpenBtn) authOpenBtn.click();
+        });
+
+        window.addEventListener('gagaga-auth-change', connectChat);
+        window.addEventListener('beforeunload', closeSocket);
+        setMessagesEmpty('Please login to join the chat.');
+        setTimeout(connectChat, 0);
+      })();
+    </script>
   </body>
 </html>

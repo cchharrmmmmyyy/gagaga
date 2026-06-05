@@ -1,9 +1,9 @@
 const crypto = require('crypto');
 const { WebSocketServer } = require('ws');
 
-function createChessRoomService(server) {
+function createChessRoomService() {
   const rooms = new Map();
-  const wss = new WebSocketServer({ server, path: '/ws/chinese-chess' });
+  const wss = new WebSocketServer({ noServer: true });
 
   function generateRoomCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

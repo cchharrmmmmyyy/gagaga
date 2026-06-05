@@ -10,6 +10,7 @@ function emptyDb() {
     sessions: [],
     leaderboardEntries: [],
     matchRecords: [],
+    chatMessages: [],
   };
 }
 
