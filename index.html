@@ -354,13 +354,14 @@
 
       .chat-panel {
         position: fixed;
-        top: 120px;
-        right: 24px;
-        bottom: 100px;
-        z-index: 4;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 30;
         display: flex;
-        width: 280px;
-        min-height: 420px;
+        width: min(500px, calc(100vw - 48px));
+        height: 100vh;
+        min-height: 0;
         flex-direction: column;
         color: #fff8df;
         background:
@@ -368,6 +369,52 @@
           #8b4513;
         border: 5px solid var(--ink);
         box-shadow: 8px 8px 0 rgba(32, 19, 11, .32), inset 0 0 0 5px #c95824;
+        transform: translateX(calc(100% + 16px));
+        transition: transform .2s ease;
+      }
+
+      .chat-panel.open {
+        transform: translateX(0);
+      }
+
+      .chat-drawer-toggle {
+        position: fixed;
+        right: 0;
+        top: 45%;
+        z-index: 29;
+        display: block;
+        padding: 12px 8px;
+        color: #fff;
+        font: inherit;
+        font-size: .78rem;
+        font-weight: 900;
+        writing-mode: vertical-rl;
+        text-transform: uppercase;
+        background: #8b4513;
+        border: 4px solid var(--ink);
+        border-right: 0;
+        box-shadow: inset 0 -4px 0 #5a2d0c;
+        cursor: pointer;
+      }
+
+      .chat-drawer-toggle[hidden] {
+        display: none;
+      }
+
+      .chat-drawer-close {
+        display: block;
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+        padding: 0;
+        color: #fff;
+        font: inherit;
+        font-size: 1.2rem;
+        font-weight: 900;
+        line-height: 1;
+        background: #e33a25;
+        border: 3px solid var(--ink);
+        cursor: pointer;
       }
 
       .chat-panel-header {
@@ -531,15 +578,6 @@
 
         .leaderboard-toolbar {
           flex-direction: column;
-        }
-      }
-
-      @media (max-width: 1660px) {
-        .chat-panel {
-          position: static;
-          width: min(1120px, calc(100vw - 32px));
-          min-height: 360px;
-          margin: 28px auto 0;
         }
       }
 
@@ -884,7 +922,9 @@
       <span></span><span></span><span></span><span></span><span></span>
     </div>
 
-    <main class="container page-shell">
+    <button class="chat-drawer-toggle" id="chat-drawer-toggle" type="button" aria-controls="chat-panel" aria-expanded="false">Chat</button>
+
+    <main class="page-shell">
         <header class="pixel-header" aria-label="Games arcade header">
           <div class="header-bar">
             <h1 class="games-heading">Simple JavaScript Games</h1>
@@ -979,10 +1019,11 @@
         </div>
     </main>
 
-    <aside class="chat-panel" aria-label="Online chat">
+    <aside class="chat-panel" id="chat-panel" aria-label="Online chat">
       <div class="chat-panel-header">
         <h2 class="chat-panel-title">Chat Room</h2>
         <span class="chat-panel-status" id="chat-status">Guest</span>
+        <button class="chat-drawer-close" id="chat-drawer-close" type="button" aria-label="Close chat">×</button>
       </div>
       <div class="chat-panel-body">
         <p class="chat-login-note" id="chat-login-note">Login first, then everyone online can chat here.</p>
@@ -1059,9 +1100,18 @@
         const composeForm = document.getElementById('chat-compose');
         const inputEl = document.getElementById('chat-input');
         const authOpenBtn = document.getElementById('auth-open-btn');
+        const chatPanel = document.getElementById('chat-panel');
+        const drawerToggle = document.getElementById('chat-drawer-toggle');
+        const drawerClose = document.getElementById('chat-drawer-close');
 
         let socket = null;
         let connectedToken = null;
+
+        function setDrawerOpen(open) {
+          chatPanel.classList.toggle('open', open);
+          drawerToggle.setAttribute('aria-expanded', String(open));
+          drawerToggle.hidden = open;
+        }
 
         function chatUrl() {
           const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -1203,6 +1253,14 @@
 
         loginNote.addEventListener('click', () => {
           if (authOpenBtn) authOpenBtn.click();
+        });
+
+        drawerToggle.addEventListener('click', () => {
+          setDrawerOpen(!chatPanel.classList.contains('open'));
+        });
+        drawerClose.addEventListener('click', () => setDrawerOpen(false));
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') setDrawerOpen(false);
         });
 
         window.addEventListener('gagaga-auth-change', connectChat);
