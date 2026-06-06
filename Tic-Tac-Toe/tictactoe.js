@@ -1,46 +1,52 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const cellSize = 90;
-let board = [
-  ['', '', ''],
-  ['', '', ''],
-  ['', '', '']
-];
+const cellSize = canvas.width / 3;
+let board = createBoard();
 let currentPlayer = 'X';
+let gameFinished = false;
 
 canvas.addEventListener('click', handleClick);
-
-// 只加这一行：空格重新开始
-document.addEventListener('keydown', function(e) {
-  if (e.key === ' ') resetGame();
+document.addEventListener('keydown', event => {
+  if (event.key === ' ') resetGame();
 });
 
+function createBoard() {
+  return [
+    ['', '', ''],
+    ['', '', ''],
+    ['', '', '']
+  ];
+}
+
 function handleClick(event) {
-  if (currentPlayer !== 'X') return;
+  if (gameFinished) return;
+
   const x = Math.floor(event.offsetX / cellSize);
   const y = Math.floor(event.offsetY / cellSize);
+  if (!board[y] || board[y][x] !== '') return;
 
-  if (board[y][x] === '') {
-    board[y][x] = currentPlayer;
-    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-    draw();
-    checkWinner();
-  }
+  board[y][x] = currentPlayer;
+  currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+  draw();
+  checkWinner();
 }
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1;
 
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 3; j++) {
-      const x = j * cellSize;
-      const y = i * cellSize;
+  for (let row = 0; row < 3; row += 1) {
+    for (let column = 0; column < 3; column += 1) {
+      const x = column * cellSize;
+      const y = row * cellSize;
       ctx.strokeRect(x, y, cellSize, cellSize);
 
-      if (board[i][j] !== '') {
+      if (board[row][column] !== '') {
         ctx.font = '80px Arial';
-        ctx.fillText(board[i][j], x + 20, y + 80);
+        ctx.fillStyle = '#000';
+        ctx.fillText(board[row][column], x + 20, y + 80);
       }
     }
   }
@@ -60,25 +66,35 @@ function checkWinner() {
 
   for (const line of lines) {
     if (line[0] !== '' && line[0] === line[1] && line[1] === line[2]) {
-      alert(`${line[0]} 获胜!`);
+      gameFinished = true;
+      submitTicTacToeResult(line[0] === 'X' ? 'win' : 'loss');
+      alert(`${line[0]} wins!`);
       resetGame();
       return;
     }
   }
 
   if (board.flat().every(cell => cell !== '')) {
+    gameFinished = true;
+    submitTicTacToeResult('draw');
     alert('Draw!');
     resetGame();
   }
 }
 
+function submitTicTacToeResult(result) {
+  if (!window.GagagaPlatform) return;
+  window.GagagaPlatform.submitScore(
+    'tic-tac-toe',
+    { result },
+    `tic:${Date.now()}:${result}`
+  );
+}
+
 function resetGame() {
-  board = [
-    ['', '', ''],
-    ['', '', ''],
-    ['', '', '']
-  ];
+  board = createBoard();
   currentPlayer = 'X';
+  gameFinished = false;
   draw();
 }
 

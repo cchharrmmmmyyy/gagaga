@@ -1,0 +1,12 @@
+{
+  "name": "gagaga-game-service",
+  "version": "1.0.0",
+  "description": "Shared auth, leaderboard, and Chinese Chess room service",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}

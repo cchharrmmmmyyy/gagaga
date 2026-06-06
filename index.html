@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -189,6 +189,364 @@
         box-shadow: inset 0 -5px 0 #d17c15;
       }
 
+      .account-panel {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 10px;
+        min-width: 260px;
+      }
+
+      .account-name {
+        max-width: 180px;
+        padding: 8px 10px;
+        overflow: hidden;
+        color: #fff;
+        font-size: .9rem;
+        font-weight: 900;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        background: #1f6f35;
+        border: 4px solid var(--ink);
+        box-shadow: inset 0 -4px 0 #144923;
+      }
+
+      .pixel-btn {
+        padding: 8px 12px;
+        color: #fff;
+        font: inherit;
+        font-size: .86rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        background: #2f8ee6;
+        border: 4px solid var(--ink);
+        box-shadow: inset 0 -4px 0 #1b5794;
+        cursor: pointer;
+      }
+
+      .pixel-btn:hover,
+      .pixel-btn:focus {
+        color: var(--ink);
+        background: var(--gold);
+        box-shadow: inset 0 -4px 0 #e09c24;
+      }
+
+      .pixel-btn.danger {
+        background: #e33a25;
+        box-shadow: inset 0 -4px 0 #9f2215;
+      }
+
+      .arcade-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(25, 19, 12, .72);
+      }
+
+      .arcade-modal.active {
+        display: flex;
+      }
+
+      .arcade-dialog {
+        width: min(720px, 100%);
+        max-height: min(760px, calc(100vh - 40px));
+        overflow: auto;
+        color: var(--ink);
+        background: #fff8df;
+        border: 6px solid var(--ink);
+        box-shadow: 10px 10px 0 rgba(32, 19, 11, .38);
+      }
+
+      .arcade-dialog-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        background: #fff2a3;
+        border-bottom: 5px solid var(--ink);
+      }
+
+      .arcade-dialog-title {
+        margin: 0;
+        color: #e33a25;
+        font-size: 1.35rem;
+        font-weight: 900;
+      }
+
+      .arcade-dialog-body {
+        padding: 18px;
+      }
+
+      .auth-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .auth-box {
+        padding: 14px;
+        background: #fff2a3;
+        border: 4px solid var(--ink);
+      }
+
+      .auth-box h3 {
+        margin: 0 0 12px;
+        font-size: 1rem;
+        font-weight: 900;
+      }
+
+      .arcade-input,
+      .arcade-select {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 10px;
+        color: var(--ink);
+        font: inherit;
+        font-weight: 800;
+        background: #fff8df;
+        border: 4px solid var(--ink);
+      }
+
+      .service-message {
+        min-height: 24px;
+        margin-top: 12px;
+        font-size: .92rem;
+        font-weight: 900;
+      }
+
+      .leaderboard-toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff2a3;
+        border: 4px solid var(--ink);
+      }
+
+      .leaderboard-table th,
+      .leaderboard-table td {
+        padding: 10px;
+        border-bottom: 3px solid var(--ink);
+        font-size: .92rem;
+        font-weight: 900;
+      }
+
+      .leaderboard-table th {
+        color: #fff;
+        background: #2f8ee6;
+      }
+
+      .leaderboard-table tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .chat-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 30;
+        display: flex;
+        width: min(500px, calc(100vw - 48px));
+        height: 100vh;
+        min-height: 0;
+        flex-direction: column;
+        color: #fff8df;
+        background:
+          linear-gradient(90deg, rgba(255,255,255,.08) 0 5px, transparent 5px 100%) 0 0 / 26px 26px,
+          #8b4513;
+        border: 5px solid var(--ink);
+        box-shadow: 8px 8px 0 rgba(32, 19, 11, .32), inset 0 0 0 5px #c95824;
+        transform: translateX(calc(100% + 16px));
+        transition: transform .2s ease;
+      }
+
+      .chat-panel.open {
+        transform: translateX(0);
+      }
+
+      .chat-drawer-toggle {
+        position: fixed;
+        right: 0;
+        top: 45%;
+        z-index: 29;
+        display: block;
+        padding: 12px 8px;
+        color: #fff;
+        font: inherit;
+        font-size: .78rem;
+        font-weight: 900;
+        writing-mode: vertical-rl;
+        text-transform: uppercase;
+        background: #8b4513;
+        border: 4px solid var(--ink);
+        border-right: 0;
+        box-shadow: inset 0 -4px 0 #5a2d0c;
+        cursor: pointer;
+      }
+
+      .chat-drawer-toggle[hidden] {
+        display: none;
+      }
+
+      .chat-drawer-close {
+        display: block;
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+        padding: 0;
+        color: #fff;
+        font: inherit;
+        font-size: 1.2rem;
+        font-weight: 900;
+        line-height: 1;
+        background: #e33a25;
+        border: 3px solid var(--ink);
+        cursor: pointer;
+      }
+
+      .chat-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 12px 14px;
+        background: #5a2d0c;
+        border-bottom: 5px solid var(--ink);
+      }
+
+      .chat-panel-title {
+        margin: 0;
+        color: var(--gold);
+        font-size: 1rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 0 var(--ink);
+      }
+
+      .chat-panel-status {
+        font-size: .7rem;
+        font-weight: 900;
+        text-align: right;
+      }
+
+      .chat-panel-body {
+        display: flex;
+        min-height: 0;
+        flex: 1;
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px;
+      }
+
+      .chat-login-note {
+        margin: 0;
+        padding: 12px;
+        color: var(--ink);
+        font-size: .86rem;
+        font-weight: 900;
+        line-height: 1.35;
+        background: #fff2a3;
+        border: 4px solid var(--ink);
+      }
+
+      .chat-login-note[hidden] {
+        display: none;
+      }
+
+      .chat-messages {
+        min-height: 220px;
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+        background: #20130b;
+        border: 4px solid var(--ink);
+        box-shadow: inset 0 0 0 4px rgba(255, 214, 74, .08);
+      }
+
+      .chat-message {
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid rgba(255, 248, 223, .18);
+        overflow-wrap: anywhere;
+      }
+
+      .chat-message:last-child {
+        margin-bottom: 0;
+      }
+
+      .chat-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 3px;
+        color: var(--gold);
+        font-size: .72rem;
+        font-weight: 900;
+      }
+
+      .chat-text {
+        color: #fff8df;
+        font-size: .85rem;
+        line-height: 1.3;
+      }
+
+      .chat-compose {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+      }
+
+      .chat-compose[hidden] {
+        display: none;
+      }
+
+      .chat-input {
+        min-width: 0;
+        padding: 9px 10px;
+        color: var(--ink);
+        font: inherit;
+        font-size: .85rem;
+        font-weight: 800;
+        background: #fff8df;
+        border: 4px solid var(--ink);
+        border-radius: 0;
+        outline: none;
+      }
+
+      .chat-send {
+        min-width: 62px;
+        padding: 8px 10px;
+        color: #fff;
+        font: inherit;
+        font-size: .8rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        background: #e33a25;
+        border: 4px solid var(--ink);
+        box-shadow: inset 0 -4px 0 #9f2215;
+        cursor: pointer;
+      }
+
+      .chat-send:hover,
+      .chat-send:focus {
+        color: var(--ink);
+        background: var(--gold);
+        box-shadow: inset 0 -4px 0 #b96f16;
+      }
+
       @media (max-width: 640px) {
         .pixel-header {
           margin-top: 14px;
@@ -207,6 +565,19 @@
 
         .coin {
           width: 22px;
+        }
+
+        .account-panel {
+          justify-content: flex-start;
+          min-width: 0;
+        }
+
+        .auth-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .leaderboard-toolbar {
+          flex-direction: column;
         }
       }
 
@@ -427,22 +798,7 @@
       }
 
       .header-bar::before {
-        content: "?";
-        position: absolute;
-        right: 80px;
-        top: 50%;
-        width: 44px; height: 44px;
-        transform: translateY(-50%);
-        display: grid;
-        place-items: center;
-        border: 5px solid var(--ink);
-        background: var(--gold);
-        color: #fff;
-        font-size: 1.55rem;
-        font-weight: 900;
-        text-shadow: 2px 2px 0 var(--ink);
-        box-shadow: inset -6px -6px 0 #b96f16;
-        animation: questionBounce 1.45s ease-in-out infinite;
+        content: none;
       }
 
       @keyframes questionBounce {
@@ -566,14 +922,17 @@
       <span></span><span></span><span></span><span></span><span></span>
     </div>
 
-    <main class="container page-shell">
+    <button class="chat-drawer-toggle" id="chat-drawer-toggle" type="button" aria-controls="chat-panel" aria-expanded="false">Chat</button>
+
+    <main class="page-shell">
         <header class="pixel-header" aria-label="Games arcade header">
           <div class="header-bar">
             <h1 class="games-heading">Simple JavaScript Games</h1>
-            <div class="coin-row" aria-hidden="true">
-              <span class="coin"></span>
-              <span class="coin"></span>
-              <span class="coin"></span>
+            <div class="account-panel" aria-label="Account and leaderboards">
+              <span class="account-name" id="account-name">Guest</span>
+              <button class="pixel-btn" id="auth-open-btn" type="button">Login</button>
+              <button class="pixel-btn" id="leaderboard-open-btn" type="button">Ranks</button>
+              <button class="pixel-btn danger" id="logout-btn" type="button" hidden>Logout</button>
             </div>
           </div>
         </header>
@@ -645,7 +1004,7 @@
     </svg>
     <div class="card-body">
       <h5 class="card-title">Chinese Chess Game</h5>
-      <a href="Rock-Paper-Scissors/index.html" class="btn btn-primary">Tap to Play <span class="play-arrow">▶</span></a>
+      <a href="Chinese Chess/index.html" class="btn btn-primary">Tap to Play <span class="play-arrow">▶</span></a>
     </div>
   </div>
 <div class="card">
@@ -660,6 +1019,255 @@
         </div>
     </main>
 
+    <aside class="chat-panel" id="chat-panel" aria-label="Online chat">
+      <div class="chat-panel-header">
+        <h2 class="chat-panel-title">Chat Room</h2>
+        <span class="chat-panel-status" id="chat-status">Guest</span>
+        <button class="chat-drawer-close" id="chat-drawer-close" type="button" aria-label="Close chat">×</button>
+      </div>
+      <div class="chat-panel-body">
+        <p class="chat-login-note" id="chat-login-note">Login first, then everyone online can chat here.</p>
+        <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
+        <form class="chat-compose" id="chat-compose" hidden>
+          <input class="chat-input" id="chat-input" maxlength="240" autocomplete="off" placeholder="Type message..." required>
+          <button class="chat-send" type="submit">Send</button>
+        </form>
+      </div>
+    </aside>
+
+    <div class="arcade-modal" id="auth-modal" aria-hidden="true">
+      <div class="arcade-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <div class="arcade-dialog-header">
+          <h2 class="arcade-dialog-title" id="auth-title">Player Account</h2>
+          <button class="pixel-btn danger" type="button" data-close-modal="auth-modal">Close</button>
+        </div>
+        <div class="arcade-dialog-body">
+          <div class="auth-grid">
+            <form class="auth-box" id="login-form">
+              <h3>Login</h3>
+              <input class="arcade-input" id="login-username" name="username" autocomplete="username" placeholder="Username" required>
+              <input class="arcade-input" id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Password" required>
+              <button class="pixel-btn" type="submit">Login</button>
+            </form>
+            <form class="auth-box" id="register-form">
+              <h3>Register</h3>
+              <input class="arcade-input" id="register-username" name="username" autocomplete="username" placeholder="3-20 characters" required>
+              <input class="arcade-input" id="register-password" name="password" type="password" autocomplete="new-password" placeholder="At least 6 characters" required>
+              <button class="pixel-btn" type="submit">Create</button>
+            </form>
+          </div>
+          <div class="service-message" id="auth-message" role="status"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arcade-modal" id="leaderboard-modal" aria-hidden="true">
+      <div class="arcade-dialog" role="dialog" aria-modal="true" aria-labelledby="leaderboard-title">
+        <div class="arcade-dialog-header">
+          <h2 class="arcade-dialog-title" id="leaderboard-title">Leaderboards</h2>
+          <button class="pixel-btn danger" type="button" data-close-modal="leaderboard-modal">Close</button>
+        </div>
+        <div class="arcade-dialog-body">
+          <div class="leaderboard-toolbar">
+            <select class="arcade-select" id="leaderboard-game"></select>
+            <button class="pixel-btn" id="leaderboard-refresh-btn" type="button">Refresh</button>
+          </div>
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Player</th>
+                <th>Score</th>
+                <th>Extra</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+              <tr><td colspan="4">No records yet</td></tr>
+            </tbody>
+          </table>
+          <div class="service-message" id="leaderboard-message" role="status"></div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="platform.js"></script>
+    <script>
+      (() => {
+        const statusEl = document.getElementById('chat-status');
+        const loginNote = document.getElementById('chat-login-note');
+        const messagesEl = document.getElementById('chat-messages');
+        const composeForm = document.getElementById('chat-compose');
+        const inputEl = document.getElementById('chat-input');
+        const authOpenBtn = document.getElementById('auth-open-btn');
+        const chatPanel = document.getElementById('chat-panel');
+        const drawerToggle = document.getElementById('chat-drawer-toggle');
+        const drawerClose = document.getElementById('chat-drawer-close');
+
+        let socket = null;
+        let connectedToken = null;
+
+        function setDrawerOpen(open) {
+          chatPanel.classList.toggle('open', open);
+          drawerToggle.setAttribute('aria-expanded', String(open));
+          drawerToggle.hidden = open;
+        }
+
+        function chatUrl() {
+          const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+          const host = location.hostname || 'localhost';
+          return `${protocol}://${host}:8080/ws/chat`;
+        }
+
+        function setStatus(text) {
+          statusEl.textContent = text;
+        }
+
+        function setMessagesEmpty(text) {
+          messagesEl.innerHTML = '';
+          const item = document.createElement('div');
+          item.className = 'chat-message';
+          const body = document.createElement('div');
+          body.className = 'chat-text';
+          body.textContent = text;
+          item.appendChild(body);
+          messagesEl.appendChild(item);
+        }
+
+        function formatTime(value) {
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return '';
+          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function appendMessage(message) {
+          const item = document.createElement('div');
+          item.className = 'chat-message';
+
+          const meta = document.createElement('div');
+          meta.className = 'chat-meta';
+
+          const name = document.createElement('span');
+          name.textContent = message.username || 'Player';
+
+          const time = document.createElement('span');
+          time.textContent = formatTime(message.createdAt);
+
+          const text = document.createElement('div');
+          text.className = 'chat-text';
+          text.textContent = message.text || '';
+
+          meta.append(name, time);
+          item.append(meta, text);
+          messagesEl.appendChild(item);
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function renderHistory(messages) {
+          messagesEl.innerHTML = '';
+          if (!messages.length) {
+            setMessagesEmpty('No messages yet.');
+            return;
+          }
+          messages.forEach(appendMessage);
+        }
+
+        function closeSocket() {
+          if (socket) {
+            socket.close();
+            socket = null;
+          }
+          connectedToken = null;
+        }
+
+        function renderLoggedOut() {
+          closeSocket();
+          setStatus('Guest');
+          loginNote.hidden = false;
+          composeForm.hidden = true;
+          setMessagesEmpty('Please login to join the chat.');
+        }
+
+        function connectChat() {
+          const platform = window.GagagaPlatform;
+          const token = platform && platform.getToken ? platform.getToken() : null;
+          const user = platform && platform.getUser ? platform.getUser() : null;
+          if (!token || !user) {
+            renderLoggedOut();
+            return;
+          }
+
+          if (socket && socket.readyState <= 1 && connectedToken === token) return;
+          closeSocket();
+          connectedToken = token;
+          setStatus('Connecting');
+          loginNote.hidden = true;
+          composeForm.hidden = false;
+
+          socket = new WebSocket(chatUrl());
+          socket.addEventListener('open', () => {
+            setStatus(user.username);
+            socket.send(JSON.stringify({ type: 'auth', token }));
+          });
+          socket.addEventListener('message', (event) => {
+            let data;
+            try {
+              data = JSON.parse(event.data);
+            } catch {
+              return;
+            }
+
+            if (data.type === 'ready') {
+              renderHistory(data.history || []);
+              return;
+            }
+            if (data.type === 'message' && data.message) {
+              appendMessage(data.message);
+              return;
+            }
+            if (data.type === 'error') {
+              setStatus('Error');
+              setMessagesEmpty(data.message || 'Chat error.');
+            }
+          });
+          socket.addEventListener('close', () => {
+            if (connectedToken === token) setStatus('Offline');
+          });
+          socket.addEventListener('error', () => {
+            setStatus('Offline');
+            setMessagesEmpty('Start the local server to use chat.');
+          });
+        }
+
+        composeForm.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const text = inputEl.value.trim();
+          if (!text) return;
+          if (!socket || socket.readyState !== WebSocket.OPEN) {
+            connectChat();
+            return;
+          }
+          socket.send(JSON.stringify({ type: 'message', text }));
+          inputEl.value = '';
+        });
+
+        loginNote.addEventListener('click', () => {
+          if (authOpenBtn) authOpenBtn.click();
+        });
+
+        drawerToggle.addEventListener('click', () => {
+          setDrawerOpen(!chatPanel.classList.contains('open'));
+        });
+        drawerClose.addEventListener('click', () => setDrawerOpen(false));
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') setDrawerOpen(false);
+        });
+
+        window.addEventListener('gagaga-auth-change', connectChat);
+        window.addEventListener('beforeunload', closeSocket);
+        setMessagesEmpty('Please login to join the chat.');
+        setTimeout(connectChat, 0);
+      })();
+    </script>
   </body>
 </html>

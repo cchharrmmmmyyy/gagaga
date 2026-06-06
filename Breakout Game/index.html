@@ -31,6 +31,28 @@
       image-rendering: pixelated;
     }
 
+    .home-button {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      z-index: 20;
+      padding: 10px 14px;
+      border: 4px solid #05070d;
+      background: #e23b2f;
+      color: #fff6ce;
+      box-shadow: 4px 4px 0 #05070d;
+      font: 900 14px/1 "Courier New", Consolas, monospace;
+      text-decoration: none;
+      text-shadow: 2px 2px 0 #752016;
+    }
+
+    .home-button:hover,
+    .home-button:focus-visible {
+      background: #ff563f;
+      transform: translate(-1px, -1px);
+      box-shadow: 5px 5px 0 #05070d;
+    }
+
     .shell {
       position: relative;
       width: min(100vw, 952px);
@@ -114,6 +136,12 @@
     }
 
     @media (max-width: 680px) {
+      .home-button {
+        top: 8px;
+        left: 8px;
+        padding: 8px 10px;
+        font-size: 11px;
+      }
       .shell { padding: 8px; }
       .game-frame {
         padding: 8px;
@@ -137,6 +165,7 @@
   </style>
 </head>
 <body>
+  <a class="home-button" href="../index.html" aria-label="返回主页面">&larr; HOME</a>
   <main class="shell">
     <section class="game-frame" aria-label="Breakout Adventure Pixel game">
       <div class="title-strip">
@@ -150,6 +179,7 @@
       </div>
     </section>
   </main>
+  <script src="../game-platform.js"></script>
   <script src="breakout.js"></script>
 </body>
 </html>
