@@ -102,6 +102,51 @@
     .menu-btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #1a1a1a; }
     .menu-btn.secondary { background: #2980b9; }
     .menu-btn.green { background: #27ae60; }
+    .menu-btn.ranked {
+      background: linear-gradient(180deg, #f39c12, #c66a08);
+      color: #1a1a1a;
+      border-color: #ffd76a;
+      font-weight: bold;
+    }
+
+    .rank-card {
+      background: #1a1a1a;
+      border: 3px solid #f39c12;
+      padding: 16px;
+      margin: 14px 0;
+      text-align: left;
+      line-height: 1.8;
+    }
+    .rank-card strong { color: #ffd700; }
+    .rank-title {
+      display: inline-block;
+      padding: 3px 8px;
+      color: #1a1a1a;
+      background: #ffd700;
+      border: 2px solid #fff0a0;
+      font-weight: bold;
+    }
+    .ranked-status {
+      min-height: 48px;
+      padding: 12px;
+      margin: 12px 0;
+      background: #1a1a1a;
+      color: #7bed9f;
+      border: 3px solid #2ecc71;
+      line-height: 1.5;
+    }
+    .ranked-status.searching::after {
+      content: "";
+      display: inline-block;
+      width: 1.5em;
+      animation: searchingDots 1.2s steps(4, end) infinite;
+    }
+    @keyframes searchingDots {
+      0% { content: ""; }
+      25% { content: "."; }
+      50% { content: ".."; }
+      75%, 100% { content: "..."; }
+    }
 
     .difficulty-row {
       display: flex;
@@ -167,6 +212,9 @@
     }
     #chessBoard {
       display: block;
+      width: 100%;
+      max-width: 540px;
+      height: auto;
       background: var(--board-bg);
       image-rendering: pixelated;
       cursor: pointer;
@@ -257,10 +305,25 @@
       text-shadow: 3px 3px 0 #1a1a1a;
     }
     .modal-content p { margin-bottom: 16px; font-size: 16px; }
+    .result-title-badge {
+      display: none;
+      margin: 0 auto 18px;
+      padding: 8px 14px;
+      width: fit-content;
+      background: #ffd700;
+      color: #1a1a1a;
+      border: 3px solid #fff3a6;
+      box-shadow: 3px 3px 0 #1a1a1a;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .result-title-badge.active { display: block; }
 
     @media (max-width: 720px) {
       #game-screen.active { flex-direction: column; align-items: center; }
+      .board-wrap { width: calc(100vw - 24px); padding: 6px; }
       .sidebar { width: 100%; max-width: 480px; }
+      .header h1 { font-size: 22px; padding-top: 42px; }
     }
   </style>
 </head>
@@ -282,6 +345,20 @@
       </div>
       <button class="menu-btn secondary" data-mode="local">本地双人对战</button>
       <button class="menu-btn green" data-mode="lan">联机对战</button>
+      <button class="menu-btn ranked" data-mode="ranked">排位匹配</button>
+    </div>
+
+    <div class="menu-card" id="ranked-menu" style="display:none;">
+      <h2>排位匹配</h2>
+      <div class="rank-card">
+        <div>玩家：<strong id="ranked-player-name">未登录</strong></div>
+        <div>战绩：<span id="ranked-record">0 胜 / 0 负 / 0 和</span></div>
+        <div>排位称号：<span id="ranked-current-title">暂无</span></div>
+      </div>
+      <div class="ranked-status" id="ranked-status">点击下方按钮进入在线匹配队列</div>
+      <button class="menu-btn ranked" id="ranked-start-btn">开始排位匹配</button>
+      <button class="menu-btn" id="ranked-cancel-btn" style="display:none;">取消匹配</button>
+      <button class="menu-btn secondary" id="ranked-back-btn">返回</button>
     </div>
 
     <div class="menu-card" id="lan-menu" style="display:none;">
@@ -323,6 +400,7 @@
       <h3>状态</h3>
       <div class="status-block" id="status-block">
         <div>模式：<span id="mode-label">-</span></div>
+        <div id="players-row" style="display:none;">对局：<span id="players-label">-</span></div>
         <div>走棋：<span id="turn-label" class="turn-indicator turn-red">红方</span></div>
         <div id="check-label" style="display:none;" class="check-warning">⚠ 将军！</div>
       </div>
@@ -342,6 +420,7 @@
     <div class="modal-content">
       <h2 id="result-title">游戏结束</h2>
       <p id="result-text">-</p>
+      <div class="result-title-badge" id="result-title-badge">天才少年</div>
       <button class="menu-btn green" id="play-again-btn">再来一局</button>
       <button class="menu-btn secondary" id="modal-menu-btn">主菜单</button>
     </div>

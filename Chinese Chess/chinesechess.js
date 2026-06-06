@@ -835,6 +835,7 @@ let aiThinking = false;
 let netManager = null;
 let animating = false;
 let chessLeaderboardSubmitted = false;
+let rankedOpponent = null;
 
 // DOM Elements
 const menuScreen = document.getElementById('menu-screen');
@@ -844,17 +845,27 @@ const mainMenu = document.getElementById('main-menu');
 const lanMenu = document.getElementById('lan-menu');
 const lanCreate = document.getElementById('lan-create');
 const lanJoin = document.getElementById('lan-join');
+const rankedMenu = document.getElementById('ranked-menu');
 const modeLabel = document.getElementById('mode-label');
+const playersRow = document.getElementById('players-row');
+const playersLabel = document.getElementById('players-label');
 const turnLabel = document.getElementById('turn-label');
 const checkLabel = document.getElementById('check-label');
 const moveHistoryDiv = document.getElementById('move-history');
 const resultTitle = document.getElementById('result-title');
 const resultText = document.getElementById('result-text');
+const resultTitleBadge = document.getElementById('result-title-badge');
 const roomCodeDisplay = document.getElementById('room-code');
 const createStatus = document.getElementById('create-status');
 const joinStatus = document.getElementById('join-status');
 const serverUrlInput = document.getElementById('server-url-input');
 const joinCodeInput = document.getElementById('join-code-input');
+const rankedPlayerName = document.getElementById('ranked-player-name');
+const rankedRecord = document.getElementById('ranked-record');
+const rankedCurrentTitle = document.getElementById('ranked-current-title');
+const rankedStatus = document.getElementById('ranked-status');
+const rankedStartBtn = document.getElementById('ranked-start-btn');
+const rankedCancelBtn = document.getElementById('ranked-cancel-btn');
 
 function showScreen(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -879,6 +890,18 @@ function startGame(mode, aiDepth, aiColor) {
     modeLabel.textContent = '本地双人对战';
   } else if (mode === 'lan') {
     modeLabel.textContent = '局域网对战';
+  } else if (mode === 'ranked') {
+    modeLabel.textContent = '排位对战';
+  }
+
+  if (mode === 'ranked' && netManager && rankedOpponent) {
+    const me = window.GagagaPlatform?.getUser?.();
+    const redName = netManager.myColor === RED ? me?.username : rankedOpponent.username;
+    const blackName = netManager.myColor === BLACK ? me?.username : rankedOpponent.username;
+    playersLabel.textContent = `红方 ${redName || '玩家'} vs 黑方 ${blackName || '玩家'}`;
+    playersRow.style.display = 'block';
+  } else {
+    playersRow.style.display = 'none';
   }
 
   showScreen(gameScreen);
@@ -909,7 +932,7 @@ function updateUI() {
 
   // Undo button visibility
   const undoBtn = document.getElementById('undo-btn');
-  if (currentGame.mode === 'lan') {
+  if (currentGame.mode === 'lan' || currentGame.mode === 'ranked') {
     undoBtn.style.display = 'none';
   } else {
     undoBtn.style.display = 'block';
@@ -942,24 +965,61 @@ function render() {
   drawBoard(currentGame, currentGame.selected !== null);
 }
 
-function showResult(title, text) {
+function showResult(title, text, earnedTitle = false) {
   resultTitle.textContent = title;
   resultText.textContent = text;
+  resultTitleBadge.classList.toggle('active', earnedTitle);
   resultModal.classList.add('active');
 }
 
 function localChessColor() {
   if (!currentGame) return RED;
-  if (currentGame.mode === 'lan' && netManager) return netManager.myColor;
+  if ((currentGame.mode === 'lan' || currentGame.mode === 'ranked') && netManager) return netManager.myColor;
   if (currentGame.mode === 'ai') return opponent(currentGame.aiColor);
   return RED;
 }
 
 function submitChessResult(winner) {
-  if (chessLeaderboardSubmitted || !window.GagagaPlatform) return;
-  chessLeaderboardSubmitted = true;
   const result = winner === 'draw' ? 'draw' : (winner === localChessColor() ? 'win' : 'loss');
-  window.GagagaPlatform.submitScore('chinese-chess', { result }, `chess:${Date.now()}:${result}`);
+  return submitChessOutcome(result);
+}
+
+function submitChessOutcome(result) {
+  if (chessLeaderboardSubmitted || !window.GagagaPlatform) return Promise.resolve();
+  chessLeaderboardSubmitted = true;
+  return window.GagagaPlatform
+    .submitScore('chinese-chess', { result }, `chess:${Date.now()}:${result}`)
+    .then(() => loadRankedProfile());
+}
+
+function isOnlineGame() {
+  return currentGame && (currentGame.mode === 'lan' || currentGame.mode === 'ranked');
+}
+
+async function loadRankedProfile() {
+  const platform = window.GagagaPlatform;
+  const user = platform?.getUser?.();
+  rankedPlayerName.textContent = user?.username || '未登录';
+
+  if (!user || !platform?.api) {
+    rankedRecord.textContent = '登录后查看';
+    rankedCurrentTitle.textContent = '暂无';
+    rankedCurrentTitle.className = '';
+    return;
+  }
+
+  try {
+    const data = await platform.api('/api/leaderboards/chinese-chess?limit=100');
+    const record = (data.rows || []).find((row) => row.userId === user.id);
+    rankedRecord.textContent = record
+      ? `${record.wins || 0} 胜 / ${record.losses || 0} 负 / ${record.draws || 0} 和`
+      : '0 胜 / 0 负 / 0 和';
+    const hasTitle = Boolean(record?.wins);
+    rankedCurrentTitle.textContent = hasTitle ? '天才少年' : '暂无';
+    rankedCurrentTitle.className = hasTitle ? 'rank-title' : '';
+  } catch (error) {
+    rankedRecord.textContent = '战绩加载失败';
+  }
 }
 
 function handleBoardClick(mx, my) {
@@ -970,8 +1030,8 @@ function handleBoardClick(mx, my) {
   if (!pos) return;
   const { r, c } = pos;
 
-  // LAN mode: only allow clicking when it's the local player's turn
-  if (currentGame.mode === 'lan' && netManager) {
+  // Online mode: only allow clicking when it's the local player's turn
+  if (isOnlineGame() && netManager) {
     const localColor = netManager.myColor;
     if (currentGame.turn !== localColor) return;
   }
@@ -1015,7 +1075,7 @@ function handleBoardClick(mx, my) {
     if (currentGame.status === 'checkmate') {
       submitChessResult(currentGame.winner);
       showResult('将杀！', `${color === RED ? '红方' : '黑方'}获胜！`);
-      if (netManager && currentGame.mode === 'lan') {
+      if (netManager && isOnlineGame()) {
         netManager.send({ type: 'move', fromR, fromC, toR: r, toC: c, status: 'checkmate', winner: currentGame.winner });
       }
       return;
@@ -1023,14 +1083,14 @@ function handleBoardClick(mx, my) {
     if (currentGame.status === 'stalemate') {
       submitChessResult('draw');
       showResult('和棋！', '双方平局。');
-      if (netManager && currentGame.mode === 'lan') {
+      if (netManager && isOnlineGame()) {
         netManager.send({ type: 'move', fromR, fromC, toR: r, toC: c, status: 'stalemate' });
       }
       return;
     }
 
-    // Send move in LAN mode
-    if (netManager && currentGame.mode === 'lan') {
+    // Send move in online modes
+    if (netManager && isOnlineGame()) {
       netManager.send({ type: 'move', fromR, fromC, toR: r, toC: c });
     }
 
@@ -1111,9 +1171,12 @@ class NetworkManager {
     this.onStatus = null;
     this.onCreate = null;
     this.onStart = null;
+    this.onRankedResult = null;
+    this.connectionMode = 'room';
+    this.intentionalClose = false;
   }
 
-  connect(url, roomCode, isHost) {
+  connect(url, roomCode, isHost, connectionMode = 'room') {
     if (!url) {
       if (this.onStatus) this.onStatus('请输入服务器地址');
       return;
@@ -1121,6 +1184,8 @@ class NetworkManager {
     this.isHost = isHost;
     this.myColor = isHost ? RED : BLACK;
     this.roomCode = roomCode || null;
+    this.connectionMode = connectionMode;
+    this.intentionalClose = false;
 
     if (this.onStatus) this.onStatus('正在连接...');
 
@@ -1133,7 +1198,10 @@ class NetworkManager {
 
     this.socket.onopen = () => {
       this.connected = true;
-      if (this.isHost) {
+      if (this.connectionMode === 'ranked') {
+        this.socket.send(JSON.stringify({ type: 'ranked_enqueue' }));
+        if (this.onStatus) this.onStatus('正在寻找在线对手');
+      } else if (this.isHost) {
         this.socket.send(JSON.stringify({ type: 'create_room' }));
         if (this.onStatus) this.onStatus('正在创建房间...');
       } else {
@@ -1150,7 +1218,7 @@ class NetworkManager {
 
     this.socket.onclose = () => {
       this.connected = false;
-      if (this.onStatus) this.onStatus('连接已断开。');
+      if (!this.intentionalClose && this.onStatus) this.onStatus('连接已断开。');
     };
 
     this.socket.onerror = () => {
@@ -1174,6 +1242,30 @@ class NetworkManager {
       case 'joined':
         if (this.onStatus) this.onStatus('已加入房间，游戏开始！你是黑方。');
         if (this.onStart) this.onStart();
+        break;
+
+      case 'ranked_queued':
+        if (this.onStatus) this.onStatus(`已进入匹配队列，当前有 ${msg.queueSize || 1} 名玩家等待`);
+        break;
+
+      case 'ranked_match_found':
+        this.myColor = msg.color;
+        this.matchId = msg.matchId;
+        rankedOpponent = msg.opponent;
+        if (this.onStatus) this.onStatus(`匹配成功：${msg.opponent?.username || '在线玩家'}`);
+        if (this.onStart) this.onStart(msg);
+        break;
+
+      case 'ranked_cancelled':
+        if (this.onStatus) this.onStatus('已取消排位匹配');
+        break;
+
+      case 'ranked_result':
+        if (this.onRankedResult) this.onRankedResult(msg);
+        break;
+
+      case 'auth_required':
+        if (this.onStatus) this.onStatus(msg.message || '请先登录再进行排位匹配');
         break;
 
       case 'move':
@@ -1207,17 +1299,24 @@ class NetworkManager {
   }
 
   disconnect() {
+    this.intentionalClose = true;
     if (this.socket) {
       this.socket.close();
       this.socket = null;
     }
     this.connected = false;
   }
+
+  cancelRanked() {
+    this.send({ type: 'ranked_cancel' });
+  }
 }
 
-function defaultGameSocketUrl() {
+function defaultGameSocketUrl(includeAuth = false) {
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${protocol}//${location.host}/ws/games/chinese-chess`;
+  const token = includeAuth ? window.GagagaPlatform?.getToken?.() : null;
+  const query = token ? `?token=${encodeURIComponent(token)}` : '';
+  return `${protocol}//${location.host}/ws/games/chinese-chess${query}`;
 }
 
 // ---- Event Handlers ----
@@ -1227,6 +1326,13 @@ document.querySelectorAll('[data-mode]').forEach(btn => {
     const mode = btn.dataset.mode;
     if (mode === 'lan') {
       showMenuSection('lan-menu');
+    } else if (mode === 'ranked') {
+      showMenuSection('ranked-menu');
+      rankedStatus.textContent = '点击下方按钮进入在线匹配队列';
+      rankedStatus.classList.remove('searching');
+      rankedStartBtn.style.display = 'block';
+      rankedCancelBtn.style.display = 'none';
+      loadRankedProfile();
     } else if (mode === 'ai') {
       const activeDepth = parseInt(document.querySelector('.difficulty-btn.active').dataset.depth);
       startGame('ai', activeDepth);
@@ -1234,6 +1340,75 @@ document.querySelectorAll('[data-mode]').forEach(btn => {
       startGame('local');
     }
   });
+});
+
+function handleRankedMove(msg) {
+  if (!currentGame) return;
+  currentGame.makeMove(msg.fromR, msg.fromC, msg.toR, msg.toC);
+  currentGame.selected = null;
+  currentGame.legalMoves = [];
+  updateUI();
+  render();
+}
+
+rankedStartBtn.addEventListener('click', () => {
+  const platform = window.GagagaPlatform;
+  if (!platform?.getToken?.() || !platform?.getUser?.()) {
+    rankedStatus.textContent = '请先返回游戏平台登录账号，再进入排位匹配。';
+    rankedStatus.classList.remove('searching');
+    return;
+  }
+
+  if (netManager) netManager.disconnect();
+  rankedStatus.textContent = '正在连接排位服务器';
+  rankedStatus.classList.add('searching');
+  rankedStartBtn.style.display = 'none';
+  rankedCancelBtn.style.display = 'block';
+
+  netManager = new NetworkManager();
+  netManager.onStatus = (message) => {
+    rankedStatus.textContent = message;
+  };
+  netManager.onStart = () => {
+    rankedStatus.classList.remove('searching');
+    startGame('ranked');
+  };
+  netManager.onMove = handleRankedMove;
+  netManager.onRankedResult = (message) => {
+    submitChessOutcome(message.result);
+    if (currentGame) currentGame.status = message.reason === 'stalemate' ? 'stalemate' : 'finished';
+
+    if (message.result === 'win') {
+      showResult('排位胜利！', '排位状态已更新，恭喜获得称号：', true);
+    } else if (message.result === 'draw') {
+      showResult('排位和棋', '双方平局，排位状态已更新。');
+    } else {
+      const reason = message.reason === 'disconnect' ? '连接中断，本局判负。' : '本局未能取胜，排位状态已更新。';
+      showResult('排位结束', reason);
+    }
+  };
+  netManager.connect(defaultGameSocketUrl(true), null, false, 'ranked');
+});
+
+rankedCancelBtn.addEventListener('click', () => {
+  if (netManager) {
+    netManager.cancelRanked();
+    netManager.disconnect();
+    netManager = null;
+  }
+  rankedStatus.textContent = '已取消排位匹配';
+  rankedStatus.classList.remove('searching');
+  rankedStartBtn.style.display = 'block';
+  rankedCancelBtn.style.display = 'none';
+});
+
+document.getElementById('ranked-back-btn').addEventListener('click', () => {
+  if (netManager) {
+    netManager.cancelRanked();
+    netManager.disconnect();
+    netManager = null;
+  }
+  showMenuSection('main-menu');
 });
 
 // Difficulty buttons
@@ -1341,7 +1516,7 @@ document.getElementById('join-cancel-btn').addEventListener('click', () => {
 
 // Game screen buttons
 document.getElementById('undo-btn').addEventListener('click', () => {
-  if (!currentGame || currentGame.mode === 'lan') return;
+  if (!currentGame || currentGame.mode === 'lan' || currentGame.mode === 'ranked') return;
   currentGame.undoLastMove();
   updateUI();
   render();
@@ -1349,12 +1524,14 @@ document.getElementById('undo-btn').addEventListener('click', () => {
 
 document.getElementById('resign-btn').addEventListener('click', () => {
   if (!currentGame) return;
-  if (currentGame.mode === 'lan' && netManager) {
+  const online = isOnlineGame() && netManager;
+  if (online) {
     netManager.send({ type: 'resign' });
   }
-  const winner = currentGame.turn === RED ? '黑方' : '红方';
+  const winnerColor = online ? opponent(localChessColor()) : opponent(currentGame.turn);
+  const winner = winnerColor === RED ? '红方' : '黑方';
   currentGame.status = 'resigned';
-  submitChessResult(opponent(currentGame.turn));
+  submitChessResult(winnerColor);
   showResult('认输', `${winner}获胜！`);
 });
 
@@ -1372,10 +1549,16 @@ document.getElementById('play-again-btn').addEventListener('click', () => {
   if (currentGame) {
     const mode = currentGame.mode;
     const depth = currentGame.aiDepth;
-    if (mode === 'lan' && netManager) {
+    if ((mode === 'lan' || mode === 'ranked') && netManager) {
       netManager.disconnect();
       showScreen(menuScreen);
-      showMenuSection('main-menu');
+      showMenuSection(mode === 'ranked' ? 'ranked-menu' : 'main-menu');
+      if (mode === 'ranked') {
+        rankedStartBtn.style.display = 'block';
+        rankedCancelBtn.style.display = 'none';
+        rankedStatus.textContent = '点击下方按钮进入在线匹配队列';
+        loadRankedProfile();
+      }
       return;
     }
     startGame(mode, depth);
@@ -1397,7 +1580,7 @@ canvas.addEventListener('click', (e) => {
 
 // ---- Keyboard shortcuts ----
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'u' && currentGame && currentGame.mode !== 'lan') {
+  if (e.key === 'u' && currentGame && currentGame.mode !== 'lan' && currentGame.mode !== 'ranked') {
     currentGame.undoLastMove();
     updateUI();
     render();
