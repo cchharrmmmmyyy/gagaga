@@ -1,0 +1,13 @@
+{
+  "id": "chinese-chess",
+  "name": "Chinese Chess",
+  "entry": "/Chinese%20Chess/index.html",
+  "leaderboard": {
+    "type": "match",
+    "sort": [
+      { "field": "wins", "direction": "desc" },
+      { "field": "winRate", "direction": "desc" },
+      { "field": "gamesPlayed", "direction": "asc" }
+    ]
+  }
+}
