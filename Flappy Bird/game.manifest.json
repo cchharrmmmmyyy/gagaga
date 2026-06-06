@@ -1,0 +1,14 @@
+{
+  "id": "flappy-bird",
+  "name": "Flappy Bird",
+  "entry": "/Flappy%20Bird/index.html",
+  "leaderboard": {
+    "type": "best",
+    "fields": {
+      "score": { "type": "number", "required": true }
+    },
+    "sort": [
+      { "field": "score", "direction": "desc" }
+    ]
+  }
+}
