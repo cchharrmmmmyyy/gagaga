@@ -1,0 +1,14 @@
+{
+  "id": "catch-the-ball",
+  "name": "Catch the Ball",
+  "entry": "/Catch%20the%20Ball/index.html",
+  "leaderboard": {
+    "type": "best",
+    "fields": {
+      "score": { "type": "number", "required": true }
+    },
+    "sort": [
+      { "field": "score", "direction": "desc" }
+    ]
+  }
+}
