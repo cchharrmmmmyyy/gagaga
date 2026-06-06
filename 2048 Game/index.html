@@ -7,6 +7,75 @@
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
+    <!-- 登录注册弹窗 -->
+    <div class="auth-overlay" id="auth-overlay">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h2 class="auth-title">2048 游戏</h2>
+                <p class="auth-subtitle">登录后开始游戏</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">登录</button>
+                <button class="auth-tab" data-tab="register">注册</button>
+            </div>
+            
+            <!-- 登录表单 -->
+            <form class="auth-form active" id="login-form">
+                <div class="form-group">
+                    <label for="login-qq">QQ号</label>
+                    <input type="text" id="login-qq" placeholder="请输入QQ号" maxlength="12" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">密码</label>
+                    <input type="password" id="login-password" placeholder="请输入密码" required>
+                </div>
+                <div class="form-error" id="login-error"></div>
+                <button type="submit" class="auth-submit">登录</button>
+            </form>
+            
+            <!-- 注册表单 -->
+            <form class="auth-form" id="register-form">
+                <div class="form-group">
+                    <label for="register-qq">QQ号</label>
+                    <input type="text" id="register-qq" placeholder="请输入QQ号" maxlength="12" required>
+                    <span class="form-hint">作为您的账号</span>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">密码</label>
+                    <input type="password" id="register-password" placeholder="请输入密码（至少8位）" minlength="8" required>
+                    <span class="form-hint">至少8个字符</span>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm">确认密码</label>
+                    <input type="password" id="register-confirm" placeholder="请再次输入密码" required>
+                </div>
+                <div class="form-error" id="register-error"></div>
+                <button type="submit" class="auth-submit">注册</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 用户信息栏 -->
+    <div class="user-bar" id="user-bar">
+        <button class="ranking-btn" id="ranking-btn">🏆 排行榜</button>
+        <span class="user-info">欢迎，<span id="user-qq"></span></span>
+        <button class="logout-btn" id="logout-btn">退出登录</button>
+    </div>
+
+    <!-- 排行榜弹窗 -->
+    <div class="ranking-overlay" id="ranking-overlay">
+        <div class="ranking-container">
+            <div class="ranking-header">
+                <h2 class="ranking-title">🏆 排行榜</h2>
+                <button class="ranking-close" id="ranking-close">×</button>
+            </div>
+            <div class="ranking-list" id="ranking-list">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+    </div>
+
     <div class="game-wrapper">
         <header class="game-header">
             <div class="title-section">
@@ -50,11 +119,20 @@
         </div>
 
         <div class="instructions">
-            <p><strong>玩法说明:</strong> 使用 <span class="key">↑</span> <span class="key">↓</span> <span class="key">←</span> <span class="key">→</span> 方向键滑动方块，相同数字会合并相加</p>
+            <div class="rules-section">
+                <h3 class="rules-title">📖 游戏规则</h3>
+                <ul class="rules-list">
+                    <li><strong>目标:</strong> 通过合并数字，最终得到 <span class="highlight">2048</span> 方块</li>
+                    <li><strong>移动:</strong> 使用 <span class="key">↑</span><span class="key">↓</span><span class="key">←</span><span class="key">→</span> 方向键或滑动屏幕</li>
+                    <li><strong>合并:</strong> 相同数字的方块碰撞时会合并成它们的和</li>
+                    <li><strong>计分:</strong> 每次成功合并都会获得相应的分数奖励</li>
+                    <li><strong>结束:</strong> 当无法再移动任何方块时，游戏结束</li>
+                </ul>
+            </div>
         </div>
 
         <footer class="game-footer">
-            <p>用方向键或滑动屏幕来移动方块</p>
+            <p>支持触屏滑动操作</p>
         </footer>
     </div>
     <script src="../game-platform.js"></script>

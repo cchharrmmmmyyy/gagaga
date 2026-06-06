@@ -7,6 +7,7 @@ const EMPTY_DB = {
   sessions: [],
   leaderboardEntries: [],
   matchRecords: [],
+  chatMessages: [],
   gameData: {},
 };
 

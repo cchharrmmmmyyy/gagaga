@@ -56,51 +56,111 @@ const BRICK = {
   'C': { id: 'coin', hp: 1, score: 40, fill: '#f2a91f', top: PAL.coin, label: 'C' },
   'M': { id: 'moving', hp: 1, score: 35, fill: PAL.blue, top: '#7fc9ff', label: '' },
   'B': { id: 'bomb', hp: 1, score: 45, fill: '#343044', top: '#77708d', label: '!' },
-  'X': { id: 'boss', hp: 6, score: 180, fill: PAL.purple, top: '#c5a6ff', label: 'X', boss: true }
+  'X': { id: 'boss', hp: 3, score: 180, fill: PAL.purple, top: '#c5a6ff', label: 'X', boss: true }
 };
 
 const LEVELS = [
   {
     id: 'grassland', name: 'WORLD 1-1', title: 'SUNNY FIELD', theme: 'grass',
-    ballSpeed: 360, paddleSpeed: 560,
-    dropRates: { normal: 0.12, question: 1, coin: 0.35 },
+    ballSpeed: 385, paddleSpeed: 580,
+    dropRates: { normal: 0.17, question: 1, coin: 0.42, bomb: 0.35 },
     specialRules: { wind: 0 },
-    layout: ['000??000', '01111110', '01C11C10', '01111110', '00011000']
+    layout: [
+      '111111??111111',
+      '11B1111111B111',
+      '111C111111C111',
+      '11111111111111',
+      'B1111B11B1111B',
+      '11111111111111',
+      '11?111CC111?11',
+      '111B111111B111',
+      '11111111111111',
+      '1C1111111111C1',
+      '111111BB111111'
+    ]
   },
   {
     id: 'cavern', name: 'WORLD 1-2', title: 'DEEP CAVERN', theme: 'cave',
-    ballSpeed: 382, paddleSpeed: 545,
-    dropRates: { normal: 0.13, question: 1, coin: 0.3 },
+    ballSpeed: 405, paddleSpeed: 565,
+    dropRates: { normal: 0.18, hard: 0.12, question: 1, coin: 0.4, bomb: 0.4 },
     specialRules: { wind: 0 },
-    layout: ['022??220', '02111120', '02B00B20', '01122110', '00111100']
+    layout: [
+      '22222????22222',
+      '21112122121112',
+      '21B12122121B12',
+      '21112111121112',
+      '222B222222B222',
+      '211121CC121112',
+      '21B12122121B12',
+      '21112111121112',
+      '222B222222B222',
+      '21112122121112',
+      '22B222BB222B22'
+    ]
   },
   {
     id: 'lagoon', name: 'WORLD 1-3', title: 'SHELL LAGOON', theme: 'water',
-    ballSpeed: 392, paddleSpeed: 535,
-    dropRates: { normal: 0.16, question: 1, coin: 0.38 },
+    ballSpeed: 420, paddleSpeed: 555,
+    dropRates: { normal: 0.2, moving: 0.22, question: 1, coin: 0.45, bomb: 0.45 },
     specialRules: { wind: 0.00003 },
-    layout: ['0M1111M0', '01?CC?10', '01122110', '0B1001B0', '00111100']
+    layout: [
+      'M111M????M111M',
+      '11C11111111C11',
+      '1M111B11B111M1',
+      '11121111112111',
+      'B111M1111M111B',
+      '11?111CC111?11',
+      'B111M1111M111B',
+      '11121111112111',
+      '1M111B11B111M1',
+      '11C11111111C11',
+      'M111M1BB1M111M'
+    ]
   },
   {
     id: 'skyway', name: 'WORLD 1-4', title: 'CLOUD RUN', theme: 'sky',
-    ballSpeed: 410, paddleSpeed: 525,
-    dropRates: { normal: 0.18, question: 1, coin: 0.34 },
+    ballSpeed: 435, paddleSpeed: 545,
+    dropRates: { normal: 0.21, moving: 0.25, question: 1, coin: 0.42, bomb: 0.48 },
     specialRules: { wind: 0.00008 },
-    layout: ['M1M??M1M', '01111110', '00C22C00', '011BB110', '0M1111M0']
+    layout: [
+      'M1M1M????M1M1M',
+      '11111111111111',
+      '1M1C12BB21C1M1',
+      '11111111111111',
+      'M1B1M1111M1B1M',
+      '11?111CC111?11',
+      'M1B1M1111M1B1M',
+      '11111111111111',
+      '1M1C12BB21C1M1',
+      '11111111111111',
+      'M1M1M1BB1M1M1M'
+    ]
   },
   {
     id: 'castle', name: 'WORLD 1-5', title: 'EMBER FORT', theme: 'castle',
-    ballSpeed: 425, paddleSpeed: 515,
-    dropRates: { normal: 0.2, question: 1, coin: 0.28 },
+    ballSpeed: 450, paddleSpeed: 535,
+    dropRates: { normal: 0.22, hard: 0.14, question: 1, coin: 0.38, bomb: 0.5 },
     specialRules: { wind: 0 },
-    layout: ['222XX222', '2B1??1B2', '01M11M10', '011CC110', '00211200']
+    layout: [
+      '22222XXXX22222',
+      '2B2122??2212B2',
+      '21M12122121M12',
+      '211B211112B112',
+      '2B2222XX2222B2',
+      '21C121CC121C12',
+      '2B2222XX2222B2',
+      '211B211112B112',
+      '21M12122121M12',
+      '2B2122??2212B2',
+      '22222BBBB22222'
+    ]
   }
 ];
 
 const CONFIG = {
   paddle: { baseW: 116, wideW: 178, h: 18, y: H - 48 },
   ball: { r: 8 },
-  brick: { w: 78, h: 28, gap: 8, top: 94 },
+  brick: { w: 49, h: 22, gap: 4, top: 82 },
   power: { size: 28, fall: 150 },
   launchAngle: -Math.PI / 2
 };
@@ -138,6 +198,8 @@ const game = {
   readyPulse: 0
 };
 
+const MAX_BALLS = 7;
+
 let leaderboardSubmitted = false;
 
 const POWERUPS = [
@@ -151,7 +213,8 @@ const POWERUPS = [
     apply(g) {
       const source = g.balls[0] || createBall(W / 2, CONFIG.paddle.y - 16, 0, -currentLevel().ballSpeed);
       const speed = ballSpeed(source);
-      [-0.45, 0.45].forEach(offset => {
+      const room = Math.max(0, MAX_BALLS - g.balls.length);
+      [-0.45, 0.45].slice(0, room).forEach(offset => {
         const angle = Math.atan2(source.vy, source.vx) + offset;
         g.balls.push(createBall(source.x, source.y, Math.cos(angle) * speed, Math.sin(angle) * speed));
       });
@@ -284,12 +347,12 @@ function loadLevel(index) {
     [...row].forEach((key, c) => {
       const def = BRICK[key];
       if (!def) return;
-      const w = def.boss ? CONFIG.brick.w * 1.55 : CONFIG.brick.w;
-      const x = left + c * (CONFIG.brick.w + CONFIG.brick.gap) - (def.boss ? CONFIG.brick.w * 0.275 : 0);
+      const w = CONFIG.brick.w;
+      const x = left + c * (CONFIG.brick.w + CONFIG.brick.gap);
       const y = CONFIG.brick.top + r * (CONFIG.brick.h + CONFIG.brick.gap);
       game.bricks.push({
         key, def, x, y, baseX: x, w, h: CONFIG.brick.h, hp: def.hp, maxHp: def.hp,
-        alive: true, wobble: rand(0, Math.PI * 2), moveRange: def.id === 'moving' ? rand(28, 46) : 0
+        alive: true, wobble: rand(0, Math.PI * 2), moveRange: def.id === 'moving' ? rand(5, 10) : 0
       });
     });
   });
@@ -430,12 +493,12 @@ function hitBrick(brick, ball) {
 }
 
 function explodeBrick(center, ball) {
-  spawnParticles(center.x + center.w / 2, center.y + center.h / 2, PAL.lava, 28, 270);
+  spawnParticles(center.x + center.w / 2, center.y + center.h / 2, PAL.lava, 34, 290);
   game.bricks.forEach(brick => {
     if (!brick.alive || brick === center) return;
     const dx = brick.x + brick.w / 2 - (center.x + center.w / 2);
     const dy = brick.y + brick.h / 2 - (center.y + center.h / 2);
-    if (Math.hypot(dx, dy) < 118) hitBrick(brick, ball);
+    if (Math.hypot(dx, dy) < 88) hitBrick(brick, ball);
   });
 }
 
@@ -810,9 +873,9 @@ function drawBricks() {
 }
 
 function drawBrickLines(x, y, w, h) {
-  px(x + 4, y + 14, w - 8, 3, PAL.brickDark);
-  for (let bx = x + 18; bx < x + w - 8; bx += 28) px(bx, y + 4, 3, 10, PAL.brickDark);
-  for (let bx = x + 32; bx < x + w - 8; bx += 28) px(bx, y + 17, 3, 7, PAL.brickDark);
+  px(x + 4, y + 12, w - 8, 2, PAL.brickDark);
+  for (let bx = x + 15; bx < x + w - 6; bx += 22) px(bx, y + 4, 2, 8, PAL.brickDark);
+  for (let bx = x + 26; bx < x + w - 6; bx += 22) px(bx, y + 14, 2, 5, PAL.brickDark);
 }
 
 function drawStoneCracks(x, y, w, h, damage) {
@@ -822,17 +885,15 @@ function drawStoneCracks(x, y, w, h, damage) {
 }
 
 function drawMysteryBrick(x, y, w, h) {
-  px(x + 10, y + 7, 10, 10, '#fff08a');
-  px(x + w - 20, y + 7, 10, 10, PAL.coinDark);
   ctx.fillStyle = PAL.black;
-  ctx.font = '900 20px "Courier New", monospace';
+  ctx.font = '900 16px "Courier New", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('?', x + w / 2, y + h / 2 + 1);
 }
 
 function drawCoinGlyph(cx, cy, scale = 1) {
-  const s = 4 * scale;
+  const s = 2.5 * scale;
   px(cx - 3 * s, cy - 4 * s, 6 * s, 8 * s, PAL.black);
   px(cx - 2 * s, cy - 3 * s, 4 * s, 6 * s, PAL.coin);
   px(cx - s, cy - 2 * s, s, 4 * s, '#fff08a');
@@ -840,8 +901,8 @@ function drawCoinGlyph(cx, cy, scale = 1) {
 }
 
 function drawArrowGlyph(x, y, w, h) {
-  px(x + 14, y + h - 10, w - 28, 4, '#d7f7ff');
-  px(x + w - 24, y + h - 14, 8, 12, '#d7f7ff');
+  px(x + 10, y + h - 8, w - 20, 3, '#d7f7ff');
+  px(x + w - 16, y + h - 11, 6, 9, '#d7f7ff');
 }
 
 function drawBombGlyph(x, y, w, h) {
