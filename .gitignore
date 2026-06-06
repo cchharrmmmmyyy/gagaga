@@ -15,5 +15,6 @@ copilot-instructions.md
 # Local game server data
 server/data/
 node_modules/
+server/node_modules/
 __pycache__/
 *.pyc
