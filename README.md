@@ -1,71 +1,120 @@
 # Gagaga - 经典小游戏合集 🎮
 
-一个基于纯前端（HTML + CSS + JavaScript）的经典街机小游戏合集，采用 **超级马里奥** 像素风格作为游戏大厅主题。
+Gagaga 是一个基于 HTML、CSS、JavaScript 和 Node.js 的多人协作小游戏平台。项目采用超级马里奥像素风格，集成多个经典小游戏，并提供统一登录、排行榜、公共聊天和部分游戏联机功能。
 
 ## 游戏列表
 
 | 游戏 | 说明 | 操作方式 |
 |------|------|---------|
 | **2048** | 滑动合并数字方块，挑战 2048 | 方向键 ↑ ↓ ← → |
-| **打砖块 (Breakout)** | 马里奥主题打砖块，4个世界关卡，含道具、粒子特效、音效 | 方向键/鼠标移动，空格开始，P 暂停 |
+| **打砖块 (Breakout)** | 马里奥主题打砖块游戏 | 方向键/鼠标、空格、P |
 | **接球游戏 (Catch the Ball)** | 移动篮子接住下落的球 | 方向键 ← → |
-| **Flappy Bird** | 点击/空格控制小鸟飞行，穿过管道间隙 | 点击/空格 |
-| **记忆翻牌 (Memory Game)** | 配对 emoji 水果卡片，4种难度模式 | 点击卡片翻转 |
-| **乒乓球 (Pong)** | 经典乒乓，人机对战 | 方向键 ↑ ↓ |
-| **石头剪刀布 (Rock-Paper-Scissors)** | 经典猜拳游戏 | 点击按钮 |
-| **俄罗斯方块 (Tetris)** | 经典 10x20 俄罗斯方块，7种方块 | 方向键移动/旋转 |
-| **井字棋 (Tic-Tac-Toe)** | 双人井字棋 | 点击棋盘落子 |
+| **Flappy Bird** | 控制小鸟穿过管道 | 点击/空格 |
+| **记忆翻牌 (Memory Game)** | 配对卡片，支持多种难度 | 点击卡片 |
+| **乒乓球 (Pong)** | 经典乒乓球游戏 | 方向键 ↑ ↓ |
+| **中国象棋** | 支持房间联机的中国象棋 | 鼠标点击 |
+| **俄罗斯方块 (Tetris)** | 经典俄罗斯方块 | 方向键 |
+| **井字棋 (Tic-Tac-Toe)** | 支持双人和 AI 对战 | 点击棋盘 |
+
+## 平台功能
+
+- 统一用户注册和登录
+- 各游戏统一排行榜
+- 公共聊天室
+- 游戏清单自动发现
+- 游戏独立后端模块
+- 中国象棋房间联机
+- GitHub Pages 自动部署
 
 ## 技术栈
 
-- **HTML5** + **CSS3**（CSS 变量、动画、Flexbox/Grid 布局）
-- **JavaScript (ES6+)**
-- **Canvas API** — 打砖块、接球、Flappy Bird、乒乓、俄罗斯方块、井字棋
-- **Web Audio API** — 打砖块音效
-- **localStorage** — Flappy Bird/记忆翻牌 主题偏好持久化
-- **Bootstrap 5.3.3** (CDN) — 游戏大厅页面布局
-
-无需构建工具，纯静态网页，开箱即用。
+- HTML5、CSS3、JavaScript ES6+
+- Canvas API
+- Web Audio API
+- Bootstrap 5.3.3
+- Node.js
+- WebSocket（`ws`）
+- Node.js Test Runner
+- GitHub Actions
 
 ## 快速开始
 
-直接打开 `index.html` 即可游玩，或本地启动一个 HTTP 服务器：
+### 环境要求
+
+- Node.js 20 或更高版本
+- npm
+
+### 安装并启动
 
 ```bash
-# 使用 Python
-python -m http.server 8080
-
-# 或使用 npx
-npx serve .
+cd server
+npm install
+npm start
 ```
 
-然后访问 `http://localhost:8080`。
+服务默认运行在：
 
-## 在线地址
+```text
+http://localhost:8080
+```
 
-项目已配置 GitHub Pages 自动部署，推送到 `main` 分支即可触发。
+可以通过 `PORT` 环境变量修改端口。
 
-## 预览
+> 排行榜、登录、聊天和联机功能依赖 Node.js 服务，不建议直接打开根目录的 `index.html`。
 
-游戏大厅采用马里奥风格主题，包含：
-- 云朵飘动动画 ☁️
-- 板栗仔漫步 🍄
-- 问号砖块弹跳 ❓
-- 像素房屋与管道 🏠
-- 金币旋转漂浮 🪙
+## 项目结构
 
-## 开发
+```text
+gagaga/
+├── server/              # 统一 Node.js 服务
+├── shared/              # 浏览器公共接口
+├── 2048 Game/           # 2048 游戏
+├── Breakout Game/       # 打砖块
+├── Catch the Ball/      # 接球游戏
+├── Chinese Chess/       # 中国象棋
+├── Flappy Bird/         # Flappy Bird
+├── Memory Game/         # 记忆翻牌
+├── Pong Game/           # 乒乓球
+├── Tetris Game/         # 俄罗斯方块
+├── Tic-Tac-Toe/         # 井字棋
+├── ARCHITECTURE.md      # 模块开发约定
+└── CONTRIBUTING.md      # 项目协作规范
+```
 
-项目无构建流程，直接在浏览器中运行。所有游戏逻辑均在对应子目录的独立 JavaScript 文件中。
+## 开发检查
+
+提交代码前运行：
+
+```bash
+cd server
+npm run check
+```
+
+游戏开发者原则上只修改自己负责的游戏目录。公共平台与游戏模块之间的约定见 [ARCHITECTURE.md](ARCHITECTURE.md)。
+
+## 协作流程
+
+所有修改均应采用以下流程：
+
+1. 创建或认领 Issue。
+2. 从最新 `main` 创建任务分支。
+3. 在任务分支中完成修改并运行检查。
+4. 提交 Pull Request，并关联对应 Issue。
+5. 由至少一名其他成员进行 Code Review。
+6. 检查通过后合并到 `main`。
+
+具体分支、提交和评审规范见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 贡献
 
-欢迎提交 Issue 或 Pull Request！
+欢迎通过 Issue 报告问题或提出建议，并通过 Pull Request 贡献代码。
 
 ## 许可
 
-MIT License
+本项目使用 MIT License。
 
 ## 致谢
 
-- 原作者：[SUBHADIPMAITI-DEV](https://github.com/SUBHADIPMAITI-DEV/Simple-JavaScript-Games.git)
+项目基于 [SUBHADIPMAITI-DEV/Simple-JavaScript-Games](https://github.com/SUBHADIPMAITI-DEV/Simple-JavaScript-Games) 进行二次开发。
+```
+
