@@ -1215,6 +1215,11 @@ class NetworkManager {
   }
 }
 
+function defaultGameSocketUrl() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${location.host}/ws/games/chinese-chess`;
+}
+
 // ---- Event Handlers ----
 // Menu buttons
 document.querySelectorAll('[data-mode]').forEach(btn => {
@@ -1272,8 +1277,7 @@ document.getElementById('lan-create-btn').addEventListener('click', () => {
       render();
     }
   };
-  const url = serverUrlInput.value.trim();
-  if (!url) { createStatus.textContent = '请输入服务器地址'; return; }
+  const url = serverUrlInput.value.trim() || defaultGameSocketUrl();
   netManager.connect(url, null, true);
 });
 
@@ -1317,8 +1321,7 @@ document.getElementById('join-confirm-btn').addEventListener('click', () => {
       render();
     }
   };
-  const url = serverUrlInput.value.trim();
-  if (!url) { joinStatus.textContent = '请输入服务器地址'; joinStatus.style.color = '#e74c3c'; return; }
+  const url = serverUrlInput.value.trim() || defaultGameSocketUrl();
   netManager.connect(url, code, false);
 });
 
