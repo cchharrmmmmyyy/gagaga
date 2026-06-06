@@ -1,0 +1,17 @@
+{
+  "id": "breakout",
+  "name": "Breakout",
+  "entry": "/Breakout%20Game/index.html",
+  "leaderboard": {
+    "type": "best",
+    "fields": {
+      "score": { "type": "number", "required": true },
+      "level": { "type": "number" },
+      "elapsedMs": { "type": "number" }
+    },
+    "sort": [
+      { "field": "score", "direction": "desc" },
+      { "field": "elapsedMs", "direction": "asc" }
+    ]
+  }
+}
