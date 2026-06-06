@@ -1,0 +1,18 @@
+{
+  "id": "2048",
+  "name": "2048",
+  "entry": "/2048%20Game/index.html",
+  "leaderboard": {
+    "type": "best",
+    "fields": {
+      "score": { "type": "number", "required": true },
+      "level": { "type": "number" },
+      "elapsedMs": { "type": "number" },
+      "mode": { "type": "string", "maxLength": 40 }
+    },
+    "sort": [
+      { "field": "score", "direction": "desc" },
+      { "field": "elapsedMs", "direction": "asc" }
+    ]
+  }
+}
