@@ -1,0 +1,17 @@
+{
+  "id": "memory",
+  "name": "Memory Game",
+  "entry": "/Memory%20Game/index.html",
+  "leaderboard": {
+    "type": "best",
+    "fields": {
+      "moves": { "type": "number", "required": true },
+      "elapsedMs": { "type": "number", "required": true },
+      "mode": { "type": "string", "maxLength": 40 }
+    },
+    "sort": [
+      { "field": "moves", "direction": "asc" },
+      { "field": "elapsedMs", "direction": "asc" }
+    ]
+  }
+}
