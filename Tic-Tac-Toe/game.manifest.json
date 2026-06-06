@@ -1,0 +1,13 @@
+{
+  "id": "tic-tac-toe",
+  "name": "Tic-Tac-Toe",
+  "entry": "/Tic-Tac-Toe/index.html",
+  "leaderboard": {
+    "type": "match",
+    "sort": [
+      { "field": "wins", "direction": "desc" },
+      { "field": "winRate", "direction": "desc" },
+      { "field": "gamesPlayed", "direction": "asc" }
+    ]
+  }
+}
