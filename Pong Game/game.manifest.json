@@ -1,0 +1,13 @@
+{
+  "id": "pong",
+  "name": "Pong",
+  "entry": "/Pong%20Game/index.html",
+  "leaderboard": {
+    "type": "match",
+    "sort": [
+      { "field": "wins", "direction": "desc" },
+      { "field": "winRate", "direction": "desc" },
+      { "field": "gamesPlayed", "direction": "asc" }
+    ]
+  }
+}
