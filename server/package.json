@@ -1,10 +1,12 @@
 {
-  "name": "gagaga-game-service",
+  "name": "gagaga-platform",
   "version": "1.0.0",
-  "description": "Shared auth, leaderboard, and Chinese Chess room service",
-  "main": "src/index.js",
+  "private": true,
+  "description": "Single server for the game lobby, shared services, and game modules",
+  "main": "index.js",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node index.js",
+    "check": "node --check index.js && node --test"
   },
   "dependencies": {
     "ws": "^8.16.0"
