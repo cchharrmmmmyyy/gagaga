@@ -4,12 +4,19 @@ const path = require("path");
 const { WebSocketServer } = require("ws");
 const auth = require("./lib/auth");
 const { attachChat } = require("./lib/chat");
+const friends = require("./lib/friends");
 const { discoverGames, ROOT } = require("./lib/games");
 const { readJson, sendJson } = require("./lib/http");
 const leaderboards = require("./lib/leaderboards");
+const { createPresence } = require("./lib/presence");
 
 const PORT = Number(process.env.PORT || 8080);
 const games = discoverGames();
+let presence = {
+  disconnectToken() {},
+  isOnline() { return false; },
+  notifyUsers() {},
+};
 
 function publicLeaderboard(game) {
   const leaderboard = game.manifest.leaderboard;
@@ -56,8 +63,58 @@ async function api(req, res, url) {
     return sendJson(res, 200, { user: auth.publicUser(requireUser(req)) });
   }
   if (req.method === "POST" && url.pathname === "/api/logout") {
+    const token = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
     auth.logout(req);
+    presence.disconnectToken(token);
     return sendJson(res, 200, { ok: true });
+  }
+  if (req.method === "GET" && url.pathname === "/api/users/search") {
+    const user = requireUser(req);
+    return sendJson(res, 200, friends.search(
+      user,
+      url.searchParams.get("q"),
+      url.searchParams.get("page"),
+      url.searchParams.get("pageSize"),
+      presence.isOnline,
+    ));
+  }
+  if (req.method === "GET" && url.pathname === "/api/friends") {
+    const user = requireUser(req);
+    return sendJson(res, 200, friends.list(
+      user,
+      url.searchParams.get("page"),
+      url.searchParams.get("pageSize"),
+      presence.isOnline,
+    ));
+  }
+  if (req.method === "GET" && url.pathname === "/api/friend-requests") {
+    return sendJson(res, 200, friends.listRequests(requireUser(req)));
+  }
+  if (req.method === "POST" && url.pathname === "/api/friend-requests") {
+    const user = requireUser(req);
+    const request = friends.createRequest(user, (await readJson(req)).userId);
+    presence.notifyUsers([request.fromUserId, request.toUserId]);
+    return sendJson(res, 201, { request });
+  }
+
+  const friendRequestMatch = url.pathname.match(/^\/api\/friend-requests\/([^/]+)\/(accept|reject)$/);
+  if (req.method === "POST" && friendRequestMatch) {
+    const request = friends.respond(
+      requireUser(req),
+      decodeURIComponent(friendRequestMatch[1]),
+      friendRequestMatch[2] === "accept" ? "accepted" : "rejected",
+    );
+    presence.notifyUsers([request.fromUserId, request.toUserId]);
+    return sendJson(res, 200, { request });
+  }
+
+  const friendMatch = url.pathname.match(/^\/api\/friends\/([^/]+)$/);
+  if (req.method === "DELETE" && friendMatch) {
+    const user = requireUser(req);
+    const otherUserId = decodeURIComponent(friendMatch[1]);
+    const result = friends.remove(user, otherUserId);
+    presence.notifyUsers([user.id, otherUserId]);
+    return sendJson(res, 200, result);
   }
 
   const leaderboardMatch = url.pathname.match(/^\/api\/leaderboards\/([^/]+)(\/submit)?$/);
@@ -132,6 +189,7 @@ function authenticateUpgrade(req, url, token = url.searchParams.get("token")) {
 }
 
 attachChat(server, authenticateUpgrade);
+presence = createPresence(server, authenticateUpgrade, friends.friendIds);
 
 for (const game of games.values()) {
   if (!game.backend.handleWebSocket) continue;

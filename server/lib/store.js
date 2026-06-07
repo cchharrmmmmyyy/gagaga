@@ -1,13 +1,17 @@
 const fs = require("fs");
 const path = require("path");
 
-const DATA_FILE = path.join(__dirname, "..", "data", "db.json");
+const DATA_FILE = process.env.GAGAGA_DATA_FILE
+  ? path.resolve(process.env.GAGAGA_DATA_FILE)
+  : path.join(__dirname, "..", "data", "db.json");
 const EMPTY_DB = {
   users: [],
   sessions: [],
   leaderboardEntries: [],
   matchRecords: [],
   chatMessages: [],
+  friendRequests: [],
+  friendships: [],
   gameData: {},
 };
 
