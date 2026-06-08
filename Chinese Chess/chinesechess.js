@@ -114,6 +114,11 @@ function inPalace(r, c, color) {
   return r >= 0 && r <= 2;
 }
 
+function flipRow(r, flipped) { return flipped ? BOARD_ROWS - 1 - r : r; }
+function flipCol(c, flipped) { return flipped ? BOARD_COLS - 1 - c : c; }
+function boardX(c, flipped) { return PADDING + flipCol(c, flipped) * CELL_SIZE; }
+function boardY(r, flipped) { return PADDING + flipRow(r, flipped) * CELL_SIZE; }
+
 // ---- Board Initialization ----
 function createInitialBoard() {
   const b = Array.from({ length: BOARD_ROWS }, () => Array(BOARD_COLS).fill(null));
@@ -323,6 +328,7 @@ class GameState {
     this.lastMove = null;
     this.capturedByRed = [];
     this.capturedByBlack = [];
+    this.flipped = false;
   }
 
   reset() {
@@ -337,6 +343,7 @@ class GameState {
     this.lastMove = null;
     this.capturedByRed = [];
     this.capturedByBlack = [];
+    this.flipped = false;
   }
 
   makeMove(fromR, fromC, toR, toC) {
@@ -570,14 +577,18 @@ function toBoardCoords(mx, my) {
   const scaleY = canvas.height / rect.height;
   const x = (mx - rect.left) * scaleX;
   const y = (my - rect.top) * scaleY;
-  const c = Math.round((x - PADDING) / CELL_SIZE);
-  const r = Math.round((y - PADDING) / CELL_SIZE);
+  const rawC = Math.round((x - PADDING) / CELL_SIZE);
+  const rawR = Math.round((y - PADDING) / CELL_SIZE);
+  const flipped = currentGame && currentGame.flipped;
+  const c = flipped ? BOARD_COLS - 1 - rawC : rawC;
+  const r = flipped ? BOARD_ROWS - 1 - rawR : rawR;
   if (inBoard(r, c)) return { r, c };
   return null;
 }
 
 function drawBoard(gameState, highlightMoves) {
   const W = canvas.width, H = canvas.height;
+  const flipped = gameState.flipped;
   ctx.clearRect(0, 0, W, H);
 
   // Board background
@@ -595,59 +606,61 @@ function drawBoard(gameState, highlightMoves) {
 
   // Horizontal lines
   for (let r = 0; r < BOARD_ROWS; r++) {
-    const y = PADDING + r * CELL_SIZE;
+    const y = boardY(r, flipped);
     ctx.beginPath();
-    ctx.moveTo(PADDING, y);
-    ctx.lineTo(PADDING + BOARD_W, y);
+    ctx.moveTo(boardX(0, flipped), y);
+    ctx.lineTo(boardX(BOARD_COLS - 1, flipped), y);
     ctx.stroke();
   }
 
   // Vertical lines (split at river)
+  const riverTopY = boardY(4, flipped);
+  const riverBotY = boardY(5, flipped);
   for (let c = 0; c < BOARD_COLS; c++) {
-    const x = PADDING + c * CELL_SIZE;
-    // Top half
-    ctx.beginPath();
-    ctx.moveTo(x, PADDING);
-    ctx.lineTo(x, PADDING + 4 * CELL_SIZE);
-    ctx.stroke();
-    // Bottom half
-    ctx.beginPath();
-    ctx.moveTo(x, PADDING + 5 * CELL_SIZE);
-    ctx.lineTo(x, PADDING + 9 * CELL_SIZE);
-    ctx.stroke();
+    const x = boardX(c, flipped);
+    const y0 = boardY(0, flipped);
+    const y9 = boardY(9, flipped);
+    if (c === 0 || c === BOARD_COLS - 1) {
+      ctx.beginPath();
+      ctx.moveTo(x, y0);
+      ctx.lineTo(x, y9);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x, y0);
+      ctx.lineTo(x, Math.min(riverTopY, riverBotY));
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, Math.max(riverTopY, riverBotY));
+      ctx.lineTo(x, y9);
+      ctx.stroke();
+    }
   }
-  // Leftmost and rightmost vertical lines extend full length
-  ctx.beginPath();
-  ctx.moveTo(PADDING, PADDING);
-  ctx.lineTo(PADDING, PADDING + BOARD_H);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(PADDING + BOARD_W, PADDING);
-  ctx.lineTo(PADDING + BOARD_W, PADDING + BOARD_H);
-  ctx.stroke();
 
   // Palace diagonal lines
   ctx.strokeStyle = '#5a3a1a';
   ctx.lineWidth = 1;
-  // Top palace (black)
-  const px = PADDING + 3 * CELL_SIZE, py = PADDING;
+  // Top palace (black's palace)
+  const palaceTopX0 = boardX(3, flipped), palaceTopY0 = boardY(0, flipped);
+  const palaceTopX2 = boardX(5, flipped), palaceTopY2 = boardY(2, flipped);
   ctx.beginPath();
-  ctx.moveTo(px, py);
-  ctx.lineTo(px + 2 * CELL_SIZE, py + 2 * CELL_SIZE);
+  ctx.moveTo(palaceTopX0, palaceTopY0);
+  ctx.lineTo(palaceTopX2, palaceTopY2);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(px + 2 * CELL_SIZE, py);
-  ctx.lineTo(px, py + 2 * CELL_SIZE);
+  ctx.moveTo(palaceTopX2, palaceTopY0);
+  ctx.lineTo(palaceTopX0, palaceTopY2);
   ctx.stroke();
-  // Bottom palace (red)
-  const py2 = PADDING + 7 * CELL_SIZE;
+  // Bottom palace (red's palace)
+  const palaceBotX0 = boardX(3, flipped), palaceBotY0 = boardY(7, flipped);
+  const palaceBotX2 = boardX(5, flipped), palaceBotY2 = boardY(9, flipped);
   ctx.beginPath();
-  ctx.moveTo(px, py2);
-  ctx.lineTo(px + 2 * CELL_SIZE, py2 + 2 * CELL_SIZE);
+  ctx.moveTo(palaceBotX0, palaceBotY0);
+  ctx.lineTo(palaceBotX2, palaceBotY2);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(px + 2 * CELL_SIZE, py2);
-  ctx.lineTo(px, py2 + 2 * CELL_SIZE);
+  ctx.moveTo(palaceBotX2, palaceBotY0);
+  ctx.lineTo(palaceBotX0, palaceBotY2);
   ctx.stroke();
 
   // River text
@@ -655,46 +668,45 @@ function drawBoard(gameState, highlightMoves) {
   ctx.font = 'bold 28px "KaiTi", "STKaiti", "SimSun", serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const riverY = PADDING + 4.5 * CELL_SIZE;
-  ctx.fillText('楚 河', PADDING + 1.5 * CELL_SIZE, riverY);
-  ctx.fillText('漢 界', PADDING + 6.5 * CELL_SIZE, riverY);
+  const riverY = boardY(4.5, flipped);
+  const leftTextX = boardX(1.5, flipped);
+  const rightTextX = boardX(6.5, flipped);
+  const leftText = flipped ? '漢 界' : '楚 河';
+  const rightText = flipped ? '楚 河' : '漢 界';
+  ctx.fillText(leftText, leftTextX, riverY);
+  ctx.fillText(rightText, rightTextX, riverY);
 
   // Position markers (star points)
   const starOffsets = [[0,1],[0,7],[2,0],[2,2],[2,4],[2,6],[2,8],[3,0],[3,2],[3,4],[3,6],[3,8],
                        [6,0],[6,2],[6,4],[6,6],[6,8],[7,0],[7,2],[7,4],[7,6],[7,8],[9,1],[9,7]];
   for (const [r, c] of starOffsets) {
-    drawStarMark(ctx, PADDING + c * CELL_SIZE, PADDING + r * CELL_SIZE);
+    drawStarMark(ctx, boardX(c, flipped), boardY(r, flipped));
   }
 
   // Last move highlight
   if (gameState.lastMove) {
     ctx.fillStyle = 'rgba(241, 196, 15, 0.25)';
-    for (const pos of [gameState.lastMove.fromR, gameState.lastMove.toR]) {
-      // skip - handled below
-    }
-    ctx.fillRect(PADDING + gameState.lastMove.fromC * CELL_SIZE - CELL_SIZE / 2,
-                 PADDING + gameState.lastMove.fromR * CELL_SIZE - CELL_SIZE / 2,
+    ctx.fillRect(boardX(gameState.lastMove.fromC, flipped) - CELL_SIZE / 2,
+                 boardY(gameState.lastMove.fromR, flipped) - CELL_SIZE / 2,
                  CELL_SIZE, CELL_SIZE);
-    ctx.fillRect(PADDING + gameState.lastMove.toC * CELL_SIZE - CELL_SIZE / 2,
-                 PADDING + gameState.lastMove.toR * CELL_SIZE - CELL_SIZE / 2,
+    ctx.fillRect(boardX(gameState.lastMove.toC, flipped) - CELL_SIZE / 2,
+                 boardY(gameState.lastMove.toR, flipped) - CELL_SIZE / 2,
                  CELL_SIZE, CELL_SIZE);
   }
 
   // Legal move indicators
   if (highlightMoves) {
     for (const [tr, tc] of gameState.legalMoves) {
-      const x = PADDING + tc * CELL_SIZE;
-      const y = PADDING + tr * CELL_SIZE;
+      const x = boardX(tc, flipped);
+      const y = boardY(tr, flipped);
       const target = gameState.board[tr][tc];
       if (target) {
-        // Capture indicator: red circle around target
         ctx.strokeStyle = 'rgba(231, 76, 60, 0.7)';
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.arc(x, y, CELL_SIZE / 2 - 2, 0, Math.PI * 2);
         ctx.stroke();
       } else {
-        // Move indicator: small green dot
         ctx.fillStyle = 'rgba(39, 174, 96, 0.6)';
         ctx.beginPath();
         ctx.arc(x, y, 6, 0, Math.PI * 2);
@@ -706,8 +718,8 @@ function drawBoard(gameState, highlightMoves) {
   // Selected piece highlight
   if (gameState.selected) {
     const { r, c } = gameState.selected;
-    const x = PADDING + c * CELL_SIZE;
-    const y = PADDING + r * CELL_SIZE;
+    const x = boardX(c, flipped);
+    const y = boardY(r, flipped);
     ctx.fillStyle = 'rgba(241, 196, 15, 0.35)';
     ctx.fillRect(x - CELL_SIZE / 2, y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
     ctx.strokeStyle = '#f1c40f';
@@ -722,8 +734,8 @@ function drawBoard(gameState, highlightMoves) {
       for (let c = 0; c < BOARD_COLS; c++) {
         const p = gameState.board[r][c];
         if (p && typeOf(p) === KING && colorOf(p) === checkedColor) {
-          const x = PADDING + c * CELL_SIZE;
-          const y = PADDING + r * CELL_SIZE;
+          const x = boardX(c, flipped);
+          const y = boardY(r, flipped);
           ctx.strokeStyle = '#e74c3c';
           ctx.lineWidth = 3;
           ctx.beginPath();
@@ -743,7 +755,7 @@ function drawBoard(gameState, highlightMoves) {
   for (let r = 0; r < BOARD_ROWS; r++) {
     for (let c = 0; c < BOARD_COLS; c++) {
       const p = gameState.board[r][c];
-      if (p) drawPiece(ctx, p, r, c);
+      if (p) drawPiece(ctx, p, r, c, flipped);
     }
   }
 }
@@ -766,9 +778,9 @@ function drawStarMark(ctx, x, y) {
   }
 }
 
-function drawPiece(ctx, piece, r, c) {
-  const x = PADDING + c * CELL_SIZE;
-  const y = PADDING + r * CELL_SIZE;
+function drawPiece(ctx, piece, r, c, flipped) {
+  const x = boardX(c, flipped);
+  const y = boardY(r, flipped);
   const radius = CELL_SIZE / 2 - 3;
 
   // Shadow
@@ -885,6 +897,16 @@ function startGame(mode, aiDepth, aiColor) {
   aiThinking = false;
   animating = false;
   chessLeaderboardSubmitted = false;
+
+  // Set board flip for Black's perspective
+  if (mode === 'ai') {
+    currentGame.flipped = (aiColor === RED);
+  } else if (mode === 'lan') {
+    currentGame.flipped = (netManager && netManager.myColor === BLACK);
+  } else {
+    currentGame.flipped = false;
+  }
+
   updateUI();
   render();
 }
@@ -1468,6 +1490,10 @@ if (typeof module !== 'undefined' && module.exports) {
     toBoardCoords,
     drawBoard,
     drawPiece,
+    flipRow,
+    flipCol,
+    boardX,
+    boardY,
     NetworkManager,
     localChessColor,
     submitChessResult,

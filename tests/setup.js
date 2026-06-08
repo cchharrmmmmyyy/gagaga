@@ -3,7 +3,6 @@ import { Window } from 'happy-dom';
 
 const window = new Window({
   url: 'http://localhost/',
-  settings: {},
 });
 const document = window.document;
 
@@ -23,50 +22,57 @@ const elementIds = [
 ];
 
 for (const id of elementIds) {
-  const el = document.createElement('div');
-  el.id = id;
   if (id === 'chessBoard') {
     const canvas = document.createElement('canvas');
     canvas.id = 'chessBoard';
     canvas.width = 540;
     canvas.height = 600;
-    // Mock getContext to return a basic object with canvas methods
+    // Mock getContext
     const mockCtx = {
-      clearRect: () => {},
-      fillRect: () => {},
-      strokeRect: () => {},
+      clearRect() {},
+      fillRect() {},
+      strokeRect() {},
       fillStyle: '',
       strokeStyle: '',
       lineWidth: 1,
       font: '',
-      textAlign: '',
-      textBaseline: '',
-      beginPath: () => {},
-      moveTo: () => {},
-      lineTo: () => {},
-      stroke: () => {},
-      fill: () => {},
-      arc: () => {},
-      fillText: () => {},
-      strokeText: () => {},
-      createRadialGradient: () => ({ addColorStop: () => {} }),
-      createLinearGradient: () => ({ addColorStop: () => {} }),
-      save: () => {},
-      restore: () => {},
+      textAlign: 'center',
+      textBaseline: 'middle',
+      beginPath() {},
+      moveTo() {},
+      lineTo() {},
+      stroke() {},
+      fill() {},
+      arc() {},
+      fillText() {},
+      strokeText() {},
+      createRadialGradient() { return { addColorStop() {} }; },
+      createLinearGradient() { return { addColorStop() {} }; },
+      save() {},
+      restore() {},
       globalAlpha: 1,
-      lineCap: '',
+      lineCap: 'round',
       canvas: canvas,
-      getImageData: () => ({ data: new Uint8ClampedArray() }),
-      putImageData: () => {},
+      getImageData() { return { data: new Uint8ClampedArray() }; },
+      putImageData() {},
     };
-    canvas.getContext = () => mockCtx;
+    canvas.getContext = function () { return mockCtx; };
     document.body.appendChild(canvas);
   } else {
+    const el = document.createElement('div');
+    el.id = id;
     document.body.appendChild(el);
   }
 }
 
-// Add data attributes for difficulty buttons
+// Add data-mode buttons
+for (const mode of ['ai', 'local', 'lan']) {
+  const btn = document.createElement('button');
+  btn.dataset.mode = mode;
+  document.body.appendChild(btn);
+}
+
+// Add difficulty buttons
 for (const depth of [2, 3, 4]) {
   const btn = document.createElement('button');
   btn.className = 'difficulty-btn';
@@ -75,38 +81,31 @@ for (const depth of [2, 3, 4]) {
   document.body.appendChild(btn);
 }
 
-// Add data-mode buttons
-const modes = ['ai', 'local', 'lan'];
-for (const mode of modes) {
-  const btn = document.createElement('button');
-  btn.dataset.mode = mode;
-  document.body.appendChild(btn);
+// Set up screen classes
+const menuScreen = document.getElementById('menu-screen');
+if (menuScreen) {
+  menuScreen.classList.add('screen', 'active');
 }
-
-// Set up screen elements with classes
-const screenEls = ['menu-screen', 'game-screen'];
-for (const id of screenEls) {
-  const el = document.getElementById(id);
-  if (el) el.classList.add('screen');
+const gameScreen = document.getElementById('game-screen');
+if (gameScreen) {
+  gameScreen.classList.add('screen');
 }
-const menuEl = document.getElementById('menu-screen');
-if (menuEl) {
-  menuEl.classList.add('active');
-  const mainMenuEl = document.getElementById('main-menu');
-  if (mainMenuEl) {
-    mainMenuEl.style.display = 'block';
-  }
+const mainMenu = document.getElementById('main-menu');
+if (mainMenu) {
+  mainMenu.style.display = 'block';
 }
 
 global.window = window;
 global.document = document;
-global.HTMLCanvasElement = window.HTMLCanvasElement || class HTMLCanvasElement {};
-global.HTMLElement = window.HTMLElement || class HTMLElement {};
-global.HTMLDivElement = window.HTMLDivElement || class HTMLDivElement {};
-global.HTMLInputElement = window.HTMLInputElement || class HTMLInputElement {};
-global.HTMLButtonElement = window.HTMLButtonElement || class HTMLButtonElement {};
-global.Event = window.Event || class Event { constructor(type) { this.type = type; } };
-global.CustomEvent = window.CustomEvent || class CustomEvent { constructor(type, opts) { this.type = type; Object.assign(this, opts); } };
-global.Image = window.Image || class Image {};
+global.HTMLElement = window.HTMLElement;
+global.HTMLDivElement = window.HTMLDivElement;
+global.HTMLCanvasElement = window.HTMLCanvasElement;
+global.HTMLInputElement = window.HTMLInputElement;
+global.HTMLButtonElement = window.HTMLButtonElement;
+global.Event = window.Event;
+global.CustomEvent = window.CustomEvent;
+global.Image = window.Image;
 global.location = window.location;
 global.navigator = window.navigator;
+global.Node = window.Node;
+
