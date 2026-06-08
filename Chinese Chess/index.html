@@ -236,6 +236,45 @@
     .sidebar button.secondary { background: #2980b9; }
     .sidebar button.secondary:hover { background: #3498db; }
 
+    /* Chat panel */
+    .chat-panel-inline {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 2px solid #ffd700;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-messages {
+      max-height: 180px;
+      overflow-y: auto;
+      background: #1a1a1a;
+      padding: 8px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .chat-msg { padding: 3px 0; border-bottom: 1px solid #333; }
+    .chat-time { color: #888; font-size: 10px; margin-right: 4px; }
+    .chat-user { color: #ffd700; font-weight: bold; }
+    .chat-text { color: #ddd; }
+    .chat-input-inline {
+      flex: 1;
+      padding: 6px 8px;
+      font-family: inherit;
+      font-size: 12px;
+      background: #1a1a1a;
+      color: #ffd700;
+      border: 2px solid #ffd700;
+    }
+    .chat-send-inline {
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 12px;
+      background: #27ae60;
+      color: #fff;
+      border: 2px solid #1a1a1a;
+      cursor: pointer;
+    }
+
     /* Result modal */
     .modal {
       display: none;
@@ -341,6 +380,15 @@
       <button id="undo-btn" class="secondary">悔棋</button>
       <button id="resign-btn">认输</button>
       <button id="menu-btn-game" class="secondary">返回菜单</button>
+
+      <div class="chat-panel-inline" id="chat-panel" style="display:none;">
+        <h3>聊天</h3>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div style="display:flex; gap:4px; margin-top:8px;">
+          <input type="text" id="chat-input" class="chat-input-inline" placeholder="输入消息..." maxlength="500">
+          <button id="chat-send-btn" class="chat-send-inline">发送</button>
+        </div>
+      </div>
     </div>
   </div>
 

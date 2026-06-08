@@ -905,6 +905,53 @@ let aiThinking = false;
 let netManager = null;
 let animating = false;
 let chessLeaderboardSubmitted = false;
+let chatMessages = [];
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function addChatMessage(username, text, isLocal) {
+  chatMessages.push({ username, text, isLocal, time: new Date() });
+  if (chatMessages.length > 100) chatMessages.shift();
+  renderChat();
+}
+
+function renderChat() {
+  const chatDiv = document.getElementById('chat-messages');
+  const chatPanel = document.getElementById('chat-panel');
+  if (!chatDiv || !chatPanel) return;
+  const visible = currentGame && (currentGame.mode === 'lan');
+  chatPanel.style.display = visible ? 'flex' : 'none';
+  if (!visible) return;
+
+  chatDiv.innerHTML = '';
+  for (const msg of chatMessages) {
+    const div = document.createElement('div');
+    div.className = 'chat-msg';
+    const timeStr = msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    div.innerHTML = `<span class="chat-time">${timeStr}</span>
+      <span class="chat-user">${escapeHtml(msg.username || '玩家')}:</span>
+      <span class="chat-text">${escapeHtml(msg.text)}</span>`;
+    chatDiv.appendChild(div);
+  }
+  chatDiv.scrollTop = chatDiv.scrollHeight;
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text || text.length > 500) return;
+  input.value = '';
+  const myName = (window.GagagaPlatform && window.GagagaPlatform.getUser && window.GagagaPlatform.getUser().username) || '我';
+  addChatMessage(myName, text, true);
+  if (netManager) {
+    netManager.send({ type: 'chat', text });
+  }
+}
 
 // DOM Elements
 const menuScreen = document.getElementById('menu-screen');
@@ -955,6 +1002,8 @@ function startGame(mode, aiDepth, aiColor) {
   aiThinking = false;
   animating = false;
   chessLeaderboardSubmitted = false;
+  chatMessages = [];
+  renderChat();
 
   // Set board flip for Black's perspective
   if (mode === 'ai') {
@@ -1302,6 +1351,13 @@ class NetworkManager {
       case 'error':
         if (this.onStatus) this.onStatus('错误：' + (msg.message || '未知错误'));
         break;
+
+      case 'chat':
+        if (currentGame) {
+          const sender = this.myColor === RED ? '黑方' : '红方';
+          addChatMessage(sender, msg.text, false);
+        }
+        break;
     }
   }
 
@@ -1500,6 +1556,12 @@ canvas.addEventListener('click', (e) => {
   handleBoardClick(e.clientX, e.clientY);
 });
 
+// Chat event bindings
+document.getElementById('chat-send-btn')?.addEventListener('click', sendChatMessage);
+document.getElementById('chat-input')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendChatMessage();
+});
+
 // ---- Keyboard shortcuts ----
 document.addEventListener('keydown', (e) => {
   if (e.key === 'u' && currentGame && currentGame.mode !== 'lan') {
@@ -1580,6 +1642,10 @@ if (typeof module !== 'undefined' && module.exports) {
     NetworkManager,
     localChessColor,
     submitChessResult,
+    escapeHtml,
+    addChatMessage,
+    sendChatMessage,
+    renderChat,
   };
 }
 

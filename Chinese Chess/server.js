@@ -52,6 +52,15 @@ function handleWebSocket(ws) {
       return;
     }
 
+    if (message.type === 'chat' && message.text) {
+      const room = rooms.get(code);
+      if (room) {
+        const other = room.host === ws ? room.joiner : room.host;
+        if (other) send(other, { type: 'chat', text: String(message.text).slice(0, 500) });
+      }
+      return;
+    }
+
     send(ws, { type: "error", message: "Unknown or invalid action" });
   });
 
