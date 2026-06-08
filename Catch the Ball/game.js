@@ -9,16 +9,19 @@ const baseSpeed = 3.6;
 let basketX = (canvas.width - basketWidth) / 2;
 let rightPressed = false;
 let leftPressed = false;
+
 let ballX = randomBallX();
 let ballY = ballRadius;
 let ballDY = baseSpeed;
 let ballColor = '#0095DD';
+
 let score = 0;
 let lives = 3;
 let gameOver = false;
 let pause = false;
 let leaderboardSubmitted = false;
 
+// 键盘监听
 document.addEventListener('keydown', keyDownHandler, false);
 document.addEventListener('keyup', keyUpHandler, false);
 
@@ -29,8 +32,15 @@ function keyDownHandler(event) {
     leftPressed = true;
   }
 
-  if (event.key.toLowerCase() === 'p' && !gameOver) pause = !pause;
-  if (event.key === ' ' && gameOver) restartGame();
+  // P键暂停（仅游戏中）
+  if (event.key.toLowerCase() === 'p' && !gameOver) {
+    pause = !pause;
+  }
+
+  // 空格键：游戏结束时重启
+  if (event.key === ' ' && gameOver) {
+    restartGame();
+  }
 }
 
 function keyUpHandler(event) {
@@ -62,13 +72,14 @@ function drawScore() {
   ctx.fillStyle = '#0095DD';
   ctx.fillText(`Score: ${score}`, 8, 20);
   ctx.fillText(`Lives: ${lives}`, 8, 40);
-  ctx.fillText('P: Pause  Space: Restart', 8, 60);
+  ctx.fillText('P: Pause | Space: Restart', 8, 60);
 }
 
 function detectCollision() {
-  const caught = ballY + ballRadius > canvas.height - basketHeight
-    && ballX > basketX
-    && ballX < basketX + basketWidth;
+  const caught =
+    ballY + ballRadius > canvas.height - basketHeight &&
+    ballX > basketX &&
+    ballX < basketX + basketWidth;
 
   if (caught) {
     score += 1;
@@ -105,6 +116,7 @@ function resetBall() {
   ballY = ballRadius;
 }
 
+// 核心：重启游戏（重置所有状态）
 function restartGame() {
   score = 0;
   lives = 3;
