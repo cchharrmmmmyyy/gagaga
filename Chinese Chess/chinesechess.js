@@ -5,8 +5,8 @@
 // ---- Constants ----
 const BOARD_COLS = 9;
 const BOARD_ROWS = 10;
-const CELL_SIZE = 54;
-const PADDING = 27;
+const CELL_SIZE = 64;
+const PADDING = 32;
 const BOARD_W = CELL_SIZE * (BOARD_COLS - 1);
 const BOARD_H = CELL_SIZE * (BOARD_ROWS - 1);
 const CANVAS_W = BOARD_W + PADDING * 2;
@@ -570,6 +570,8 @@ function getAIMove(gameState) {
 // ---- Canvas Rendering ----
 const canvas = document.getElementById('chessBoard');
 const ctx = canvas.getContext('2d');
+canvas.width = CANVAS_W;
+canvas.height = CANVAS_H;
 
 function toBoardCoords(mx, my) {
   const rect = canvas.getBoundingClientRect();
@@ -665,7 +667,7 @@ function drawBoard(gameState, highlightMoves) {
 
   // River text
   ctx.fillStyle = '#5a3a1a';
-  ctx.font = 'bold 28px "KaiTi", "STKaiti", "SimSun", serif';
+  ctx.font = 'bold 32px "KaiTi", "STKaiti", "SimSun", serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   const riverY = boardY(4.5, flipped);
@@ -761,7 +763,7 @@ function drawBoard(gameState, highlightMoves) {
 }
 
 function drawStarMark(ctx, x, y) {
-  const s = 5, g = 2;
+  const s = 6, g = 2;
   ctx.strokeStyle = '#5a3a1a';
   ctx.lineWidth = 1;
   const parts = [
@@ -823,7 +825,7 @@ function drawPiece(ctx, piece, r, c, flipped) {
   // Character
   const name = PIECE_NAMES[piece] || piece;
   ctx.fillStyle = isRedPiece ? '#c0392b' : '#1c1c1c';
-  ctx.font = 'bold 26px "KaiTi", "STKaiti", "SimSun", serif';
+  ctx.font = 'bold 30px "KaiTi", "STKaiti", "SimSun", serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(name, x, y + 1);
@@ -906,6 +908,22 @@ function startGame(mode, aiDepth, aiColor) {
   } else {
     currentGame.flipped = false;
   }
+
+  // Read timer config from URL params (default 10 min)
+  const timerParam = new URLSearchParams(location.search).get('timer');
+  currentGame.timerConfig = parseInt(timerParam) || 600;
+  currentGame.redTime = currentGame.timerConfig;
+  currentGame.blackTime = currentGame.timerConfig;
+  currentGame.updateTimerDisplay();
+  currentGame.startTimer((loser) => {
+    const winner = opponent(loser);
+    currentGame.status = 'checkmate';
+    currentGame.winner = winner;
+    updateUI();
+    render();
+    submitChessResult(winner);
+    showResult('时间耗尽', `${loser === RED ? '红方' : '黑方'}超时，${winner === RED ? '红方' : '黑方'}获胜！`);
+  });
 
   updateUI();
   render();
@@ -1059,8 +1077,12 @@ function handleBoardClick(mx, my) {
     // Trigger AI move
     if (currentGame.mode === 'ai' && currentGame.turn === currentGame.aiColor && (currentGame.status === 'playing' || currentGame.status === 'check')) {
       aiThinking = true;
+      currentGame.stopTimer();
       setTimeout(() => {
         doAIMove();
+        if (currentGame && (currentGame.status === 'playing' || currentGame.status === 'check')) {
+          currentGame.startTimer(currentGame._timeoutCallback);
+        }
       }, 100);
     }
   } else {
