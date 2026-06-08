@@ -8,6 +8,8 @@ Chinese Chess (中国象棋) is a classic two-player strategy board game from Ch
 - **Human vs AI mode** — Play against an AI opponent with adjustable difficulty (Easy/Normal/Hard)
 - **Local 2-Player mode** — Two players on the same device
 - **P2P Multiplayer** — Play over network via browser-to-browser WebRTC (PeerJS), no server needed
+- **Ranked Matchmaking** — Logged-in players can join an online queue and automatically start a match
+- **Ranked Title** — A ranked winner receives the “天才少年” title
 - **Pixel retro art style** — Matching the project's Mario-themed aesthetic
 
 ## Game Rules
@@ -36,6 +38,7 @@ The game is played on a 10×9 grid. Pieces are placed on the intersections (poin
 1. **VS AI**: Select difficulty (Easy/Normal/Hard) and click "人机对战 vs AI"
 2. **Local 2P**: Click "本地双人 Local 2P" — players take turns on the same device
 3. **P2P**: Click "联机对战" and create or join a room
+4. **Ranked**: Log in on the platform, click "排位匹配", then join the online queue
 
 ### Controls
 - Click a piece to select it, then click a highlighted square to move

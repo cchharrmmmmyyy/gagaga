@@ -59,6 +59,7 @@ const PAL = {
 const LEVELS = [
   {
     id: 'grass', name: 'WORLD 1-1', title: 'SUNNY RALLY', theme: 'grass',
+    mission: 'LEARN THE RETURN - SCORE 3',
     target: 3, ai: 0.56, ball: 245, hazard: 'bricks', powerRate: 8,
     obstacles: [
       { type: 'block', x: 374, y: 142, w: 52, h: 28, hp: 3 },
@@ -67,6 +68,7 @@ const LEVELS = [
   },
   {
     id: 'cave', name: 'WORLD 1-2', title: 'ECHO CAVERN', theme: 'cave',
+    mission: 'BREAK THE CENTER GUARD',
     target: 4, ai: 0.64, ball: 270, hazard: 'stone', powerRate: 7,
     obstacles: [
       { type: 'bumper', x: 392, y: 104, w: 16, h: 56 },
@@ -76,6 +78,7 @@ const LEVELS = [
   },
   {
     id: 'water', name: 'WORLD 1-3', title: 'TIDE COURT', theme: 'water',
+    mission: 'READ THE TIDE GATES',
     target: 4, ai: 0.68, ball: 285, hazard: 'current', wind: 48, powerRate: 7,
     obstacles: [
       { type: 'gate', x: 386, y: 74, w: 28, h: 72, phase: 0 },
@@ -84,6 +87,7 @@ const LEVELS = [
   },
   {
     id: 'sky', name: 'WORLD 1-4', title: 'CLOUD DUEL', theme: 'sky',
+    mission: 'BEAT THE MOVING WALLS',
     target: 5, ai: 0.73, ball: 305, hazard: 'clouds', wind: 36, powerRate: 6,
     obstacles: [
       { type: 'moving', x: 358, y: 116, w: 84, h: 18, baseY: 116, range: 58, phase: 0 },
@@ -92,7 +96,8 @@ const LEVELS = [
   },
   {
     id: 'castle', name: 'WORLD 1-5', title: 'EMBER BOSS', theme: 'castle',
-    target: 6, ai: 0.82, ball: 325, hazard: 'boss', wind: 0, powerRate: 5,
+    mission: 'DRAIN THE BOSS HP',
+    target: 6, bossHp: 6, ai: 0.82, ball: 325, hazard: 'boss', wind: 0, powerRate: 5,
     boss: true,
     obstacles: [
       { type: 'flame', x: 390, y: 90, w: 20, h: 62, phase: 0 },
@@ -142,7 +147,10 @@ const game = {
   message: '',
   winner: '',
   shake: 0,
-  pausedFrom: STATE.MENU
+  pausedFrom: STATE.MENU,
+  bossHp: 0,
+  bossMaxHp: 0,
+  bossPhase: 1
 };
 
 let leaderboardSubmitted = false;
@@ -218,6 +226,9 @@ function startLevel() {
   game.p1 = makePaddle('p1', 26);
   game.p2 = makePaddle('p2', W - 44);
   game.p2.isBoss = Boolean(level.boss && game.mode === MODE.QUEST);
+  game.bossMaxHp = game.p2.isBoss ? level.bossHp : 0;
+  game.bossHp = game.bossMaxHp;
+  game.bossPhase = 1;
   if (game.p2.isBoss) {
     game.p2.h = 138;
     game.p2.baseH = 138;
@@ -261,10 +272,19 @@ function serve() {
 function endRound(winner) {
   game.winner = winner;
   game.score[winner] += 1;
+  if (game.mode === MODE.QUEST && game.p2.isBoss && winner === 'p1') {
+    game.bossHp = Math.max(0, game.bossHp - 1);
+    const nextPhase = game.bossHp <= 2 ? 3 : (game.bossHp <= 4 ? 2 : 1);
+    if (nextPhase !== game.bossPhase) {
+      game.bossPhase = nextPhase;
+      spawnText(W / 2, 96, `BOSS PHASE ${game.bossPhase}`, PAL.lava);
+    }
+  }
   game.rally = 0;
   clearRoundEffects();
   spawnText(W / 2, 62, winner === 'p1' ? 'P1 SCORES' : opponentName() + ' SCORES', PAL.coin);
-  if (game.score[winner] >= currentLevel().target) {
+  const bossDefeated = game.p2.isBoss && game.bossHp <= 0;
+  if (game.score[winner] >= currentLevel().target || bossDefeated) {
     if (game.mode === MODE.QUEST && winner === 'p1') {
       if (game.levelIndex >= LEVELS.length - 1) setState(STATE.WIN, 'VICTORY');
       else setState(STATE.ROUND_OVER, 'CLEAR');
@@ -311,6 +331,7 @@ function update(delta) {
   }
 
   if (game.state === STATE.INTRO && game.stateTime > 1.45) setState(STATE.READY);
+  if (game.state === STATE.READY && game.stateTime > 3) serve();
   if (game.state !== STATE.PLAYING) {
     updateParticles(delta);
     return;
@@ -358,7 +379,8 @@ function updateAI(delta) {
   const target = targetBall.y - game.p2.h / 2 + bossWave;
   const error = game.p2.isBoss ? Math.sin(game.time * 3.7) * 16 : Math.sin(game.time * 2.1) * 28;
   const desired = target + error;
-  const speed = game.p2.speed * level.ai;
+  const bossBoost = game.p2.isBoss ? 1 + (game.bossPhase - 1) * 0.1 : 1;
+  const speed = game.p2.speed * level.ai * bossBoost;
   game.p2.y += clamp(desired - game.p2.y, -speed * delta, speed * delta);
 
   if (game.p2.isBoss && game.p2.charge >= 85 && Math.random() < delta * 0.55) {
@@ -408,11 +430,18 @@ function updateObstacles(delta) {
       game.powerups.push({ x: W - 120, y: rand(100, H - 80), vy: 0, vx: -95, power: POWERUPS[1], fake: true, spin: 0 });
     }
   }
+
+  if (game.p2.isBoss && game.bossPhase >= 2 && game.balls.length && Math.random() < delta * 0.18) {
+    const ball = game.balls[0];
+    ball.vy += rand(-36, 36);
+    normalizeBall(ball, Math.min(560, speedOf(ball) * (game.bossPhase === 3 ? 1.012 : 1.006)));
+  }
 }
 
 function updateBalls(delta) {
   const level = currentLevel();
-  game.balls.forEach(ball => {
+  for (const ball of game.balls) {
+    if (game.state !== STATE.PLAYING) break;
     if (level.wind) ball.vy += Math.sin(game.time * 1.4 + ball.x * 0.01) * level.wind * delta;
     if (ball.ghost > 0) ball.ghost -= delta;
 
@@ -437,7 +466,7 @@ function updateBalls(delta) {
 
     ball.trail.push({ x: ball.x, y: ball.y });
     if (ball.trail.length > 9) ball.trail.shift();
-  });
+  }
   game.balls = game.balls.filter(ball => ball.x > -60 && ball.x < W + 60);
   if (!game.balls.length && game.state === STATE.PLAYING) resetBall(game.winner === 'p1' ? 1 : -1);
 }
@@ -540,7 +569,8 @@ function applyPowerup(power, paddle) {
     }
   }
   if (power.id === 'coin') {
-    game.score[paddle.id] += 1;
+    paddle.charge = clamp(paddle.charge + 35, 0, 100);
+    spawnText(paddle.x, paddle.y - 12, '+35 CHARGE', PAL.coin);
   }
   spawnParticles(paddle.x, paddle.y + paddle.h / 2, power.color, 12);
 }
@@ -820,6 +850,13 @@ function drawHud() {
   ctx.fillStyle = PAL.coin;
   ctx.fillText(currentLevel().title, W / 2, 29);
 
+  ctx.font = '900 10px "Courier New", monospace';
+  ctx.fillStyle = PAL.white;
+  const objective = game.p2.isBoss
+    ? `BOSS HP ${game.bossHp}/${game.bossMaxHp}`
+    : `GOAL ${game.score.p1}/${currentLevel().target}`;
+  ctx.fillText(objective, W / 2, 45);
+
   ctx.fillStyle = PAL.white;
   ctx.textAlign = 'right';
   ctx.fillText(opponentName(), W - 18, 10);
@@ -829,6 +866,27 @@ function drawHud() {
   let y = 64;
   drawActiveEffects(game.p1, 14, y);
   drawActiveEffects(game.p2, W - 152, y);
+
+  if (game.p2.isBoss) drawBossHealth();
+  if (game.p1.charge >= 100 && game.state === STATE.PLAYING) {
+    box(W / 2 - 88, H - 48, 176, 24, PAL.coin, PAL.black, 3);
+    ctx.fillStyle = PAL.black;
+    ctx.font = '900 12px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('SKILL READY: F / SPACE', W / 2, H - 42);
+  }
+}
+
+function drawBossHealth() {
+  const x = W / 2 - 150;
+  const y = 62;
+  box(x, y, 300, 22, PAL.panel, PAL.black, 3);
+  const pct = game.bossMaxHp ? game.bossHp / game.bossMaxHp : 0;
+  px(x + 6, y + 6, 288 * pct, 10, game.bossPhase === 3 ? PAL.lava : PAL.purple);
+  ctx.fillStyle = PAL.white;
+  ctx.font = '900 10px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(`BOSS PHASE ${game.bossPhase}`, W / 2, y + 6);
 }
 
 function drawCharge(x, y, value, color) {
@@ -872,25 +930,34 @@ function drawOverlay(title, lines, action) {
 }
 
 function drawMenu() {
-  drawOverlay('PIXEL PONG ADVENTURE', ['QUEST MODE + VERSUS MODE', 'POWER UPS  SKILLS  BOSS ROUND'], 'PRESS ENTER');
+  drawOverlay('PIXEL PONG ADVENTURE', ['RETURN THE BALL AND SCORE', 'CLEAR 4 RIVALS + 1 BOSS'], 'PRESS ENTER');
 }
 
 function drawModeSelect() {
-  drawOverlay('SELECT MODE', ['ENTER: QUEST', '2: LOCAL VERSUS'], '1 QUEST / 2 VERSUS');
+  drawOverlay('SELECT MODE', ['1 / ENTER: FIVE-STAGE QUEST', '2: LOCAL VERSUS'], 'CHOOSE A MODE');
 }
 
 function drawIntro() {
-  drawOverlay(currentLevel().name, [currentLevel().title, `FIRST TO ${currentLevel().target}`], 'GET READY');
+  const goal = currentLevel().boss
+    ? `BOSS HP: ${currentLevel().bossHp} - EACH SCORE DEALS 1`
+    : `FIRST TO ${currentLevel().target}`;
+  drawOverlay(currentLevel().name, [currentLevel().mission, goal, 'MOVE: W/S OR ARROWS'], 'GET READY');
 }
 
 function drawReady() {
+  const countdown = Math.max(1, Math.ceil(3 - game.stateTime));
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = PAL.black;
-  ctx.font = '900 16px "Courier New", monospace';
-  ctx.fillText('ENTER / CLICK TO SERVE', W / 2 + 3, H - 48 + 3);
+  ctx.font = '900 54px "Courier New", monospace';
+  ctx.fillText(String(countdown), W / 2 + 4, H / 2 + 4);
+  ctx.fillStyle = PAL.coin;
+  ctx.fillText(String(countdown), W / 2, H / 2);
+  ctx.font = '900 13px "Courier New", monospace';
+  ctx.fillStyle = PAL.black;
+  ctx.fillText('ENTER / CLICK TO SERVE NOW', W / 2 + 2, H - 46 + 2);
   ctx.fillStyle = PAL.white;
-  ctx.fillText('ENTER / CLICK TO SERVE', W / 2, H - 48);
+  ctx.fillText('ENTER / CLICK TO SERVE NOW', W / 2, H - 46);
 }
 
 function drawPause() {
