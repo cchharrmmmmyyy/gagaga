@@ -11,9 +11,13 @@ const elementIds = [
   'chessBoard',
   'menu-screen', 'game-screen', 'result-modal',
   'main-menu', 'lan-menu', 'lan-create', 'lan-join',
+  'ranked-menu',
   'mode-label', 'turn-label', 'check-label', 'move-history',
+  'players-row', 'players-label',
   'result-title', 'result-text', 'room-code-display',
+  'result-title-badge',
   'create-status', 'join-status', 'server-url-input', 'join-code-input',
+  'room-code',
   'undo-btn', 'resign-btn', 'menu-btn-game',
   'play-again-btn', 'modal-menu-btn',
   'red-timer', 'black-timer',
@@ -21,6 +25,8 @@ const elementIds = [
   'tier-badge', 'tier-progress',
   'lan-create-btn', 'lan-join-btn', 'join-confirm-btn',
   'lan-back-btn', 'create-cancel-btn', 'join-cancel-btn',
+  'ranked-player-name', 'ranked-record', 'ranked-current-title',
+  'ranked-status', 'ranked-start-btn', 'ranked-cancel-btn', 'ranked-back-btn',
   'difficulty-row', 'status-block',
 ];
 
@@ -69,7 +75,7 @@ for (const id of elementIds) {
 }
 
 // Add data-mode buttons
-for (const mode of ['ai', 'local', 'lan']) {
+for (const mode of ['ai', 'local', 'lan', 'ranked']) {
   const btn = document.createElement('button');
   btn.dataset.mode = mode;
   document.body.appendChild(btn);

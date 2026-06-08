@@ -118,6 +118,11 @@ function flipRow(r, flipped) { return flipped ? BOARD_ROWS - 1 - r : r; }
 function flipCol(c, flipped) { return flipped ? BOARD_COLS - 1 - c : c; }
 function boardX(c, flipped) { return PADDING + flipCol(c, flipped) * CELL_SIZE; }
 function boardY(r, flipped) { return PADDING + flipRow(r, flipped) * CELL_SIZE; }
+function shouldFlipBoard(mode, playerColor, computerColor) {
+  if (mode === 'ai') return computerColor === RED;
+  if (mode === 'lan' || mode === 'ranked') return playerColor === BLACK;
+  return false;
+}
 
 // ---- Ranking Tier System ----
 const TIERS = [
@@ -1128,14 +1133,7 @@ function startGame(mode, aiDepth, aiColor) {
   renderChat();
   loadPlayerStats();
 
-  // Set board flip for Black's perspective
-  if (mode === 'ai') {
-    currentGame.flipped = (aiColor === RED);
-  } else if (mode === 'lan') {
-    currentGame.flipped = (netManager && netManager.myColor === BLACK);
-  } else {
-    currentGame.flipped = false;
-  }
+  currentGame.flipped = shouldFlipBoard(mode, netManager?.myColor, aiColor);
 
   // Read timer config from URL params (default 10 min)
   const timerParam = new URLSearchParams(location.search).get('timer');
@@ -1954,6 +1952,7 @@ if (typeof module !== 'undefined' && module.exports) {
     flipCol,
     boardX,
     boardY,
+    shouldFlipBoard,
     NetworkManager,
     localChessColor,
     submitChessResult,
