@@ -11,6 +11,7 @@ const BOARD_W = CELL_SIZE * (BOARD_COLS - 1);
 const BOARD_H = CELL_SIZE * (BOARD_ROWS - 1);
 const CANVAS_W = BOARD_W + PADDING * 2;
 const CANVAS_H = BOARD_H + PADDING * 2;
+const MOVE_TIME_LIMIT = 90;
 
 const RED = 'r';
 const BLACK = 'b';
@@ -389,9 +390,9 @@ class GameState {
     this.capturedByRed = [];
     this.capturedByBlack = [];
     this.flipped = false;
-    this.redTime = 600;
-    this.blackTime = 600;
-    this.timerConfig = 600;
+    this.redTime = MOVE_TIME_LIMIT;
+    this.blackTime = MOVE_TIME_LIMIT;
+    this.timerConfig = MOVE_TIME_LIMIT;
     this.timerInterval = null;
   }
 
@@ -409,6 +410,10 @@ class GameState {
     this.capturedByBlack = [];
     this.flipped = false;
     this.stopTimer();
+    this.resetMoveTimer();
+  }
+
+  resetMoveTimer() {
     this.redTime = this.timerConfig;
     this.blackTime = this.timerConfig;
   }
@@ -506,6 +511,7 @@ class GameState {
     }
 
     this.turn = opp;
+    this.resetMoveTimer();
     this.selected = null;
     this.legalMoves = [];
     return true;
@@ -531,6 +537,7 @@ class GameState {
     this.selected = null;
     this.legalMoves = [];
     this.lastMove = this.moveHistory.length > 0 ? this.moveHistory[this.moveHistory.length - 1] : null;
+    this.resetMoveTimer();
     return true;
   }
 
@@ -1028,7 +1035,7 @@ function renderChat() {
   const chatDiv = document.getElementById('chat-messages');
   const chatPanel = document.getElementById('chat-panel');
   if (!chatDiv || !chatPanel) return;
-  const visible = currentGame && (currentGame.mode === 'lan');
+  const visible = currentGame && isOnlineGame();
   chatPanel.style.display = visible ? 'flex' : 'none';
   if (!visible) return;
 
@@ -1135,11 +1142,10 @@ function startGame(mode, aiDepth, aiColor) {
 
   currentGame.flipped = shouldFlipBoard(mode, netManager?.myColor, aiColor);
 
-  // Read timer config from URL params (default 10 min)
+  // Each move has an independent 90-second limit by default.
   const timerParam = new URLSearchParams(location.search).get('timer');
-  currentGame.timerConfig = parseInt(timerParam) || 600;
-  currentGame.redTime = currentGame.timerConfig;
-  currentGame.blackTime = currentGame.timerConfig;
+  currentGame.timerConfig = parseInt(timerParam) || MOVE_TIME_LIMIT;
+  currentGame.resetMoveTimer();
   currentGame.updateTimerDisplay();
   currentGame.startTimer((loser) => {
     const winner = opponent(loser);
@@ -1148,6 +1154,9 @@ function startGame(mode, aiDepth, aiColor) {
     updateUI();
     render();
     submitChessResult(winner);
+    if (netManager && isOnlineGame()) {
+      netManager.send({ type: 'timeout', loser });
+    }
     showResult('时间耗尽', `${loser === RED ? '红方' : '黑方'}超时，${winner === RED ? '红方' : '黑方'}获胜！`);
   });
 
@@ -1552,6 +1561,7 @@ class NetworkManager {
         break;
 
       case 'resign':
+      case 'timeout':
         if (currentGame) {
           currentGame.status = 'resigned';
           const winner = this.myColor === RED ? '黑方' : '红方';
@@ -1967,6 +1977,7 @@ if (typeof module !== 'undefined' && module.exports) {
     drawArrow,
     lastMoveAnimation,
     MOVE_ANIM_DURATION,
+    MOVE_TIME_LIMIT,
   };
 }
 
