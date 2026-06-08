@@ -1420,6 +1420,60 @@ document.addEventListener('keydown', (e) => {
 showScreen(menuScreen);
 showMenuSection('main-menu');
 
+// Export for testing (Node.js / Vitest)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    GameState,
+    generateRawMoves,
+    generateLegalMoves,
+    getAllLegalMoves,
+    isInCheck,
+    kingsAreFacing,
+    createInitialBoard,
+    cloneBoard,
+    inBoard,
+    inPalace,
+    colorOf,
+    typeOf,
+    isRed,
+    isBlack,
+    sameColor,
+    makePiece,
+    isRedSide,
+    opponent,
+    RED,
+    BLACK,
+    KING,
+    ADVISOR,
+    ELEPHANT,
+    HORSE,
+    ROOK,
+    CANNON,
+    PAWN,
+    PIECE_NAMES,
+    PIECE_VALUES,
+    POS_VALUES,
+    BOARD_ROWS,
+    BOARD_COLS,
+    CELL_SIZE,
+    PADDING,
+    BOARD_W,
+    BOARD_H,
+    CANVAS_W,
+    CANVAS_H,
+    evaluateBoard,
+    minimax,
+    getAIMove,
+    orderMoves,
+    toBoardCoords,
+    drawBoard,
+    drawPiece,
+    NetworkManager,
+    localChessColor,
+    submitChessResult,
+  };
+}
+
 console.log('Chinese Chess 中国象棋 loaded.');
 console.log('模式：人机对战、本地双人、局域网对战');
 console.log('快捷键：[U]悔棋 [R]认输 [Esc]菜单');
