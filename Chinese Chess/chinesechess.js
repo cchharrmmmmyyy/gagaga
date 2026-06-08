@@ -796,15 +796,25 @@ function drawBoard(gameState, highlightMoves) {
     drawStarMark(ctx, boardX(c, flipped), boardY(r, flipped));
   }
 
-  // Last move highlight
+  // Last move animation
   if (gameState.lastMove) {
-    ctx.fillStyle = 'rgba(241, 196, 15, 0.25)';
-    ctx.fillRect(boardX(gameState.lastMove.fromC, flipped) - CELL_SIZE / 2,
-                 boardY(gameState.lastMove.fromR, flipped) - CELL_SIZE / 2,
-                 CELL_SIZE, CELL_SIZE);
-    ctx.fillRect(boardX(gameState.lastMove.toC, flipped) - CELL_SIZE / 2,
-                 boardY(gameState.lastMove.toR, flipped) - CELL_SIZE / 2,
-                 CELL_SIZE, CELL_SIZE);
+    const fromX = boardX(gameState.lastMove.fromC, flipped);
+    const fromY = boardY(gameState.lastMove.fromR, flipped);
+    const toX = boardX(gameState.lastMove.toC, flipped);
+    const toY = boardY(gameState.lastMove.toR, flipped);
+
+    // Pulsing highlights on from/to squares
+    const pulseAlpha = lastMoveAnimation
+      ? 0.3 + 0.15 * Math.sin((Date.now() - lastMoveAnimation.startTime) / 200)
+      : 0.3;
+
+    ctx.fillStyle = `rgba(241, 196, 15, ${pulseAlpha})`;
+    ctx.fillRect(fromX - CELL_SIZE / 2, fromY - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+    ctx.fillStyle = `rgba(46, 204, 113, ${pulseAlpha + 0.05})`;
+    ctx.fillRect(toX - CELL_SIZE / 2, toY - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+
+    // Animated arrow from source to destination
+    drawArrow(ctx, fromX, fromY, toX, toY, '#f39c12', 0.7);
   }
 
   // Legal move indicators
@@ -871,6 +881,39 @@ function drawBoard(gameState, highlightMoves) {
       if (p) drawPiece(ctx, p, r, c, flipped);
     }
   }
+}
+
+function drawArrow(ctx, fromX, fromY, toX, toY, color, alpha) {
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist < 1) return;
+
+  const ux = dx / dist;
+  const uy = dy / dist;
+  const headSize = Math.min(14, dist * 0.3);
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+
+  ctx.beginPath();
+  ctx.moveTo(fromX + ux * 20, fromY + uy * 20);
+  ctx.lineTo(toX - ux * (20 + headSize * 0.7), toY - uy * (20 + headSize * 0.7));
+  ctx.stroke();
+
+  const perpX = -uy * headSize * 0.5;
+  const perpY = ux * headSize * 0.5;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(toX - ux * (20 + headSize * 0.2), toY - uy * (20 + headSize * 0.2) + perpY * 0.3);
+  ctx.lineTo(toX - ux * 20, toY - uy * 20);
+  ctx.lineTo(toX - ux * (20 + headSize * 0.2), toY - uy * (20 + headSize * 0.2) - perpY * 0.3);
+  ctx.fill();
+
+  ctx.restore();
 }
 
 function drawStarMark(ctx, x, y) {
@@ -958,7 +1001,8 @@ function drawPiece(ctx, piece, r, c, flipped) {
 let currentGame = null;
 let aiThinking = false;
 let netManager = null;
-let animating = false;
+let lastMoveAnimation = null;
+const MOVE_ANIM_DURATION = 600;
 let chessLeaderboardSubmitted = false;
 let chatMessages = [];
 
@@ -1055,7 +1099,7 @@ function startGame(mode, aiDepth, aiColor) {
 
   showScreen(gameScreen);
   aiThinking = false;
-  animating = false;
+  lastMoveAnimation = null;
   chessLeaderboardSubmitted = false;
   chatMessages = [];
   renderChat();
@@ -1141,6 +1185,14 @@ function render() {
   if (!currentGame) return;
   const moves = currentGame.selected ? currentGame.legalMoves : [];
   drawBoard(currentGame, currentGame.selected !== null);
+
+  if (lastMoveAnimation) {
+    if (Date.now() - lastMoveAnimation.startTime < lastMoveAnimation.duration) {
+      requestAnimationFrame(render);
+    } else {
+      lastMoveAnimation = null;
+    }
+  }
 }
 
 function showResult(title, text) {
@@ -1164,7 +1216,7 @@ function submitChessResult(winner) {
 }
 
 function handleBoardClick(mx, my) {
-  if (!currentGame || aiThinking || animating) return;
+  if (!currentGame || aiThinking) return;
   if (currentGame.status === 'checkmate' || currentGame.status === 'stalemate') return;
 
   const pos = toBoardCoords(mx, my);
@@ -1210,6 +1262,18 @@ function handleBoardClick(mx, my) {
     currentGame.selected = null;
     currentGame.legalMoves = [];
     updateUI();
+
+    // Start last move animation
+    if (currentGame.lastMove) {
+      lastMoveAnimation = {
+        fromR: currentGame.lastMove.fromR,
+        fromC: currentGame.lastMove.fromC,
+        toR: currentGame.lastMove.toR,
+        toC: currentGame.lastMove.toC,
+        startTime: Date.now(),
+        duration: MOVE_ANIM_DURATION,
+      };
+    }
     render();
 
     // Check game end
@@ -1284,6 +1348,18 @@ function doAIMove() {
   const success = currentGame.makeMove(move.fromR, move.fromC, move.toR, move.toC);
   aiThinking = false;
   updateUI();
+
+  // Start last move animation for AI move
+  if (currentGame.lastMove) {
+    lastMoveAnimation = {
+      fromR: currentGame.lastMove.fromR,
+      fromC: currentGame.lastMove.fromC,
+      toR: currentGame.lastMove.toR,
+      toC: currentGame.lastMove.toC,
+      startTime: Date.now(),
+      duration: MOVE_ANIM_DURATION,
+    };
+  }
   render();
 
   if (currentGame.status === 'checkmate') {
@@ -1706,6 +1782,9 @@ if (typeof module !== 'undefined' && module.exports) {
     getTierProgress,
     loadPlayerStats,
     TIERS,
+    drawArrow,
+    lastMoveAnimation,
+    MOVE_ANIM_DURATION,
   };
 }
 
