@@ -24,6 +24,7 @@ function publicLeaderboard(game) {
   return {
     ...leaderboard,
     label: game.manifest.name,
+    primaryField: leaderboard.sort?.[0]?.field || "score",
     strategy: leaderboard.type === "match"
       ? "matchRecord"
       : leaderboard.sort?.[0]?.direction === "asc" ? "bestLowScore" : "bestHighScore",
