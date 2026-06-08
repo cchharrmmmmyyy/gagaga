@@ -126,8 +126,8 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-function authenticateUpgrade(req, url) {
-  req.headers.authorization = `Bearer ${url.searchParams.get("token") || ""}`;
+function authenticateUpgrade(req, url, token = url.searchParams.get("token")) {
+  req.headers.authorization = `Bearer ${token || ""}`;
   return auth.userFromRequest(req);
 }
 

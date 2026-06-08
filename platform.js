@@ -41,12 +41,20 @@
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
     renderAccount();
+    notifyAuthChange();
   }
 
   function clearAuth() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     renderAccount();
+    notifyAuthChange();
+  }
+
+  function notifyAuthChange() {
+    window.dispatchEvent(new CustomEvent('gagaga-auth-change', {
+      detail: { user: getUser(), token: getToken() },
+    }));
   }
 
   async function api(path, options = {}) {
@@ -179,6 +187,7 @@
       clearAuth();
     }
     renderAccount();
+    notifyAuthChange();
   }
 
   els.authOpen.addEventListener('click', () => openModal(els.authModal));

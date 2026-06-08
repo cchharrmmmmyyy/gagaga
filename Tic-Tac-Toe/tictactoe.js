@@ -1,42 +1,52 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const cellSize = 100;
-let board = [
-  ['', '', ''],
-  ['', '', ''],
-  ['', '', '']
-];
+const cellSize = canvas.width / 3;
+let board = createBoard();
 let currentPlayer = 'X';
 let gameFinished = false;
 
 canvas.addEventListener('click', handleClick);
+document.addEventListener('keydown', event => {
+  if (event.key === ' ') resetGame();
+});
+
+function createBoard() {
+  return [
+    ['', '', ''],
+    ['', '', ''],
+    ['', '', '']
+  ];
+}
 
 function handleClick(event) {
   if (gameFinished) return;
+
   const x = Math.floor(event.offsetX / cellSize);
   const y = Math.floor(event.offsetY / cellSize);
+  if (!board[y] || board[y][x] !== '') return;
 
-  if (board[y][x] === '') {
-    board[y][x] = currentPlayer;
-    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-    draw();
-    checkWinner();
-  }
+  board[y][x] = currentPlayer;
+  currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+  draw();
+  checkWinner();
 }
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1;
 
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 3; j++) {
-      const x = j * cellSize;
-      const y = i * cellSize;
+  for (let row = 0; row < 3; row += 1) {
+    for (let column = 0; column < 3; column += 1) {
+      const x = column * cellSize;
+      const y = row * cellSize;
       ctx.strokeRect(x, y, cellSize, cellSize);
 
-      if (board[i][j] !== '') {
+      if (board[row][column] !== '') {
         ctx.font = '80px Arial';
-        ctx.fillText(board[i][j], x + 20, y + 80);
+        ctx.fillStyle = '#000';
+        ctx.fillText(board[row][column], x + 20, y + 80);
       }
     }
   }
@@ -44,15 +54,12 @@ function draw() {
 
 function checkWinner() {
   const lines = [
-    // Rows
     [board[0][0], board[0][1], board[0][2]],
     [board[1][0], board[1][1], board[1][2]],
     [board[2][0], board[2][1], board[2][2]],
-    // Columns
     [board[0][0], board[1][0], board[2][0]],
     [board[0][1], board[1][1], board[2][1]],
     [board[0][2], board[1][2], board[2][2]],
-    // Diagonals
     [board[0][0], board[1][1], board[2][2]],
     [board[0][2], board[1][1], board[2][0]]
   ];
@@ -77,15 +84,15 @@ function checkWinner() {
 
 function submitTicTacToeResult(result) {
   if (!window.GagagaPlatform) return;
-  window.GagagaPlatform.submitScore('tic-tac-toe', { result }, `tic:${Date.now()}:${result}`);
+  window.GagagaPlatform.submitScore(
+    'tic-tac-toe',
+    { result },
+    `tic:${Date.now()}:${result}`
+  );
 }
 
 function resetGame() {
-  board = [
-    ['', '', ''],
-    ['', '', ''],
-    ['', '', '']
-  ];
+  board = createBoard();
   currentPlayer = 'X';
   gameFinished = false;
   draw();
