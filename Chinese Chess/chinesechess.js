@@ -1214,6 +1214,11 @@ class NetworkManager {
       case 'opponent_disconnected':
         this.connected = false;
         if (this.onStatus) this.onStatus('对手已断开连接。');
+        if (currentGame && (currentGame.status === 'playing' || currentGame.status === 'check')) {
+          currentGame.status = 'resigned';
+          submitChessResult(this.myColor);
+          showResult('对手断线', `${this.myColor === RED ? '红方' : '黑方'}不战而胜！`);
+        }
         break;
 
       case 'error':
