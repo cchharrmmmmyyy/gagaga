@@ -18,3 +18,6 @@ node_modules/
 server/node_modules/
 __pycache__/
 *.pyc
+
+# Test files (not tracked)
+tests/
