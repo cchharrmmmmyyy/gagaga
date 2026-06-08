@@ -154,7 +154,7 @@
     /* Game screen */
     #game-screen {
       display: none;
-      max-width: 1100px;
+      max-width: 900px;
       margin: 16px auto;
     }
     #game-screen.active { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
@@ -164,6 +164,7 @@
       border: 6px solid #1a1a1a;
       box-shadow: var(--pixel-shadow);
       padding: 12px;
+      flex-shrink: 0;
     }
     #chessBoard {
       display: block;
@@ -259,7 +260,7 @@
     .modal-content p { margin-bottom: 16px; font-size: 16px; }
 
     @media (max-width: 720px) {
-      #game-screen.active { flex-direction: column; align-items: center; }
+      #game-screen.active { flex-direction: column; align-items: center; max-width: none; }
       .sidebar { width: 100%; max-width: 480px; }
     }
   </style>
