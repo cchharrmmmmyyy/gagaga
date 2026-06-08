@@ -18,6 +18,7 @@ const elementIds = [
   'play-again-btn', 'modal-menu-btn',
   'red-timer', 'black-timer',
   'chat-messages', 'chat-panel', 'chat-input', 'chat-send-btn',
+  'tier-badge', 'tier-progress',
   'lan-create-btn', 'lan-join-btn', 'join-confirm-btn',
   'lan-back-btn', 'create-cancel-btn', 'join-cancel-btn',
   'difficulty-row', 'status-block',

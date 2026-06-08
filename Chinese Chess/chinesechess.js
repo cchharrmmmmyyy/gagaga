@@ -119,6 +119,61 @@ function flipCol(c, flipped) { return flipped ? BOARD_COLS - 1 - c : c; }
 function boardX(c, flipped) { return PADDING + flipCol(c, flipped) * CELL_SIZE; }
 function boardY(r, flipped) { return PADDING + flipRow(r, flipped) * CELL_SIZE; }
 
+// ---- Ranking Tier System ----
+const TIERS = [
+  { name: '王者', color: '#ffd700', minWins: 200 },
+  { name: '钻石', color: '#00d2ff', minWins: 100 },
+  { name: '铂金', color: '#5effc7', minWins: 60 },
+  { name: '黄金', color: '#ffea00', minWins: 30 },
+  { name: '白银', color: '#c0c0c0', minWins: 10 },
+  { name: '青铜', color: '#cd7f32', minWins: 0 },
+];
+
+function getTier(wins) {
+  for (const tier of TIERS) {
+    if (wins >= tier.minWins) return tier;
+  }
+  return TIERS[TIERS.length - 1];
+}
+
+function getTierProgress(wins) {
+  for (let i = 0; i < TIERS.length; i++) {
+    if (wins >= TIERS[i].minWins) {
+      const prev = TIERS[i - 1];
+      if (prev) return { current: TIERS[i], next: prev, progress: wins - TIERS[i].minWins, needed: prev.minWins - TIERS[i].minWins };
+      return { current: TIERS[i], next: null, progress: 0, needed: 0 };
+    }
+  }
+  return { current: TIERS[TIERS.length - 1], next: TIERS[TIERS.length - 2] || null, progress: 0, needed: TIERS[TIERS.length - 2]?.minWins || 0 };
+}
+
+async function loadPlayerStats() {
+  const platform = window.GagagaPlatform;
+  if (!platform || !platform.api) return;
+  try {
+    const data = await platform.api('/api/leaderboards/chinese-chess?limit=100');
+    const user = platform.getUser();
+    if (!user) return;
+    const record = (data.rows || []).find(row => row.userId === user.id);
+    const wins = record ? record.wins : 0;
+    const tier = getTier(wins);
+    const progress = getTierProgress(wins);
+    const tierBadge = document.getElementById('tier-badge');
+    if (tierBadge) {
+      tierBadge.textContent = tier.name;
+      tierBadge.style.color = tier.color;
+    }
+    const tierProgress = document.getElementById('tier-progress');
+    if (tierProgress && progress.next) {
+      tierProgress.textContent = `${progress.progress}/${progress.needed} → ${progress.next.name}`;
+    } else if (tierProgress) {
+      tierProgress.textContent = '已达最高段位';
+    }
+  } catch (e) {
+    // Silently fail, tier display is non-critical
+  }
+}
+
 // ---- Board Initialization ----
 function createInitialBoard() {
   const b = Array.from({ length: BOARD_ROWS }, () => Array(BOARD_COLS).fill(null));
@@ -1004,6 +1059,7 @@ function startGame(mode, aiDepth, aiColor) {
   chessLeaderboardSubmitted = false;
   chatMessages = [];
   renderChat();
+  loadPlayerStats();
 
   // Set board flip for Black's perspective
   if (mode === 'ai') {
@@ -1646,6 +1702,10 @@ if (typeof module !== 'undefined' && module.exports) {
     addChatMessage,
     sendChatMessage,
     renderChat,
+    getTier,
+    getTierProgress,
+    loadPlayerStats,
+    TIERS,
   };
 }
 
