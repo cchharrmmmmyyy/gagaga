@@ -16,6 +16,7 @@ const elementIds = [
   'create-status', 'join-status', 'server-url-input', 'join-code-input',
   'undo-btn', 'resign-btn', 'menu-btn-game',
   'play-again-btn', 'modal-menu-btn',
+  'red-timer', 'black-timer',
   'lan-create-btn', 'lan-join-btn', 'join-confirm-btn',
   'lan-back-btn', 'create-cancel-btn', 'join-cancel-btn',
   'difficulty-row', 'status-block',

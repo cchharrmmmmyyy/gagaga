@@ -329,6 +329,10 @@ class GameState {
     this.capturedByRed = [];
     this.capturedByBlack = [];
     this.flipped = false;
+    this.redTime = 600;
+    this.blackTime = 600;
+    this.timerConfig = 600;
+    this.timerInterval = null;
   }
 
   reset() {
@@ -344,6 +348,58 @@ class GameState {
     this.capturedByRed = [];
     this.capturedByBlack = [];
     this.flipped = false;
+    this.stopTimer();
+    this.redTime = this.timerConfig;
+    this.blackTime = this.timerConfig;
+  }
+
+  startTimer(onTimeout) {
+    this.stopTimer();
+    this._timeoutCallback = onTimeout;
+    this.timerInterval = setInterval(() => {
+      if (this.status !== 'playing' && this.status !== 'check') {
+        this.stopTimer();
+        return;
+      }
+      if (this.turn === RED) {
+        this.redTime--;
+        if (this.redTime <= 0) { this.redTime = 0; this.stopTimer(); if (onTimeout) onTimeout(RED); }
+      } else {
+        this.blackTime--;
+        if (this.blackTime <= 0) { this.blackTime = 0; this.stopTimer(); if (onTimeout) onTimeout(BLACK); }
+      }
+      this.updateTimerDisplay();
+    }, 1000);
+  }
+
+  stopTimer() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
+
+  formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  updateTimerDisplay() {
+    const redEl = document.getElementById('red-timer');
+    const blackEl = document.getElementById('black-timer');
+    if (redEl) redEl.textContent = this.formatTime(this.redTime);
+    if (blackEl) blackEl.textContent = this.formatTime(this.blackTime);
+    if (this.redTime < 60) {
+      redEl?.classList.add('timer-warning');
+    } else {
+      redEl?.classList.remove('timer-warning');
+    }
+    if (this.blackTime < 60) {
+      blackEl?.classList.add('timer-warning');
+    } else {
+      blackEl?.classList.remove('timer-warning');
+    }
   }
 
   makeMove(fromR, fromC, toR, toC) {

@@ -198,6 +198,10 @@
     .turn-indicator { font-weight: bold; }
     .turn-red { color: #e74c3c; }
     .turn-black { color: #95a5a6; }
+    #red-timer { color: #e74c3c; font-weight: bold; font-size: 15px; }
+    #black-timer { color: #95a5a6; font-weight: bold; font-size: 15px; }
+    .timer-warning { animation: timerBlink 0.5s infinite alternate; color: #f1c40f !important; }
+    @keyframes timerBlink { from { opacity: 1; } to { opacity: 0.3; } }
     .check-warning {
       color: #f1c40f;
       animation: blink 0.7s infinite alternate;
@@ -325,6 +329,8 @@
       <div class="status-block" id="status-block">
         <div>模式：<span id="mode-label">-</span></div>
         <div>走棋：<span id="turn-label" class="turn-indicator turn-red">红方</span></div>
+        <div>红方时间：<span id="red-timer">10:00</span></div>
+        <div>黑方时间：<span id="black-timer">10:00</span></div>
         <div id="check-label" style="display:none;" class="check-warning">⚠ 将军！</div>
       </div>
 
