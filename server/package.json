@@ -9,6 +9,6 @@
     "check": "node --check index.js && node --test"
   },
   "dependencies": {
-    "ws": "^8.16.0"
+    "ws": "^8.21.0"
   }
 }
