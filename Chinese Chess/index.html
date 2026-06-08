@@ -154,7 +154,7 @@
     /* Game screen */
     #game-screen {
       display: none;
-      max-width: 1100px;
+      max-width: 900px;
       margin: 16px auto;
     }
     #game-screen.active { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
@@ -164,6 +164,7 @@
       border: 6px solid #1a1a1a;
       box-shadow: var(--pixel-shadow);
       padding: 12px;
+      flex-shrink: 0;
     }
     #chessBoard {
       display: block;
@@ -197,6 +198,10 @@
     .turn-indicator { font-weight: bold; }
     .turn-red { color: #e74c3c; }
     .turn-black { color: #95a5a6; }
+    #red-timer { color: #e74c3c; font-weight: bold; font-size: 15px; }
+    #black-timer { color: #95a5a6; font-weight: bold; font-size: 15px; }
+    .timer-warning { animation: timerBlink 0.5s infinite alternate; color: #f1c40f !important; }
+    @keyframes timerBlink { from { opacity: 1; } to { opacity: 0.3; } }
     .check-warning {
       color: #f1c40f;
       animation: blink 0.7s infinite alternate;
@@ -231,6 +236,45 @@
     .sidebar button.secondary { background: #2980b9; }
     .sidebar button.secondary:hover { background: #3498db; }
 
+    /* Chat panel */
+    .chat-panel-inline {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 2px solid #ffd700;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-messages {
+      max-height: 180px;
+      overflow-y: auto;
+      background: #1a1a1a;
+      padding: 8px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .chat-msg { padding: 3px 0; border-bottom: 1px solid #333; }
+    .chat-time { color: #888; font-size: 10px; margin-right: 4px; }
+    .chat-user { color: #ffd700; font-weight: bold; }
+    .chat-text { color: #ddd; }
+    .chat-input-inline {
+      flex: 1;
+      padding: 6px 8px;
+      font-family: inherit;
+      font-size: 12px;
+      background: #1a1a1a;
+      color: #ffd700;
+      border: 2px solid #ffd700;
+    }
+    .chat-send-inline {
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 12px;
+      background: #27ae60;
+      color: #fff;
+      border: 2px solid #1a1a1a;
+      cursor: pointer;
+    }
+
     /* Result modal */
     .modal {
       display: none;
@@ -259,7 +303,7 @@
     .modal-content p { margin-bottom: 16px; font-size: 16px; }
 
     @media (max-width: 720px) {
-      #game-screen.active { flex-direction: column; align-items: center; }
+      #game-screen.active { flex-direction: column; align-items: center; max-width: none; }
       .sidebar { width: 100%; max-width: 480px; }
     }
   </style>
@@ -317,13 +361,17 @@
   <!-- Game Screen -->
   <div id="game-screen" class="screen">
     <div class="board-wrap">
-      <canvas id="chessBoard" width="540" height="600"></canvas>
+      <canvas id="chessBoard"></canvas>
     </div>
     <div class="sidebar">
       <h3>状态</h3>
       <div class="status-block" id="status-block">
         <div>模式：<span id="mode-label">-</span></div>
         <div>走棋：<span id="turn-label" class="turn-indicator turn-red">红方</span></div>
+        <div>红方时间：<span id="red-timer">10:00</span></div>
+        <div>黑方时间：<span id="black-timer">10:00</span></div>
+        <div>段位：<span id="tier-badge" style="font-weight:bold;">青铜</span></div>
+        <div style="font-size:11px; color:#888;" id="tier-progress"></div>
         <div id="check-label" style="display:none;" class="check-warning">⚠ 将军！</div>
       </div>
 
@@ -334,6 +382,15 @@
       <button id="undo-btn" class="secondary">悔棋</button>
       <button id="resign-btn">认输</button>
       <button id="menu-btn-game" class="secondary">返回菜单</button>
+
+      <div class="chat-panel-inline" id="chat-panel" style="display:none;">
+        <h3>聊天</h3>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div style="display:flex; gap:4px; margin-top:8px;">
+          <input type="text" id="chat-input" class="chat-input-inline" placeholder="输入消息..." maxlength="500">
+          <button id="chat-send-btn" class="chat-send-inline">发送</button>
+        </div>
+      </div>
     </div>
   </div>
 

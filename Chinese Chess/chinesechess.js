@@ -5,8 +5,8 @@
 // ---- Constants ----
 const BOARD_COLS = 9;
 const BOARD_ROWS = 10;
-const CELL_SIZE = 54;
-const PADDING = 27;
+const CELL_SIZE = 64;
+const PADDING = 32;
 const BOARD_W = CELL_SIZE * (BOARD_COLS - 1);
 const BOARD_H = CELL_SIZE * (BOARD_ROWS - 1);
 const CANVAS_W = BOARD_W + PADDING * 2;
@@ -112,6 +112,66 @@ function inPalace(r, c, color) {
   if (c < 3 || c > 5) return false;
   if (color === RED) return r >= 7 && r <= 9;
   return r >= 0 && r <= 2;
+}
+
+function flipRow(r, flipped) { return flipped ? BOARD_ROWS - 1 - r : r; }
+function flipCol(c, flipped) { return flipped ? BOARD_COLS - 1 - c : c; }
+function boardX(c, flipped) { return PADDING + flipCol(c, flipped) * CELL_SIZE; }
+function boardY(r, flipped) { return PADDING + flipRow(r, flipped) * CELL_SIZE; }
+
+// ---- Ranking Tier System ----
+const TIERS = [
+  { name: '王者', color: '#ffd700', minWins: 200 },
+  { name: '钻石', color: '#00d2ff', minWins: 100 },
+  { name: '铂金', color: '#5effc7', minWins: 60 },
+  { name: '黄金', color: '#ffea00', minWins: 30 },
+  { name: '白银', color: '#c0c0c0', minWins: 10 },
+  { name: '青铜', color: '#cd7f32', minWins: 0 },
+];
+
+function getTier(wins) {
+  for (const tier of TIERS) {
+    if (wins >= tier.minWins) return tier;
+  }
+  return TIERS[TIERS.length - 1];
+}
+
+function getTierProgress(wins) {
+  for (let i = 0; i < TIERS.length; i++) {
+    if (wins >= TIERS[i].minWins) {
+      const prev = TIERS[i - 1];
+      if (prev) return { current: TIERS[i], next: prev, progress: wins - TIERS[i].minWins, needed: prev.minWins - TIERS[i].minWins };
+      return { current: TIERS[i], next: null, progress: 0, needed: 0 };
+    }
+  }
+  return { current: TIERS[TIERS.length - 1], next: TIERS[TIERS.length - 2] || null, progress: 0, needed: TIERS[TIERS.length - 2]?.minWins || 0 };
+}
+
+async function loadPlayerStats() {
+  const platform = window.GagagaPlatform;
+  if (!platform || !platform.api) return;
+  try {
+    const data = await platform.api('/api/leaderboards/chinese-chess?limit=100');
+    const user = platform.getUser();
+    if (!user) return;
+    const record = (data.rows || []).find(row => row.userId === user.id);
+    const wins = record ? record.wins : 0;
+    const tier = getTier(wins);
+    const progress = getTierProgress(wins);
+    const tierBadge = document.getElementById('tier-badge');
+    if (tierBadge) {
+      tierBadge.textContent = tier.name;
+      tierBadge.style.color = tier.color;
+    }
+    const tierProgress = document.getElementById('tier-progress');
+    if (tierProgress && progress.next) {
+      tierProgress.textContent = `${progress.progress}/${progress.needed} → ${progress.next.name}`;
+    } else if (tierProgress) {
+      tierProgress.textContent = '已达最高段位';
+    }
+  } catch (e) {
+    // Silently fail, tier display is non-critical
+  }
 }
 
 // ---- Board Initialization ----
@@ -323,6 +383,11 @@ class GameState {
     this.lastMove = null;
     this.capturedByRed = [];
     this.capturedByBlack = [];
+    this.flipped = false;
+    this.redTime = 600;
+    this.blackTime = 600;
+    this.timerConfig = 600;
+    this.timerInterval = null;
   }
 
   reset() {
@@ -337,6 +402,59 @@ class GameState {
     this.lastMove = null;
     this.capturedByRed = [];
     this.capturedByBlack = [];
+    this.flipped = false;
+    this.stopTimer();
+    this.redTime = this.timerConfig;
+    this.blackTime = this.timerConfig;
+  }
+
+  startTimer(onTimeout) {
+    this.stopTimer();
+    this._timeoutCallback = onTimeout;
+    this.timerInterval = setInterval(() => {
+      if (this.status !== 'playing' && this.status !== 'check') {
+        this.stopTimer();
+        return;
+      }
+      if (this.turn === RED) {
+        this.redTime--;
+        if (this.redTime <= 0) { this.redTime = 0; this.stopTimer(); if (onTimeout) onTimeout(RED); }
+      } else {
+        this.blackTime--;
+        if (this.blackTime <= 0) { this.blackTime = 0; this.stopTimer(); if (onTimeout) onTimeout(BLACK); }
+      }
+      this.updateTimerDisplay();
+    }, 1000);
+  }
+
+  stopTimer() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
+
+  formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  updateTimerDisplay() {
+    const redEl = document.getElementById('red-timer');
+    const blackEl = document.getElementById('black-timer');
+    if (redEl) redEl.textContent = this.formatTime(this.redTime);
+    if (blackEl) blackEl.textContent = this.formatTime(this.blackTime);
+    if (this.redTime < 60) {
+      redEl?.classList.add('timer-warning');
+    } else {
+      redEl?.classList.remove('timer-warning');
+    }
+    if (this.blackTime < 60) {
+      blackEl?.classList.add('timer-warning');
+    } else {
+      blackEl?.classList.remove('timer-warning');
+    }
   }
 
   makeMove(fromR, fromC, toR, toC) {
@@ -563,6 +681,8 @@ function getAIMove(gameState) {
 // ---- Canvas Rendering ----
 const canvas = document.getElementById('chessBoard');
 const ctx = canvas.getContext('2d');
+canvas.width = CANVAS_W;
+canvas.height = CANVAS_H;
 
 function toBoardCoords(mx, my) {
   const rect = canvas.getBoundingClientRect();
@@ -570,14 +690,18 @@ function toBoardCoords(mx, my) {
   const scaleY = canvas.height / rect.height;
   const x = (mx - rect.left) * scaleX;
   const y = (my - rect.top) * scaleY;
-  const c = Math.round((x - PADDING) / CELL_SIZE);
-  const r = Math.round((y - PADDING) / CELL_SIZE);
+  const rawC = Math.round((x - PADDING) / CELL_SIZE);
+  const rawR = Math.round((y - PADDING) / CELL_SIZE);
+  const flipped = currentGame && currentGame.flipped;
+  const c = flipped ? BOARD_COLS - 1 - rawC : rawC;
+  const r = flipped ? BOARD_ROWS - 1 - rawR : rawR;
   if (inBoard(r, c)) return { r, c };
   return null;
 }
 
 function drawBoard(gameState, highlightMoves) {
   const W = canvas.width, H = canvas.height;
+  const flipped = gameState.flipped;
   ctx.clearRect(0, 0, W, H);
 
   // Board background
@@ -595,106 +719,117 @@ function drawBoard(gameState, highlightMoves) {
 
   // Horizontal lines
   for (let r = 0; r < BOARD_ROWS; r++) {
-    const y = PADDING + r * CELL_SIZE;
+    const y = boardY(r, flipped);
     ctx.beginPath();
-    ctx.moveTo(PADDING, y);
-    ctx.lineTo(PADDING + BOARD_W, y);
+    ctx.moveTo(boardX(0, flipped), y);
+    ctx.lineTo(boardX(BOARD_COLS - 1, flipped), y);
     ctx.stroke();
   }
 
   // Vertical lines (split at river)
+  const riverTopY = boardY(4, flipped);
+  const riverBotY = boardY(5, flipped);
   for (let c = 0; c < BOARD_COLS; c++) {
-    const x = PADDING + c * CELL_SIZE;
-    // Top half
-    ctx.beginPath();
-    ctx.moveTo(x, PADDING);
-    ctx.lineTo(x, PADDING + 4 * CELL_SIZE);
-    ctx.stroke();
-    // Bottom half
-    ctx.beginPath();
-    ctx.moveTo(x, PADDING + 5 * CELL_SIZE);
-    ctx.lineTo(x, PADDING + 9 * CELL_SIZE);
-    ctx.stroke();
+    const x = boardX(c, flipped);
+    const y0 = boardY(0, flipped);
+    const y9 = boardY(9, flipped);
+    if (c === 0 || c === BOARD_COLS - 1) {
+      ctx.beginPath();
+      ctx.moveTo(x, y0);
+      ctx.lineTo(x, y9);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x, y0);
+      ctx.lineTo(x, Math.min(riverTopY, riverBotY));
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, Math.max(riverTopY, riverBotY));
+      ctx.lineTo(x, y9);
+      ctx.stroke();
+    }
   }
-  // Leftmost and rightmost vertical lines extend full length
-  ctx.beginPath();
-  ctx.moveTo(PADDING, PADDING);
-  ctx.lineTo(PADDING, PADDING + BOARD_H);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(PADDING + BOARD_W, PADDING);
-  ctx.lineTo(PADDING + BOARD_W, PADDING + BOARD_H);
-  ctx.stroke();
 
   // Palace diagonal lines
   ctx.strokeStyle = '#5a3a1a';
   ctx.lineWidth = 1;
-  // Top palace (black)
-  const px = PADDING + 3 * CELL_SIZE, py = PADDING;
+  // Top palace (black's palace)
+  const palaceTopX0 = boardX(3, flipped), palaceTopY0 = boardY(0, flipped);
+  const palaceTopX2 = boardX(5, flipped), palaceTopY2 = boardY(2, flipped);
   ctx.beginPath();
-  ctx.moveTo(px, py);
-  ctx.lineTo(px + 2 * CELL_SIZE, py + 2 * CELL_SIZE);
+  ctx.moveTo(palaceTopX0, palaceTopY0);
+  ctx.lineTo(palaceTopX2, palaceTopY2);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(px + 2 * CELL_SIZE, py);
-  ctx.lineTo(px, py + 2 * CELL_SIZE);
+  ctx.moveTo(palaceTopX2, palaceTopY0);
+  ctx.lineTo(palaceTopX0, palaceTopY2);
   ctx.stroke();
-  // Bottom palace (red)
-  const py2 = PADDING + 7 * CELL_SIZE;
+  // Bottom palace (red's palace)
+  const palaceBotX0 = boardX(3, flipped), palaceBotY0 = boardY(7, flipped);
+  const palaceBotX2 = boardX(5, flipped), palaceBotY2 = boardY(9, flipped);
   ctx.beginPath();
-  ctx.moveTo(px, py2);
-  ctx.lineTo(px + 2 * CELL_SIZE, py2 + 2 * CELL_SIZE);
+  ctx.moveTo(palaceBotX0, palaceBotY0);
+  ctx.lineTo(palaceBotX2, palaceBotY2);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(px + 2 * CELL_SIZE, py2);
-  ctx.lineTo(px, py2 + 2 * CELL_SIZE);
+  ctx.moveTo(palaceBotX2, palaceBotY0);
+  ctx.lineTo(palaceBotX0, palaceBotY2);
   ctx.stroke();
 
   // River text
   ctx.fillStyle = '#5a3a1a';
-  ctx.font = 'bold 28px "KaiTi", "STKaiti", "SimSun", serif';
+  ctx.font = 'bold 32px "KaiTi", "STKaiti", "SimSun", serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const riverY = PADDING + 4.5 * CELL_SIZE;
-  ctx.fillText('楚 河', PADDING + 1.5 * CELL_SIZE, riverY);
-  ctx.fillText('漢 界', PADDING + 6.5 * CELL_SIZE, riverY);
+  const riverY = boardY(4.5, flipped);
+  const leftTextX = boardX(1.5, flipped);
+  const rightTextX = boardX(6.5, flipped);
+  const leftText = flipped ? '漢 界' : '楚 河';
+  const rightText = flipped ? '楚 河' : '漢 界';
+  ctx.fillText(leftText, leftTextX, riverY);
+  ctx.fillText(rightText, rightTextX, riverY);
 
   // Position markers (star points)
   const starOffsets = [[0,1],[0,7],[2,0],[2,2],[2,4],[2,6],[2,8],[3,0],[3,2],[3,4],[3,6],[3,8],
                        [6,0],[6,2],[6,4],[6,6],[6,8],[7,0],[7,2],[7,4],[7,6],[7,8],[9,1],[9,7]];
   for (const [r, c] of starOffsets) {
-    drawStarMark(ctx, PADDING + c * CELL_SIZE, PADDING + r * CELL_SIZE);
+    drawStarMark(ctx, boardX(c, flipped), boardY(r, flipped));
   }
 
-  // Last move highlight
+  // Last move animation
   if (gameState.lastMove) {
-    ctx.fillStyle = 'rgba(241, 196, 15, 0.25)';
-    for (const pos of [gameState.lastMove.fromR, gameState.lastMove.toR]) {
-      // skip - handled below
-    }
-    ctx.fillRect(PADDING + gameState.lastMove.fromC * CELL_SIZE - CELL_SIZE / 2,
-                 PADDING + gameState.lastMove.fromR * CELL_SIZE - CELL_SIZE / 2,
-                 CELL_SIZE, CELL_SIZE);
-    ctx.fillRect(PADDING + gameState.lastMove.toC * CELL_SIZE - CELL_SIZE / 2,
-                 PADDING + gameState.lastMove.toR * CELL_SIZE - CELL_SIZE / 2,
-                 CELL_SIZE, CELL_SIZE);
+    const fromX = boardX(gameState.lastMove.fromC, flipped);
+    const fromY = boardY(gameState.lastMove.fromR, flipped);
+    const toX = boardX(gameState.lastMove.toC, flipped);
+    const toY = boardY(gameState.lastMove.toR, flipped);
+
+    // Pulsing highlights on from/to squares
+    const pulseAlpha = lastMoveAnimation
+      ? 0.3 + 0.15 * Math.sin((Date.now() - lastMoveAnimation.startTime) / 200)
+      : 0.3;
+
+    ctx.fillStyle = `rgba(241, 196, 15, ${pulseAlpha})`;
+    ctx.fillRect(fromX - CELL_SIZE / 2, fromY - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+    ctx.fillStyle = `rgba(46, 204, 113, ${pulseAlpha + 0.05})`;
+    ctx.fillRect(toX - CELL_SIZE / 2, toY - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+
+    // Animated arrow from source to destination
+    drawArrow(ctx, fromX, fromY, toX, toY, '#f39c12', 0.7);
   }
 
   // Legal move indicators
   if (highlightMoves) {
     for (const [tr, tc] of gameState.legalMoves) {
-      const x = PADDING + tc * CELL_SIZE;
-      const y = PADDING + tr * CELL_SIZE;
+      const x = boardX(tc, flipped);
+      const y = boardY(tr, flipped);
       const target = gameState.board[tr][tc];
       if (target) {
-        // Capture indicator: red circle around target
         ctx.strokeStyle = 'rgba(231, 76, 60, 0.7)';
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.arc(x, y, CELL_SIZE / 2 - 2, 0, Math.PI * 2);
         ctx.stroke();
       } else {
-        // Move indicator: small green dot
         ctx.fillStyle = 'rgba(39, 174, 96, 0.6)';
         ctx.beginPath();
         ctx.arc(x, y, 6, 0, Math.PI * 2);
@@ -706,8 +841,8 @@ function drawBoard(gameState, highlightMoves) {
   // Selected piece highlight
   if (gameState.selected) {
     const { r, c } = gameState.selected;
-    const x = PADDING + c * CELL_SIZE;
-    const y = PADDING + r * CELL_SIZE;
+    const x = boardX(c, flipped);
+    const y = boardY(r, flipped);
     ctx.fillStyle = 'rgba(241, 196, 15, 0.35)';
     ctx.fillRect(x - CELL_SIZE / 2, y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
     ctx.strokeStyle = '#f1c40f';
@@ -722,8 +857,8 @@ function drawBoard(gameState, highlightMoves) {
       for (let c = 0; c < BOARD_COLS; c++) {
         const p = gameState.board[r][c];
         if (p && typeOf(p) === KING && colorOf(p) === checkedColor) {
-          const x = PADDING + c * CELL_SIZE;
-          const y = PADDING + r * CELL_SIZE;
+          const x = boardX(c, flipped);
+          const y = boardY(r, flipped);
           ctx.strokeStyle = '#e74c3c';
           ctx.lineWidth = 3;
           ctx.beginPath();
@@ -743,13 +878,46 @@ function drawBoard(gameState, highlightMoves) {
   for (let r = 0; r < BOARD_ROWS; r++) {
     for (let c = 0; c < BOARD_COLS; c++) {
       const p = gameState.board[r][c];
-      if (p) drawPiece(ctx, p, r, c);
+      if (p) drawPiece(ctx, p, r, c, flipped);
     }
   }
 }
 
+function drawArrow(ctx, fromX, fromY, toX, toY, color, alpha) {
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist < 1) return;
+
+  const ux = dx / dist;
+  const uy = dy / dist;
+  const headSize = Math.min(14, dist * 0.3);
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+
+  ctx.beginPath();
+  ctx.moveTo(fromX + ux * 20, fromY + uy * 20);
+  ctx.lineTo(toX - ux * (20 + headSize * 0.7), toY - uy * (20 + headSize * 0.7));
+  ctx.stroke();
+
+  const perpX = -uy * headSize * 0.5;
+  const perpY = ux * headSize * 0.5;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(toX - ux * (20 + headSize * 0.2), toY - uy * (20 + headSize * 0.2) + perpY * 0.3);
+  ctx.lineTo(toX - ux * 20, toY - uy * 20);
+  ctx.lineTo(toX - ux * (20 + headSize * 0.2), toY - uy * (20 + headSize * 0.2) - perpY * 0.3);
+  ctx.fill();
+
+  ctx.restore();
+}
+
 function drawStarMark(ctx, x, y) {
-  const s = 5, g = 2;
+  const s = 6, g = 2;
   ctx.strokeStyle = '#5a3a1a';
   ctx.lineWidth = 1;
   const parts = [
@@ -766,9 +934,9 @@ function drawStarMark(ctx, x, y) {
   }
 }
 
-function drawPiece(ctx, piece, r, c) {
-  const x = PADDING + c * CELL_SIZE;
-  const y = PADDING + r * CELL_SIZE;
+function drawPiece(ctx, piece, r, c, flipped) {
+  const x = boardX(c, flipped);
+  const y = boardY(r, flipped);
   const radius = CELL_SIZE / 2 - 3;
 
   // Shadow
@@ -811,7 +979,7 @@ function drawPiece(ctx, piece, r, c) {
   // Character
   const name = PIECE_NAMES[piece] || piece;
   ctx.fillStyle = isRedPiece ? '#c0392b' : '#1c1c1c';
-  ctx.font = 'bold 26px "KaiTi", "STKaiti", "SimSun", serif';
+  ctx.font = 'bold 30px "KaiTi", "STKaiti", "SimSun", serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(name, x, y + 1);
@@ -833,8 +1001,56 @@ function drawPiece(ctx, piece, r, c) {
 let currentGame = null;
 let aiThinking = false;
 let netManager = null;
-let animating = false;
+let lastMoveAnimation = null;
+const MOVE_ANIM_DURATION = 600;
 let chessLeaderboardSubmitted = false;
+let chatMessages = [];
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function addChatMessage(username, text, isLocal) {
+  chatMessages.push({ username, text, isLocal, time: new Date() });
+  if (chatMessages.length > 100) chatMessages.shift();
+  renderChat();
+}
+
+function renderChat() {
+  const chatDiv = document.getElementById('chat-messages');
+  const chatPanel = document.getElementById('chat-panel');
+  if (!chatDiv || !chatPanel) return;
+  const visible = currentGame && (currentGame.mode === 'lan');
+  chatPanel.style.display = visible ? 'flex' : 'none';
+  if (!visible) return;
+
+  chatDiv.innerHTML = '';
+  for (const msg of chatMessages) {
+    const div = document.createElement('div');
+    div.className = 'chat-msg';
+    const timeStr = msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    div.innerHTML = `<span class="chat-time">${timeStr}</span>
+      <span class="chat-user">${escapeHtml(msg.username || '玩家')}:</span>
+      <span class="chat-text">${escapeHtml(msg.text)}</span>`;
+    chatDiv.appendChild(div);
+  }
+  chatDiv.scrollTop = chatDiv.scrollHeight;
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text || text.length > 500) return;
+  input.value = '';
+  const myName = (window.GagagaPlatform && window.GagagaPlatform.getUser && window.GagagaPlatform.getUser().username) || '我';
+  addChatMessage(myName, text, true);
+  if (netManager) {
+    netManager.send({ type: 'chat', text });
+  }
+}
 
 // DOM Elements
 const menuScreen = document.getElementById('menu-screen');
@@ -883,8 +1099,37 @@ function startGame(mode, aiDepth, aiColor) {
 
   showScreen(gameScreen);
   aiThinking = false;
-  animating = false;
+  lastMoveAnimation = null;
   chessLeaderboardSubmitted = false;
+  chatMessages = [];
+  renderChat();
+  loadPlayerStats();
+
+  // Set board flip for Black's perspective
+  if (mode === 'ai') {
+    currentGame.flipped = (aiColor === RED);
+  } else if (mode === 'lan') {
+    currentGame.flipped = (netManager && netManager.myColor === BLACK);
+  } else {
+    currentGame.flipped = false;
+  }
+
+  // Read timer config from URL params (default 10 min)
+  const timerParam = new URLSearchParams(location.search).get('timer');
+  currentGame.timerConfig = parseInt(timerParam) || 600;
+  currentGame.redTime = currentGame.timerConfig;
+  currentGame.blackTime = currentGame.timerConfig;
+  currentGame.updateTimerDisplay();
+  currentGame.startTimer((loser) => {
+    const winner = opponent(loser);
+    currentGame.status = 'checkmate';
+    currentGame.winner = winner;
+    updateUI();
+    render();
+    submitChessResult(winner);
+    showResult('时间耗尽', `${loser === RED ? '红方' : '黑方'}超时，${winner === RED ? '红方' : '黑方'}获胜！`);
+  });
+
   updateUI();
   render();
 }
@@ -940,6 +1185,14 @@ function render() {
   if (!currentGame) return;
   const moves = currentGame.selected ? currentGame.legalMoves : [];
   drawBoard(currentGame, currentGame.selected !== null);
+
+  if (lastMoveAnimation) {
+    if (Date.now() - lastMoveAnimation.startTime < lastMoveAnimation.duration) {
+      requestAnimationFrame(render);
+    } else {
+      lastMoveAnimation = null;
+    }
+  }
 }
 
 function showResult(title, text) {
@@ -963,7 +1216,7 @@ function submitChessResult(winner) {
 }
 
 function handleBoardClick(mx, my) {
-  if (!currentGame || aiThinking || animating) return;
+  if (!currentGame || aiThinking) return;
   if (currentGame.status === 'checkmate' || currentGame.status === 'stalemate') return;
 
   const pos = toBoardCoords(mx, my);
@@ -1009,6 +1262,18 @@ function handleBoardClick(mx, my) {
     currentGame.selected = null;
     currentGame.legalMoves = [];
     updateUI();
+
+    // Start last move animation
+    if (currentGame.lastMove) {
+      lastMoveAnimation = {
+        fromR: currentGame.lastMove.fromR,
+        fromC: currentGame.lastMove.fromC,
+        toR: currentGame.lastMove.toR,
+        toC: currentGame.lastMove.toC,
+        startTime: Date.now(),
+        duration: MOVE_ANIM_DURATION,
+      };
+    }
     render();
 
     // Check game end
@@ -1037,8 +1302,12 @@ function handleBoardClick(mx, my) {
     // Trigger AI move
     if (currentGame.mode === 'ai' && currentGame.turn === currentGame.aiColor && (currentGame.status === 'playing' || currentGame.status === 'check')) {
       aiThinking = true;
+      currentGame.stopTimer();
       setTimeout(() => {
         doAIMove();
+        if (currentGame && (currentGame.status === 'playing' || currentGame.status === 'check')) {
+          currentGame.startTimer(currentGame._timeoutCallback);
+        }
       }, 100);
     }
   } else {
@@ -1079,6 +1348,18 @@ function doAIMove() {
   const success = currentGame.makeMove(move.fromR, move.fromC, move.toR, move.toC);
   aiThinking = false;
   updateUI();
+
+  // Start last move animation for AI move
+  if (currentGame.lastMove) {
+    lastMoveAnimation = {
+      fromR: currentGame.lastMove.fromR,
+      fromC: currentGame.lastMove.fromC,
+      toR: currentGame.lastMove.toR,
+      toC: currentGame.lastMove.toC,
+      startTime: Date.now(),
+      duration: MOVE_ANIM_DURATION,
+    };
+  }
   render();
 
   if (currentGame.status === 'checkmate') {
@@ -1192,10 +1473,22 @@ class NetworkManager {
       case 'opponent_disconnected':
         this.connected = false;
         if (this.onStatus) this.onStatus('对手已断开连接。');
+        if (currentGame && (currentGame.status === 'playing' || currentGame.status === 'check')) {
+          currentGame.status = 'resigned';
+          submitChessResult(this.myColor);
+          showResult('对手断线', `${this.myColor === RED ? '红方' : '黑方'}不战而胜！`);
+        }
         break;
 
       case 'error':
         if (this.onStatus) this.onStatus('错误：' + (msg.message || '未知错误'));
+        break;
+
+      case 'chat':
+        if (currentGame) {
+          const sender = this.myColor === RED ? '黑方' : '红方';
+          addChatMessage(sender, msg.text, false);
+        }
         break;
     }
   }
@@ -1395,6 +1688,12 @@ canvas.addEventListener('click', (e) => {
   handleBoardClick(e.clientX, e.clientY);
 });
 
+// Chat event bindings
+document.getElementById('chat-send-btn')?.addEventListener('click', sendChatMessage);
+document.getElementById('chat-input')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendChatMessage();
+});
+
 // ---- Keyboard shortcuts ----
 document.addEventListener('keydown', (e) => {
   if (e.key === 'u' && currentGame && currentGame.mode !== 'lan') {
@@ -1419,6 +1718,75 @@ document.addEventListener('keydown', (e) => {
 // ---- Init ----
 showScreen(menuScreen);
 showMenuSection('main-menu');
+
+// Export for testing (Node.js / Vitest)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    GameState,
+    generateRawMoves,
+    generateLegalMoves,
+    getAllLegalMoves,
+    isInCheck,
+    kingsAreFacing,
+    createInitialBoard,
+    cloneBoard,
+    inBoard,
+    inPalace,
+    colorOf,
+    typeOf,
+    isRed,
+    isBlack,
+    sameColor,
+    makePiece,
+    isRedSide,
+    opponent,
+    RED,
+    BLACK,
+    KING,
+    ADVISOR,
+    ELEPHANT,
+    HORSE,
+    ROOK,
+    CANNON,
+    PAWN,
+    PIECE_NAMES,
+    PIECE_VALUES,
+    POS_VALUES,
+    BOARD_ROWS,
+    BOARD_COLS,
+    CELL_SIZE,
+    PADDING,
+    BOARD_W,
+    BOARD_H,
+    CANVAS_W,
+    CANVAS_H,
+    evaluateBoard,
+    minimax,
+    getAIMove,
+    orderMoves,
+    toBoardCoords,
+    drawBoard,
+    drawPiece,
+    flipRow,
+    flipCol,
+    boardX,
+    boardY,
+    NetworkManager,
+    localChessColor,
+    submitChessResult,
+    escapeHtml,
+    addChatMessage,
+    sendChatMessage,
+    renderChat,
+    getTier,
+    getTierProgress,
+    loadPlayerStats,
+    TIERS,
+    drawArrow,
+    lastMoveAnimation,
+    MOVE_ANIM_DURATION,
+  };
+}
 
 console.log('Chinese Chess 中国象棋 loaded.');
 console.log('模式：人机对战、本地双人、局域网对战');
