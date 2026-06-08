@@ -123,7 +123,7 @@ function handleWebSocket(ws, context = {}) {
       return send(ws, { type: "ranked_cancelled" });
     }
 
-    if (["move", "resign"].includes(message.type) && ws.rankedMatchId) {
+    if (["move", "resign", "timeout"].includes(message.type) && ws.rankedMatchId) {
       const match = rankedMatches.get(ws.rankedMatchId);
       if (!match || match.finished) return;
       const other = opponentInMatch(match, ws);
@@ -137,12 +137,20 @@ function handleWebSocket(ws, context = {}) {
           finishRankedMatch(match, "draw", "stalemate");
         }
       } else {
-        finishRankedMatch(match, senderColor === "r" ? "b" : "r", "resign");
+        finishRankedMatch(match, senderColor === "r" ? "b" : "r", message.type);
       }
       return;
     }
 
-    if (["move", "resign"].includes(message.type) && code) {
+    if (message.type === "chat" && message.text && ws.rankedMatchId) {
+      const match = rankedMatches.get(ws.rankedMatchId);
+      if (!match || match.finished) return;
+      const other = opponentInMatch(match, ws);
+      if (other) send(other, { type: "chat", text: String(message.text).slice(0, 500) });
+      return;
+    }
+
+    if (["move", "resign", "timeout"].includes(message.type) && code) {
       const room = rooms.get(code);
       const other = room?.host === ws ? room.joiner : room?.host;
       if (other) send(other, message);

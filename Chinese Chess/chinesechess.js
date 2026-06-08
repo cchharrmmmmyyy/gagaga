@@ -11,6 +11,7 @@ const BOARD_W = CELL_SIZE * (BOARD_COLS - 1);
 const BOARD_H = CELL_SIZE * (BOARD_ROWS - 1);
 const CANVAS_W = BOARD_W + PADDING * 2;
 const CANVAS_H = BOARD_H + PADDING * 2;
+const MOVE_TIME_LIMIT = 90;
 
 const RED = 'r';
 const BLACK = 'b';
@@ -118,6 +119,11 @@ function flipRow(r, flipped) { return flipped ? BOARD_ROWS - 1 - r : r; }
 function flipCol(c, flipped) { return flipped ? BOARD_COLS - 1 - c : c; }
 function boardX(c, flipped) { return PADDING + flipCol(c, flipped) * CELL_SIZE; }
 function boardY(r, flipped) { return PADDING + flipRow(r, flipped) * CELL_SIZE; }
+function shouldFlipBoard(mode, playerColor, computerColor) {
+  if (mode === 'ai') return computerColor === RED;
+  if (mode === 'lan' || mode === 'ranked') return playerColor === BLACK;
+  return false;
+}
 
 // ---- Ranking Tier System ----
 const TIERS = [
@@ -384,9 +390,9 @@ class GameState {
     this.capturedByRed = [];
     this.capturedByBlack = [];
     this.flipped = false;
-    this.redTime = 600;
-    this.blackTime = 600;
-    this.timerConfig = 600;
+    this.redTime = MOVE_TIME_LIMIT;
+    this.blackTime = MOVE_TIME_LIMIT;
+    this.timerConfig = MOVE_TIME_LIMIT;
     this.timerInterval = null;
   }
 
@@ -404,6 +410,10 @@ class GameState {
     this.capturedByBlack = [];
     this.flipped = false;
     this.stopTimer();
+    this.resetMoveTimer();
+  }
+
+  resetMoveTimer() {
     this.redTime = this.timerConfig;
     this.blackTime = this.timerConfig;
   }
@@ -501,6 +511,7 @@ class GameState {
     }
 
     this.turn = opp;
+    this.resetMoveTimer();
     this.selected = null;
     this.legalMoves = [];
     return true;
@@ -526,6 +537,7 @@ class GameState {
     this.selected = null;
     this.legalMoves = [];
     this.lastMove = this.moveHistory.length > 0 ? this.moveHistory[this.moveHistory.length - 1] : null;
+    this.resetMoveTimer();
     return true;
   }
 
@@ -1005,6 +1017,7 @@ let lastMoveAnimation = null;
 const MOVE_ANIM_DURATION = 600;
 let chessLeaderboardSubmitted = false;
 let chatMessages = [];
+let rankedOpponent = null;
 
 function escapeHtml(text) {
   const div = document.createElement('div');
@@ -1022,7 +1035,7 @@ function renderChat() {
   const chatDiv = document.getElementById('chat-messages');
   const chatPanel = document.getElementById('chat-panel');
   if (!chatDiv || !chatPanel) return;
-  const visible = currentGame && (currentGame.mode === 'lan');
+  const visible = currentGame && isOnlineGame();
   chatPanel.style.display = visible ? 'flex' : 'none';
   if (!visible) return;
 
@@ -1051,8 +1064,6 @@ function sendChatMessage() {
     netManager.send({ type: 'chat', text });
   }
 }
-
-let rankedOpponent = null;
 
 // DOM Elements
 const menuScreen = document.getElementById('menu-screen');
@@ -1129,20 +1140,12 @@ function startGame(mode, aiDepth, aiColor) {
   renderChat();
   loadPlayerStats();
 
-  // Set board flip for Black's perspective
-  if (mode === 'ai') {
-    currentGame.flipped = (aiColor === RED);
-  } else if (mode === 'lan') {
-    currentGame.flipped = (netManager && netManager.myColor === BLACK);
-  } else {
-    currentGame.flipped = false;
-  }
+  currentGame.flipped = shouldFlipBoard(mode, netManager?.myColor, aiColor);
 
-  // Read timer config from URL params (default 10 min)
+  // Each move has an independent 90-second limit by default.
   const timerParam = new URLSearchParams(location.search).get('timer');
-  currentGame.timerConfig = parseInt(timerParam) || 600;
-  currentGame.redTime = currentGame.timerConfig;
-  currentGame.blackTime = currentGame.timerConfig;
+  currentGame.timerConfig = parseInt(timerParam) || MOVE_TIME_LIMIT;
+  currentGame.resetMoveTimer();
   currentGame.updateTimerDisplay();
   currentGame.startTimer((loser) => {
     const winner = opponent(loser);
@@ -1151,6 +1154,9 @@ function startGame(mode, aiDepth, aiColor) {
     updateUI();
     render();
     submitChessResult(winner);
+    if (netManager && isOnlineGame()) {
+      netManager.send({ type: 'timeout', loser });
+    }
     showResult('时间耗尽', `${loser === RED ? '红方' : '黑方'}超时，${winner === RED ? '红方' : '黑方'}获胜！`);
   });
 
@@ -1555,6 +1561,7 @@ class NetworkManager {
         break;
 
       case 'resign':
+      case 'timeout':
         if (currentGame) {
           currentGame.status = 'resigned';
           const winner = this.myColor === RED ? '黑方' : '红方';
@@ -1902,6 +1909,77 @@ document.addEventListener('keydown', (e) => {
 // ---- Init ----
 showScreen(menuScreen);
 showMenuSection('main-menu');
+
+// Export for testing (Node.js / Vitest)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    GameState,
+    generateRawMoves,
+    generateLegalMoves,
+    getAllLegalMoves,
+    isInCheck,
+    kingsAreFacing,
+    createInitialBoard,
+    cloneBoard,
+    inBoard,
+    inPalace,
+    colorOf,
+    typeOf,
+    isRed,
+    isBlack,
+    sameColor,
+    makePiece,
+    isRedSide,
+    opponent,
+    RED,
+    BLACK,
+    KING,
+    ADVISOR,
+    ELEPHANT,
+    HORSE,
+    ROOK,
+    CANNON,
+    PAWN,
+    PIECE_NAMES,
+    PIECE_VALUES,
+    POS_VALUES,
+    BOARD_ROWS,
+    BOARD_COLS,
+    CELL_SIZE,
+    PADDING,
+    BOARD_W,
+    BOARD_H,
+    CANVAS_W,
+    CANVAS_H,
+    evaluateBoard,
+    minimax,
+    getAIMove,
+    orderMoves,
+    toBoardCoords,
+    drawBoard,
+    drawPiece,
+    flipRow,
+    flipCol,
+    boardX,
+    boardY,
+    shouldFlipBoard,
+    NetworkManager,
+    localChessColor,
+    submitChessResult,
+    escapeHtml,
+    addChatMessage,
+    sendChatMessage,
+    renderChat,
+    getTier,
+    getTierProgress,
+    loadPlayerStats,
+    TIERS,
+    drawArrow,
+    lastMoveAnimation,
+    MOVE_ANIM_DURATION,
+    MOVE_TIME_LIMIT,
+  };
+}
 
 console.log('Chinese Chess 中国象棋 loaded.');
 console.log('模式：人机对战、本地双人、局域网对战');

@@ -352,6 +352,127 @@
         border-bottom: 0;
       }
 
+      .friends-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .friends-tab.active {
+        color: var(--ink);
+        background: var(--gold);
+        box-shadow: inset 0 -4px 0 #e09c24;
+      }
+
+      .friends-pane[hidden] {
+        display: none;
+      }
+
+      .friends-search {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .friends-search .arcade-input {
+        margin: 0;
+      }
+
+      .friends-list {
+        display: grid;
+        gap: 8px;
+        min-height: 88px;
+      }
+
+      .friend-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px;
+        background: #fff2a3;
+        border: 4px solid var(--ink);
+      }
+
+      .friend-identity {
+        min-width: 0;
+        font-weight: 900;
+      }
+
+      .friend-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .friend-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 4px;
+        color: #765b42;
+        font-size: .78rem;
+      }
+
+      .friend-status::before {
+        width: 10px;
+        height: 10px;
+        content: "";
+        background: #777;
+        border: 2px solid var(--ink);
+      }
+
+      .friend-status.online {
+        color: #1f6f35;
+      }
+
+      .friend-status.online::before {
+        background: #39b54a;
+      }
+
+      .friend-actions {
+        display: flex;
+        flex: 0 0 auto;
+        gap: 6px;
+      }
+
+      .friend-actions .pixel-btn {
+        padding: 6px 8px;
+        font-size: .72rem;
+      }
+
+      .friends-empty {
+        padding: 18px;
+        color: #765b42;
+        font-weight: 900;
+        text-align: center;
+        background: #fff2a3;
+        border: 4px dashed var(--ink);
+      }
+
+      .friends-pager {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .friends-pager span {
+        min-width: 86px;
+        font-size: .8rem;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .request-section-title {
+        margin: 14px 0 8px;
+        font-size: .9rem;
+        font-weight: 900;
+      }
+
       .chat-panel {
         position: fixed;
         top: 0;
@@ -574,6 +695,20 @@
 
         .auth-grid {
           grid-template-columns: 1fr;
+        }
+
+        .friends-search {
+          grid-template-columns: 1fr;
+        }
+
+        .friend-row {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .friend-actions {
+          width: 100%;
+          flex-wrap: wrap;
         }
 
         .leaderboard-toolbar {
@@ -931,6 +1066,7 @@
             <div class="account-panel" aria-label="Account and leaderboards">
               <span class="account-name" id="account-name">Guest</span>
               <button class="pixel-btn" id="auth-open-btn" type="button">Login</button>
+              <button class="pixel-btn" id="friends-open-btn" type="button" hidden>Friends</button>
               <button class="pixel-btn" id="leaderboard-open-btn" type="button">Ranks</button>
               <button class="pixel-btn danger" id="logout-btn" type="button" hidden>Logout</button>
             </div>
@@ -1057,6 +1193,47 @@
             </form>
           </div>
           <div class="service-message" id="auth-message" role="status"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arcade-modal" id="friends-modal" aria-hidden="true">
+      <div class="arcade-dialog" role="dialog" aria-modal="true" aria-labelledby="friends-title">
+        <div class="arcade-dialog-header">
+          <h2 class="arcade-dialog-title" id="friends-title">Friends</h2>
+          <button class="pixel-btn danger" type="button" data-close-modal="friends-modal">Close</button>
+        </div>
+        <div class="arcade-dialog-body">
+          <div class="friends-tabs" role="tablist" aria-label="Friend management">
+            <button class="pixel-btn friends-tab active" type="button" data-friends-tab="list">Friends</button>
+            <button class="pixel-btn friends-tab" type="button" data-friends-tab="search">Search</button>
+            <button class="pixel-btn friends-tab" type="button" data-friends-tab="requests">Requests</button>
+          </div>
+
+          <section class="friends-pane" data-friends-pane="list">
+            <div class="friends-list" id="friends-list"></div>
+            <div class="friends-pager">
+              <button class="pixel-btn" id="friends-prev-btn" type="button">Prev</button>
+              <span id="friends-page-label">Page 1 / 1</span>
+              <button class="pixel-btn" id="friends-next-btn" type="button">Next</button>
+            </div>
+          </section>
+
+          <section class="friends-pane" data-friends-pane="search" hidden>
+            <form class="friends-search" id="friends-search-form">
+              <input class="arcade-input" name="query" maxlength="20" autocomplete="off" placeholder="Search username" required>
+              <button class="pixel-btn" type="submit">Search</button>
+            </form>
+            <div class="friends-list" id="friends-search-results"></div>
+          </section>
+
+          <section class="friends-pane" data-friends-pane="requests" hidden>
+            <h3 class="request-section-title">Incoming</h3>
+            <div class="friends-list" id="incoming-requests"></div>
+            <h3 class="request-section-title">Sent</h3>
+            <div class="friends-list" id="outgoing-requests"></div>
+          </section>
+          <div class="service-message" id="friends-message" role="status"></div>
         </div>
       </div>
     </div>
