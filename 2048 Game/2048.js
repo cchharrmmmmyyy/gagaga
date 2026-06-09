@@ -8,18 +8,11 @@ const tryAgainBtn = document.getElementById('try-again-btn');
 const continueBtn = document.getElementById('continue-btn');
 const newGameBtn = document.getElementById('new-game-btn');
 
-// 排行榜相关元素
-const rankingBtn = document.getElementById('ranking-btn');
-const rankingOverlay = document.getElementById('ranking-overlay');
-const rankingClose = document.getElementById('ranking-close');
-const rankingList = document.getElementById('ranking-list');
-
 let tiles = [];
 let score = 0;
 let hasWon = false;
 let isGameOver = false;
 let isContinuing = false;
-let leaderboardSubmitted = false;
 
 let bestScore = parseInt(localStorage.getItem('2048BestScore')) || 0;
 bestScoreEl.textContent = bestScore;
@@ -44,7 +37,6 @@ function initializeBoard() {
     hasWon = false;
     isGameOver = false;
     isContinuing = false;
-    leaderboardSubmitted = false;
     currentScoreEl.textContent = score;
     gameOverOverlay.style.display = 'none';
     winOverlay.style.display = 'none';
@@ -78,9 +70,6 @@ function updateScore(points) {
         bestScore = score;
         bestScoreEl.textContent = bestScore;
         localStorage.setItem('2048BestScore', bestScore);
-        
-        // 保存到排行榜
-        saveToRanking(bestScore);
     }
 }
 
@@ -200,7 +189,6 @@ function checkWin() {
         if (parseInt(tiles[i].textContent) === 2048) {
             hasWon = true;
             winOverlay.style.display = 'flex';
-            submit2048Score('win');
             return;
         }
     }
@@ -210,13 +198,6 @@ function gameOver() {
     isGameOver = true;
     finalScoreEl.textContent = score;
     gameOverOverlay.style.display = 'flex';
-    submit2048Score('game-over');
-}
-
-function submit2048Score(mode) {
-    if (leaderboardSubmitted || !window.GagagaPlatform) return;
-    leaderboardSubmitted = true;
-    window.GagagaPlatform.submitScore('2048', { score, mode }, `2048:${Date.now()}:${score}`);
 }
 
 function handleKeyPress(event) {
@@ -264,87 +245,6 @@ continueBtn.addEventListener('click', () => {
 newGameBtn.addEventListener('click', initializeBoard);
 document.addEventListener('keydown', handleKeyPress);
 gameContainer.addEventListener('touchstart', handleTouch);
-
-// 排行榜功能
-function saveToRanking(score) {
-    let ranking = JSON.parse(localStorage.getItem('2048Ranking')) || [];
-    
-    // 添加新分数
-    ranking.push({
-        score: score,
-        date: new Date().toLocaleDateString()
-    });
-    
-    // 按分数降序排序
-    ranking.sort((a, b) => b.score - a.score);
-    
-    // 只保留前20条记录
-    ranking = ranking.slice(0, 20);
-    
-    localStorage.setItem('2048Ranking', JSON.stringify(ranking));
-}
-
-function getRankingData() {
-    return JSON.parse(localStorage.getItem('2048Ranking')) || [];
-}
-
-function renderRanking() {
-    const ranking = getRankingData();
-    
-    if (ranking.length === 0) {
-        rankingList.innerHTML = `
-            <div class="ranking-empty">
-                <div class="ranking-empty-icon">📊</div>
-                <div class="ranking-empty-text">暂无排行榜数据<br>快去玩游戏上榜吧！</div>
-            </div>
-        `;
-        return;
-    }
-    
-    const medals = ['🥇', '🥈', '🥉'];
-    const rankClasses = ['gold', 'silver', 'bronze', 'normal', 'normal', 'normal', 'normal', 'normal', 'normal', 'normal'];
-    
-    rankingList.innerHTML = ranking.slice(0, 10).map((item, index) => {
-        const rankClass = rankClasses[index] || 'normal';
-        const medal = medals[index] || '';
-        
-        return `
-            <div class="ranking-item">
-                <div class="ranking-rank ${rankClass}">${index + 1}</div>
-                <div class="ranking-info">
-                    <div class="ranking-user">第 ${index + 1} 名</div>
-                    <div class="ranking-score">分数: ${item.score}</div>
-                </div>
-                ${medal ? `<div class="ranking-medal">${medal}</div>` : ''}
-            </div>
-        `;
-    }).join('');
-}
-
-function showRanking() {
-    renderRanking();
-    rankingOverlay.classList.add('show');
-}
-
-function hideRanking() {
-    rankingOverlay.classList.remove('show');
-}
-
-// 排行榜事件监听
-rankingBtn.addEventListener('click', showRanking);
-rankingClose.addEventListener('click', hideRanking);
-rankingOverlay.addEventListener('click', (e) => {
-    if (e.target === rankingOverlay) {
-        hideRanking();
-    }
-});
-
-// ESC键关闭排行榜
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && rankingOverlay.classList.contains('show')) {
-        hideRanking();
-    }
-});
 
 // 初始化游戏
 initializeBoard();
