@@ -7,35 +7,11 @@
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
-    <!-- 排行榜按钮 -->
-    <div class="ranking-btn-wrapper">
-        <button class="ranking-btn" id="ranking-btn">🏆 排行榜</button>
-    </div>
-
-    <!-- 排行榜弹窗 -->
-    <div class="ranking-overlay" id="ranking-overlay">
-        <div class="ranking-container">
-            <div class="ranking-header">
-                <h2 class="ranking-title">🏆 排行榜</h2>
-                <button class="ranking-close" id="ranking-close">×</button>
-            </div>
-            <div class="ranking-list" id="ranking-list">
-                <!-- 动态生成 -->
-            </div>
-        </div>
-    </div>
-
     <div class="game-wrapper">
-        <div class="decorative-elements">
-            <span class="deco-star">⭐</span>
-            <span class="deco-heart">💖</span>
-            <span class="deco-sparkle">✨</span>
-        </div>
-        
         <header class="game-header">
             <div class="title-section">
-                <h1 class="game-title">🎮 2048</h1>
-                <p class="game-subtitle">🎯 合并数字，挑战极限</p>
+                <h1 class="game-title">2048</h1>
+                <p class="game-subtitle">合并数字，挑战极限</p>
             </div>
             <div class="score-section">
                 <div class="score-box">
@@ -44,34 +20,107 @@
                 </div>
                 <div class="score-box best">
                     <span class="score-label">最高</span>
-                    <span class="score-value" id="best-score">0</span>
+                    <div class="best-score-display">
+                        <div class="best-score-tabs">
+                            <span class="best-tab active" data-mode="classic" title="经典模式">🎯</span>
+                            <span class="best-tab" data-mode="timed" title="限时模式">⏱️</span>
+                            <span class="best-tab" data-mode="moves" title="限步模式">🏃</span>
+                        </div>
+                        <span class="score-value" id="best-score">0</span>
+                    </div>
                 </div>
             </div>
         </header>
 
         <div class="controls">
             <button class="new-game-btn" id="new-game-btn">
-                <span>🎲 新游戏</span>
+                <span>新游戏</span>
+            </button>
+            <button class="undo-btn" id="undo-btn">
+                <span>悔棋</span>
+            </button>
+            <button class="challenge-btn" id="challenge-btn">
+                <span>挑战模式</span>
             </button>
         </div>
 
-        <div class="game-container" id="game-container">
-            <div class="game-tips">使用方向键或滑动来移动方块</div>
+        <div class="stats-panel">
+            <div class="stat-item">
+                <span class="stat-label">移动次数</span>
+                <span class="stat-value" id="move-count">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">最大数字</span>
+                <span class="stat-value" id="max-number">2</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">连击数</span>
+                <span class="stat-value" id="combo-count">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">悔棋次数</span>
+                <span class="stat-value" id="undo-count">3</span>
+            </div>
         </div>
+        <div class="combo-display" id="combo-display"></div>
+        <div class="achievement-container" id="achievement-container"></div>
+
+        <div class="game-container" id="game-container"></div>
 
         <div class="game-over-overlay" id="game-over-overlay">
             <div class="game-over-content">
-                <h2 class="game-over-title">😅 游戏结束</h2>
+                <h2 class="game-over-title" id="game-over-title">游戏结束</h2>
                 <p class="game-over-score">最终分数: <span id="final-score">0</span></p>
-                <button class="try-again-btn" id="try-again-btn">🔄 再试一次</button>
+                <button class="try-again-btn" id="try-again-btn">再试一次</button>
             </div>
         </div>
 
         <div class="win-overlay" id="win-overlay">
             <div class="win-content">
                 <h2 class="win-title">🎉 恭喜通关!</h2>
-                <p class="win-message">🏆 你成功达到了 2048!</p>
-                <button class="continue-btn" id="continue-btn">🚀 继续挑战</button>
+                <p class="win-message">你成功达到了 2048!</p>
+                <button class="continue-btn" id="continue-btn">继续游戏</button>
+            </div>
+        </div>
+
+        <!-- 挑战模式选择弹窗 -->
+        <div class="mode-overlay" id="mode-overlay">
+            <div class="mode-container">
+                <h2 class="mode-title">🎮 选择挑战模式</h2>
+                <div class="mode-options">
+                    <div class="mode-card" id="mode-classic">
+                        <div class="mode-icon">🎯</div>
+                        <div class="mode-name">经典模式</div>
+                        <div class="mode-desc">无限制，自由挑战</div>
+                    </div>
+                    <div class="mode-card" id="mode-timed">
+                        <div class="mode-icon">⏱️</div>
+                        <div class="mode-name">限时挑战</div>
+                        <div class="mode-desc">在规定时间内达成目标</div>
+                    </div>
+                    <div class="mode-card" id="mode-moves">
+                        <div class="mode-icon">🏃</div>
+                        <div class="mode-name">限步挑战</div>
+                        <div class="mode-desc">用有限步数达成目标</div>
+                    </div>
+                </div>
+                <button class="mode-close-btn" id="mode-close">取消</button>
+            </div>
+        </div>
+
+        <!-- 挑战模式信息 -->
+        <div class="challenge-info" id="challenge-info">
+            <div class="challenge-timer" id="challenge-timer" style="display: none;">
+                <span class="challenge-label">⏱️ 剩余时间</span>
+                <span class="challenge-value" id="time-remaining">60</span>
+            </div>
+            <div class="challenge-moves" id="challenge-moves" style="display: none;">
+                <span class="challenge-label">🏃 剩余步数</span>
+                <span class="challenge-value" id="moves-remaining">30</span>
+            </div>
+            <div class="challenge-target">
+                <span class="challenge-label">🎯 目标分数</span>
+                <span class="challenge-value" id="target-score">500</span>
             </div>
         </div>
 
@@ -79,20 +128,85 @@
             <div class="rules-section">
                 <h3 class="rules-title">📖 游戏规则</h3>
                 <ul class="rules-list">
-                    <li><strong>🎯 目标:</strong> 通过合并数字，最终得到 <span class="highlight">2048</span> 方块</li>
-                    <li><strong>🎮 移动:</strong> 使用 <span class="key">↑</span><span class="key">↓</span><span class="key">←</span><span class="key">→</span> 方向键或滑动屏幕</li>
-                    <li><strong>🔄 合并:</strong> 相同数字的方块碰撞时会合并成它们的和</li>
-                    <li><strong>📊 计分:</strong> 每次成功合并都会获得相应的分数奖励</li>
-                    <li><strong>🏁 结束:</strong> 当无法再移动任何方块时，游戏结束</li>
+                    <li><strong>目标:</strong> 通过合并数字，最终得到 <span class="highlight">2048</span> 方块</li>
+                    <li><strong>移动:</strong> 使用 <span class="key">↑</span><span class="key">↓</span><span class="key">←</span><span class="key">→</span> 方向键或滑动屏幕</li>
+                    <li><strong>合并:</strong> 相同数字的方块碰撞时会合并成它们的和</li>
+                    <li><strong>计分:</strong> 每次成功合并都会获得相应的分数奖励</li>
+                    <li><strong>结束:</strong> 当无法再移动任何方块时，游戏结束</li>
                 </ul>
             </div>
         </div>
 
+        <!-- 挑战结果弹窗 -->
+        <div class="challenge-result-overlay" id="challenge-result-overlay">
+            <div class="challenge-result-content">
+                <h2 class="challenge-result-title" id="challenge-result-title">挑战结果</h2>
+                <div class="challenge-result-stats">
+                    <div class="result-stat">
+                        <span class="result-label">最终分数</span>
+                        <span class="result-value" id="result-final-score">0</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-label">目标分数</span>
+                        <span class="result-value" id="result-target-score">500</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-label">用时</span>
+                        <span class="result-value" id="result-time">0</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-label">步数</span>
+                        <span class="result-value" id="result-moves">0</span>
+                    </div>
+                </div>
+                <div class="challenge-result-message" id="challenge-result-message"></div>
+                <div class="challenge-result-buttons">
+                    <button class="result-retry-btn" id="result-retry">再试一次</button>
+                    <button class="result-exit-btn" id="result-exit">返回经典</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 反馈弹窗 -->
+        <div class="feedback-overlay" id="feedback-overlay">
+            <div class="feedback-container">
+                <h2 class="feedback-title">💬 评论反馈</h2>
+                <div class="feedback-form">
+                    <div class="feedback-type">
+                        <label class="type-label">反馈类型</label>
+                        <div class="type-options">
+                            <label class="type-option">
+                                <input type="radio" name="feedbackType" value="bug" checked>
+                                <span>🐛 反馈问题</span>
+                            </label>
+                            <label class="type-option">
+                                <input type="radio" name="feedbackType" value="suggestion">
+                                <span>💡 提出建议</span>
+                            </label>
+                            <label class="type-option">
+                                <input type="radio" name="feedbackType" value="praise">
+                                <span>👏 好评鼓励</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="feedback-content">
+                        <label class="content-label">反馈内容</label>
+                        <textarea id="feedback-text" placeholder="请输入您的反馈或建议..." maxlength="500"></textarea>
+                        <div class="char-count"><span id="char-count">0</span>/500</div>
+                    </div>
+                    <div class="feedback-buttons">
+                        <button class="feedback-submit-btn" id="feedback-submit">提交反馈</button>
+                        <button class="feedback-cancel-btn" id="feedback-cancel">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <footer class="game-footer">
-            <p>🎮 支持触屏滑动操作 | 用方向键控制</p>
+            <p>支持触屏滑动操作</p>
+            <button class="feedback-btn" id="feedback-btn">💬 反馈</button>
         </footer>
     </div>
-    <script src="../game-platform.js"></script>
     <script src="2048.js"></script>
 </body>
 </html>
