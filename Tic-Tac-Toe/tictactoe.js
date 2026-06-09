@@ -1,15 +1,26 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const statusText = document.getElementById('status');
+const resetBtn = document.getElementById('resetBtn'); // 绑定按钮
 
 const cellSize = canvas.width / 3;
 let board = createBoard();
 let currentPlayer = 'X';
 let gameFinished = false;
 
+const COLOR_BG = '#f7f9fc';
+const COLOR_GRID = '#cbd5e1';
+const COLOR_X = '#ef4444';
+const COLOR_O = '#3b82f6';
+const COLOR_WIN_LINE = '#22c55e';
+
 canvas.addEventListener('click', handleClick);
 document.addEventListener('keydown', event => {
   if (event.key === ' ') resetGame();
 });
+
+// 按钮点击重置
+resetBtn.addEventListener('click', resetGame);
 
 function createBoard() {
   return [
@@ -24,7 +35,7 @@ function handleClick(event) {
 
   const x = Math.floor(event.offsetX / cellSize);
   const y = Math.floor(event.offsetY / cellSize);
-  if (!board[y] || board[y][x] !== '') return;
+  if (x < 0 || x > 2 || y < 0 || y > 2 || board[y][x] !== '') return;
 
   board[y][x] = currentPlayer;
   currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
@@ -33,43 +44,80 @@ function handleClick(event) {
 }
 
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 1;
+  ctx.fillStyle = COLOR_BG;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  for (let row = 0; row < 3; row += 1) {
-    for (let column = 0; column < 3; column += 1) {
-      const x = column * cellSize;
-      const y = row * cellSize;
-      ctx.strokeRect(x, y, cellSize, cellSize);
+  ctx.strokeStyle = COLOR_GRID;
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cellSize, 10);
+  ctx.lineTo(cellSize, canvas.height - 10);
+  ctx.moveTo(cellSize * 2, 10);
+  ctx.lineTo(cellSize * 2, canvas.height - 10);
+  ctx.moveTo(10, cellSize);
+  ctx.lineTo(canvas.width - 10, cellSize);
+  ctx.moveTo(10, cellSize * 2);
+  ctx.lineTo(canvas.width - 10, cellSize * 2);
+  ctx.stroke();
 
-      if (board[row][column] !== '') {
-        ctx.font = '80px Arial';
-        ctx.fillStyle = '#000';
-        ctx.fillText(board[row][column], x + 20, y + 80);
+  ctx.lineWidth = 8;
+  ctx.lineCap = 'round';
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 3; col++) {
+      const val = board[row][col];
+      const cx = col * cellSize + cellSize / 2;
+      const cy = row * cellSize + cellSize / 2;
+      const r = cellSize * 0.35;
+
+      if (val === 'X') {
+        ctx.strokeStyle = COLOR_X;
+        ctx.beginPath();
+        ctx.moveTo(cx - r, cy - r);
+        ctx.lineTo(cx + r, cy + r);
+        ctx.moveTo(cx + r, cy - r);
+        ctx.lineTo(cx - r, cy + r);
+        ctx.stroke();
+      } else if (val === 'O') {
+        ctx.strokeStyle = COLOR_O;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
       }
     }
+  }
+
+  if (!gameFinished) {
+    statusText.textContent = `轮到 ${currentPlayer} 落子`;
+    statusText.style.color = currentPlayer === 'X' ? COLOR_X : COLOR_O;
   }
 }
 
 function checkWinner() {
   const lines = [
-    [board[0][0], board[0][1], board[0][2]],
-    [board[1][0], board[1][1], board[1][2]],
-    [board[2][0], board[2][1], board[2][2]],
-    [board[0][0], board[1][0], board[2][0]],
-    [board[0][1], board[1][1], board[2][1]],
-    [board[0][2], board[1][2], board[2][2]],
-    [board[0][0], board[1][1], board[2][2]],
-    [board[0][2], board[1][1], board[2][0]]
+    [[0,0],[0,1],[0,2]],
+    [[1,0],[1,1],[1,2]],
+    [[2,0],[2,1],[2,2]],
+    [[0,0],[1,0],[2,0]],
+    [[0,1],[1,1],[2,1]],
+    [[0,2],[1,2],[2,2]],
+    [[0,0],[1,1],[2,2]],
+    [[0,2],[1,1],[2,0]]
   ];
 
   for (const line of lines) {
-    if (line[0] !== '' && line[0] === line[1] && line[1] === line[2]) {
+    const [a, b, c] = line;
+    const v1 = board[a[0]][a[1]];
+    const v2 = board[b[0]][b[1]];
+    const v3 = board[c[0]][c[1]];
+    if (v1 && v1 === v2 && v2 === v3) {
       gameFinished = true;
-      submitTicTacToeResult(line[0] === 'X' ? 'win' : 'loss');
-      alert(`${line[0]} wins!`);
-      resetGame();
+      submitTicTacToeResult(v1 === 'X' ? 'win' : 'loss');
+      statusText.textContent = `${v1} 获胜！`;
+      statusText.style.color = COLOR_WIN_LINE;
+      drawWinLine(line);
+      setTimeout(() => alert(`${v1} 获胜！`), 100);
+      setTimeout(resetGame, 1200);
       return;
     }
   }
@@ -77,9 +125,22 @@ function checkWinner() {
   if (board.flat().every(cell => cell !== '')) {
     gameFinished = true;
     submitTicTacToeResult('draw');
-    alert('Draw!');
-    resetGame();
+    statusText.textContent = '平局！';
+    statusText.style.color = '#64748b';
+    setTimeout(() => alert('平局！'), 100);
+    setTimeout(resetGame, 1200);
   }
+}
+
+function drawWinLine(line) {
+  const [a, b, c] = line;
+  ctx.strokeStyle = COLOR_WIN_LINE;
+  ctx.lineWidth = 10;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(a[1] * cellSize + cellSize/2, a[0] * cellSize + cellSize/2);
+  ctx.lineTo(c[1] * cellSize + cellSize/2, c[0] * cellSize + cellSize/2);
+  ctx.stroke();
 }
 
 function submitTicTacToeResult(result) {
@@ -95,6 +156,7 @@ function resetGame() {
   board = createBoard();
   currentPlayer = 'X';
   gameFinished = false;
+  statusText.style.color = '#333';
   draw();
 }
 

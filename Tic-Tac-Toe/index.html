@@ -3,13 +3,53 @@
 <head>
   <title>Tic-Tac-Toe</title>
   <style>
-    body { text-align: center; }
-    canvas { background: #f0f0f0; display: block; margin: 0 auto; }
+    body {
+      text-align: center;
+      background: #e2e8f0;
+      font-family: "Microsoft Yahei", sans-serif;
+      padding-top: 30px;
+    }
+    canvas {
+      background: #f7f9fc;
+      display: block;
+      margin: 0 auto;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #1e293b;
+      margin-bottom: 15px;
+    }
+    #status {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 15px 0;
+      color: #333;
+    }
+    /* 重置按钮样式 */
+    #resetBtn {
+      margin-top: 15px;
+      padding: 8px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      background: #3b82f6;
+      color: white;
+      cursor: pointer;
+    }
+    #resetBtn:hover {
+      background: #2563eb;
+    }
   </style>
 </head>
 <body>
   <h1>Tic-Tac-Toe</h1>
+  <div id="status">轮到 X 落子</div>
   <canvas id="gameCanvas" width="300" height="300"></canvas>
+
+  <!-- 重置按钮 -->
+  <button id="resetBtn">重新开始</button>
+
   <script src="../game-platform.js"></script>
   <script src="tictactoe.js"></script>
 </body>
