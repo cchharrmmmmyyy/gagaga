@@ -167,8 +167,44 @@
             </div>
         </div>
 
+        <!-- 反馈弹窗 -->
+        <div class="feedback-overlay" id="feedback-overlay">
+            <div class="feedback-container">
+                <h2 class="feedback-title">💬 评论反馈</h2>
+                <div class="feedback-form">
+                    <div class="feedback-type">
+                        <label class="type-label">反馈类型</label>
+                        <div class="type-options">
+                            <label class="type-option">
+                                <input type="radio" name="feedbackType" value="bug" checked>
+                                <span>🐛 反馈问题</span>
+                            </label>
+                            <label class="type-option">
+                                <input type="radio" name="feedbackType" value="suggestion">
+                                <span>💡 提出建议</span>
+                            </label>
+                            <label class="type-option">
+                                <input type="radio" name="feedbackType" value="praise">
+                                <span>👏 好评鼓励</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="feedback-content">
+                        <label class="content-label">反馈内容</label>
+                        <textarea id="feedback-text" placeholder="请输入您的反馈或建议..." maxlength="500"></textarea>
+                        <div class="char-count"><span id="char-count">0</span>/500</div>
+                    </div>
+                    <div class="feedback-buttons">
+                        <button class="feedback-submit-btn" id="feedback-submit">提交反馈</button>
+                        <button class="feedback-cancel-btn" id="feedback-cancel">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <footer class="game-footer">
             <p>支持触屏滑动操作</p>
+            <button class="feedback-btn" id="feedback-btn">💬 反馈</button>
         </footer>
     </div>
     <script src="2048.js"></script>
