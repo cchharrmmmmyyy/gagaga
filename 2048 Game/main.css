@@ -138,9 +138,15 @@ body {
     cursor: not-allowed;
 }
 
-.undo-info {
-    text-align: center;
+.game-info {
+    display: flex;
+    justify-content: space-around;
     margin-bottom: 15px;
+    font-size: 13px;
+    color: #888;
+}
+
+.undo-info {
     font-size: 13px;
     color: #888;
 }
@@ -148,6 +154,55 @@ body {
 #undo-count {
     color: #f5576c;
     font-weight: 600;
+}
+
+.combo-info {
+    font-size: 13px;
+    color: #888;
+}
+
+#combo-count {
+    color: #667eea;
+    font-weight: 600;
+}
+
+.combo-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 50;
+}
+
+.combo-text {
+    font-size: 32px;
+    font-weight: 800;
+    color: #667eea;
+    text-shadow: 0 2px 10px rgba(102, 126, 234, 0.5);
+    animation: comboPopUp 0.8s ease-out forwards;
+    white-space: nowrap;
+}
+
+@keyframes comboPopUp {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    20% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+    40% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -80%) scale(1.1);
+    }
 }
 
 .game-container {
@@ -554,6 +609,19 @@ body {
 
     .tile {
         border-radius: 8px;
+    }
+
+    .game-info {
+        font-size: 12px;
+    }
+
+    .undo-info,
+    .combo-info {
+        font-size: 12px;
+    }
+
+    .combo-text {
+        font-size: 24px !important;
     }
 
     .instructions {

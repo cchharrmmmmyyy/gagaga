@@ -9,6 +9,8 @@ const continueBtn = document.getElementById('continue-btn');
 const newGameBtn = document.getElementById('new-game-btn');
 const undoBtn = document.getElementById('undo-btn');
 const undoCountEl = document.getElementById('undo-count');
+const comboCountEl = document.getElementById('combo-count');
+const comboDisplay = document.getElementById('combo-display');
 
 let tiles = [];
 let score = 0;
@@ -20,9 +22,13 @@ let isContinuing = false;
 let history = [];
 let undoCount = 3;
 
+// 连击相关变量
+let currentCombo = 0;
+
 let bestScore = parseInt(localStorage.getItem('2048BestScore')) || 0;
 bestScoreEl.textContent = bestScore;
 undoCountEl.textContent = undoCount;
+comboCountEl.textContent = currentCombo;
 
 function createTile(value = 0) {
     const tile = document.createElement('div');
@@ -46,7 +52,9 @@ function initializeBoard() {
     isContinuing = false;
     history = [];
     undoCount = 3;
+    currentCombo = 0;
     undoCountEl.textContent = undoCount;
+    comboCountEl.textContent = currentCombo;
     undoBtn.disabled = false;
     currentScoreEl.textContent = score;
     gameOverOverlay.style.display = 'none';
@@ -59,6 +67,36 @@ function initializeBoard() {
     }
     addRandomTile();
     addRandomTile();
+}
+
+// 显示连击效果
+function showCombo(combo) {
+    if (combo < 2) return; // 只有2连击以上才显示
+
+    comboCountEl.textContent = combo;
+    comboDisplay.innerHTML = '';
+
+    const comboText = document.createElement('div');
+    comboText.className = 'combo-text';
+
+    if (combo >= 4) {
+        comboText.textContent = `🔥 ${combo} 连击!`;
+        comboText.style.color = '#f5576c';
+        comboText.style.fontSize = '40px';
+    } else if (combo >= 3) {
+        comboText.textContent = `⚡ ${combo} 连击!`;
+        comboText.style.color = '#f093fb';
+        comboText.style.fontSize = '36px';
+    } else {
+        comboText.textContent = `${combo} 连击!`;
+    }
+
+    comboDisplay.appendChild(comboText);
+
+    // 动画结束后清除
+    setTimeout(() => {
+        comboDisplay.innerHTML = '';
+    }, 800);
 }
 
 // 保存当前状态到历史记录
@@ -134,6 +172,8 @@ function moveTiles(direction) {
     saveState();
 
     let hasMoved = false;
+    let mergeCount = 0; // 统计本次移动的合并次数
+
     for (let i = 0; i < 4; i++) {
         let rowOrCol = [];
         for (let j = 0; j < 4; j++) {
@@ -147,7 +187,10 @@ function moveTiles(direction) {
 
         const result = moveAndMergeRowOrCol(rowOrCol);
         if (result.moved) hasMoved = true;
-        if (result.score > 0) updateScore(result.score);
+        if (result.score > 0) {
+            updateScore(result.score);
+            mergeCount++; // 统计合并次数
+        }
 
         if (direction === 'right' || direction === 'down') rowOrCol.reverse();
 
@@ -161,6 +204,16 @@ function moveTiles(direction) {
         renderBoard();
         addRandomTile();
         renderBoard();
+
+        // 更新连击次数
+        if (mergeCount >= 2) {
+            currentCombo += mergeCount;
+            showCombo(mergeCount);
+        } else {
+            // 如果没有合并，连击次数重置
+            currentCombo = 0;
+            comboCountEl.textContent = currentCombo;
+        }
 
         if (!hasWon && !isContinuing) {
             checkWin();
