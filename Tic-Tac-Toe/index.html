@@ -26,7 +26,6 @@
       margin: 15px 0;
       color: #333;
     }
-    /* 重置按钮样式 */
     #resetBtn {
       margin-top: 15px;
       padding: 8px 20px;
@@ -40,14 +39,22 @@
     #resetBtn:hover {
       background: #2563eb;
     }
+    /* 获胜统计样式 */
+    #scoreBoard {
+      margin: 15px 0;
+      font-size: 16px;
+      color: #334155;
+    }
   </style>
 </head>
 <body>
   <h1>Tic-Tac-Toe</h1>
   <div id="status">轮到 X 落子</div>
-  <canvas id="gameCanvas" width="300" height="300"></canvas>
 
-  <!-- 重置按钮 -->
+  <!-- 获胜统计 -->
+  <div id="scoreBoard">加载统计中...</div>
+
+  <canvas id="gameCanvas" width="300" height="300"></canvas>
   <button id="resetBtn">重新开始</button>
 
   <script src="../game-platform.js"></script>

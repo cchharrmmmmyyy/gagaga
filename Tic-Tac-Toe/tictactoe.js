@@ -1,27 +1,35 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const statusText = document.getElementById('status');
-const resetBtn = document.getElementById('resetBtn'); // 绑定按钮
+const resetBtn = document.getElementById('resetBtn');
+const scoreBoard = document.getElementById('scoreBoard'); // 统计面板
 
 const cellSize = canvas.width / 3;
 let board = createBoard();
 let currentPlayer = 'X';
 let gameFinished = false;
 
+// 配色
 const COLOR_BG = '#f7f9fc';
 const COLOR_GRID = '#cbd5e1';
 const COLOR_X = '#ef4444';
 const COLOR_O = '#3b82f6';
 const COLOR_WIN_LINE = '#22c55e';
 
+// 本地记录胜场
+let score = JSON.parse(localStorage.getItem('ticTacToeScore')) || {
+  xWins: 0,
+  oWins: 0,
+  draws: 0
+};
+
 canvas.addEventListener('click', handleClick);
 document.addEventListener('keydown', event => {
   if (event.key === ' ') resetGame();
 });
-
-// 按钮点击重置
 resetBtn.addEventListener('click', resetGame);
 
+// 创建棋盘
 function createBoard() {
   return [
     ['', '', ''],
@@ -30,9 +38,9 @@ function createBoard() {
   ];
 }
 
+// 点击落子
 function handleClick(event) {
   if (gameFinished) return;
-
   const x = Math.floor(event.offsetX / cellSize);
   const y = Math.floor(event.offsetY / cellSize);
   if (x < 0 || x > 2 || y < 0 || y > 2 || board[y][x] !== '') return;
@@ -41,8 +49,10 @@ function handleClick(event) {
   currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
   draw();
   checkWinner();
+  updateScoreBoard();
 }
 
+// 绘制界面
 function draw() {
   ctx.fillStyle = COLOR_BG;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -93,6 +103,7 @@ function draw() {
   }
 }
 
+// 判断胜负
 function checkWinner() {
   const lines = [
     [[0,0],[0,1],[0,2]],
@@ -112,10 +123,14 @@ function checkWinner() {
     const v3 = board[c[0]][c[1]];
     if (v1 && v1 === v2 && v2 === v3) {
       gameFinished = true;
+      if (v1 === 'X') score.xWins++;
+      else score.oWins++;
+      localStorage.setItem('ticTacToeScore', JSON.stringify(score));
       submitTicTacToeResult(v1 === 'X' ? 'win' : 'loss');
       statusText.textContent = `${v1} 获胜！`;
       statusText.style.color = COLOR_WIN_LINE;
       drawWinLine(line);
+      updateScoreBoard();
       setTimeout(() => alert(`${v1} 获胜！`), 100);
       setTimeout(resetGame, 1200);
       return;
@@ -124,14 +139,18 @@ function checkWinner() {
 
   if (board.flat().every(cell => cell !== '')) {
     gameFinished = true;
+    score.draws++;
+    localStorage.setItem('ticTacToeScore', JSON.stringify(score));
     submitTicTacToeResult('draw');
     statusText.textContent = '平局！';
     statusText.style.color = '#64748b';
+    updateScoreBoard();
     setTimeout(() => alert('平局！'), 100);
     setTimeout(resetGame, 1200);
   }
 }
 
+// 绘制获胜线
 function drawWinLine(line) {
   const [a, b, c] = line;
   ctx.strokeStyle = COLOR_WIN_LINE;
@@ -143,6 +162,16 @@ function drawWinLine(line) {
   ctx.stroke();
 }
 
+// 更新统计面板
+function updateScoreBoard() {
+  scoreBoard.innerHTML = `
+    X 获胜：${score.xWins} 次 &nbsp;&nbsp;
+    O 获胜：${score.oWins} 次 &nbsp;&nbsp;
+    平局：${score.draws} 次
+  `;
+}
+
+// 提交成绩
 function submitTicTacToeResult(result) {
   if (!window.GagagaPlatform) return;
   window.GagagaPlatform.submitScore(
@@ -152,12 +181,16 @@ function submitTicTacToeResult(result) {
   );
 }
 
+// 重置游戏
 function resetGame() {
   board = createBoard();
   currentPlayer = 'X';
   gameFinished = false;
   statusText.style.color = '#333';
   draw();
+  updateScoreBoard();
 }
 
+// 初始化
+updateScoreBoard();
 draw();
