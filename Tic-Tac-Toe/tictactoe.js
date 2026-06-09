@@ -1,24 +1,26 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const statusText = document.getElementById('status');
+const resetBtn = document.getElementById('resetBtn'); // 绑定按钮
 
 const cellSize = canvas.width / 3;
 let board = createBoard();
 let currentPlayer = 'X';
 let gameFinished = false;
 
-// 配色（现代柔和）
 const COLOR_BG = '#f7f9fc';
 const COLOR_GRID = '#cbd5e1';
 const COLOR_X = '#ef4444';
 const COLOR_O = '#3b82f6';
 const COLOR_WIN_LINE = '#22c55e';
 
-// 绑定事件
 canvas.addEventListener('click', handleClick);
 document.addEventListener('keydown', event => {
   if (event.key === ' ') resetGame();
 });
+
+// 按钮点击重置
+resetBtn.addEventListener('click', resetGame);
 
 function createBoard() {
   return [
@@ -41,30 +43,24 @@ function handleClick(event) {
   checkWinner();
 }
 
-// 绘制：圆角棋盘 + 阴影 + 漂亮的 X/O
 function draw() {
-  // 背景
   ctx.fillStyle = COLOR_BG;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // 画棋盘（圆角网格）
   ctx.strokeStyle = COLOR_GRID;
   ctx.lineWidth = 6;
-  ctx.lineCap = 'round'; // 线条圆角
+  ctx.lineCap = 'round';
   ctx.beginPath();
-  // 横线
   ctx.moveTo(cellSize, 10);
   ctx.lineTo(cellSize, canvas.height - 10);
   ctx.moveTo(cellSize * 2, 10);
   ctx.lineTo(cellSize * 2, canvas.height - 10);
-  // 竖线
   ctx.moveTo(10, cellSize);
   ctx.lineTo(canvas.width - 10, cellSize);
   ctx.moveTo(10, cellSize * 2);
   ctx.lineTo(canvas.width - 10, cellSize * 2);
   ctx.stroke();
 
-  // 画 X 和 O（用线条画，比文字好看）
   ctx.lineWidth = 8;
   ctx.lineCap = 'round';
   for (let row = 0; row < 3; row++) {
@@ -91,14 +87,12 @@ function draw() {
     }
   }
 
-  // 状态文字美化
   if (!gameFinished) {
     statusText.textContent = `轮到 ${currentPlayer} 落子`;
     statusText.style.color = currentPlayer === 'X' ? COLOR_X : COLOR_O;
   }
 }
 
-// 判断胜负 + 高亮获胜线
 function checkWinner() {
   const lines = [
     [[0,0],[0,1],[0,2]],
@@ -121,7 +115,7 @@ function checkWinner() {
       submitTicTacToeResult(v1 === 'X' ? 'win' : 'loss');
       statusText.textContent = `${v1} 获胜！`;
       statusText.style.color = COLOR_WIN_LINE;
-      drawWinLine(line); // 画获胜线
+      drawWinLine(line);
       setTimeout(() => alert(`${v1} 获胜！`), 100);
       setTimeout(resetGame, 1200);
       return;
@@ -138,10 +132,8 @@ function checkWinner() {
   }
 }
 
-// 画获胜高亮线
 function drawWinLine(line) {
   const [a, b, c] = line;
-  const ctx = canvas.getContext('2d');
   ctx.strokeStyle = COLOR_WIN_LINE;
   ctx.lineWidth = 10;
   ctx.lineCap = 'round';
@@ -168,5 +160,4 @@ function resetGame() {
   draw();
 }
 
-// 初始绘制
 draw();
