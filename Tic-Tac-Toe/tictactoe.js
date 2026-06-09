@@ -1,5 +1,6 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const statusText = document.getElementById('status'); // 绑定状态文字
 
 const cellSize = canvas.width / 3;
 let board = createBoard();
@@ -67,6 +68,11 @@ function draw() {
       }
     }
   }
+
+  // 更新状态文字
+  if (!gameFinished) {
+    statusText.textContent = `轮到 ${currentPlayer} 落子`;
+  }
 }
 
 // 判断胜负
@@ -91,6 +97,7 @@ function checkWinner() {
     if (v1 && v1 === v2 && v2 === v3) {
       gameFinished = true;
       submitTicTacToeResult(v1 === 'X' ? 'win' : 'loss');
+      statusText.textContent = `${v1} 获胜！`;
       alert(`${v1} 获胜！`);
       resetGame();
       return;
@@ -101,8 +108,8 @@ function checkWinner() {
   if (board.flat().every(cell => cell !== '')) {
     gameFinished = true;
     submitTicTacToeResult('draw');
+    statusText.textContent = '平局！';
     alert('平局！');
-    resetGame();
   }
 }
 
