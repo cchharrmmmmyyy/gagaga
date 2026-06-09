@@ -717,5 +717,86 @@ document.querySelectorAll('.best-tab').forEach(tab => {
 // 初始化最高分显示
 updateDisplayedBestScore('classic');
 
+// ==================== 反馈功能 ====================
+const feedbackOverlay = document.getElementById('feedback-overlay');
+const feedbackBtn = document.getElementById('feedback-btn');
+const feedbackCancel = document.getElementById('feedback-cancel');
+const feedbackSubmit = document.getElementById('feedback-submit');
+const feedbackText = document.getElementById('feedback-text');
+const charCount = document.getElementById('char-count');
+
+// 打开发反馈弹窗
+feedbackBtn.addEventListener('click', () => {
+    feedbackOverlay.style.display = 'flex';
+    feedbackText.value = '';
+    charCount.textContent = '0';
+    feedbackSubmit.disabled = false;
+});
+
+// 关闭反馈弹窗
+feedbackCancel.addEventListener('click', () => {
+    feedbackOverlay.style.display = 'none';
+});
+
+// 点击弹窗外部关闭
+feedbackOverlay.addEventListener('click', (e) => {
+    if (e.target === feedbackOverlay) {
+        feedbackOverlay.style.display = 'none';
+    }
+});
+
+// 实时更新字符计数
+feedbackText.addEventListener('input', () => {
+    const count = feedbackText.value.length;
+    charCount.textContent = count;
+    feedbackSubmit.disabled = count === 0;
+});
+
+// 提交反馈
+feedbackSubmit.addEventListener('click', () => {
+    const feedbackContent = feedbackText.value.trim();
+
+    if (!feedbackContent) {
+        alert('请输入反馈内容');
+        return;
+    }
+
+    // 获取反馈类型
+    const feedbackType = document.querySelector('input[name="feedbackType"]:checked').value;
+
+    // 获取当前游戏信息
+    const gameInfo = {
+        mode: gameMode,
+        score: score,
+        maxNumber: maxNumber,
+        moves: moveCount
+    };
+
+    // 保存反馈到localStorage
+    const feedbacks = JSON.parse(localStorage.getItem('2048Feedbacks')) || [];
+    const newFeedback = {
+        id: Date.now(),
+        type: feedbackType,
+        content: feedbackContent,
+        gameInfo: gameInfo,
+        timestamp: new Date().toLocaleString()
+    };
+
+    feedbacks.unshift(newFeedback);
+
+    // 只保留最近20条反馈
+    if (feedbacks.length > 20) {
+        feedbacks.pop();
+    }
+
+    localStorage.setItem('2048Feedbacks', JSON.stringify(feedbacks));
+
+    // 显示成功提示
+    alert('感谢您的反馈！我们会认真考虑您的建议！');
+
+    // 关闭弹窗
+    feedbackOverlay.style.display = 'none';
+});
+
 // 初始化游戏
 initializeBoard();
