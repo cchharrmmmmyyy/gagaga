@@ -7,35 +7,11 @@
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
-    <!-- 排行榜按钮 -->
-    <div class="ranking-btn-wrapper">
-        <button class="ranking-btn" id="ranking-btn">🏆 排行榜</button>
-    </div>
-
-    <!-- 排行榜弹窗 -->
-    <div class="ranking-overlay" id="ranking-overlay">
-        <div class="ranking-container">
-            <div class="ranking-header">
-                <h2 class="ranking-title">🏆 排行榜</h2>
-                <button class="ranking-close" id="ranking-close">×</button>
-            </div>
-            <div class="ranking-list" id="ranking-list">
-                <!-- 动态生成 -->
-            </div>
-        </div>
-    </div>
-
     <div class="game-wrapper">
-        <div class="decorative-elements">
-            <span class="deco-star">⭐</span>
-            <span class="deco-heart">💖</span>
-            <span class="deco-sparkle">✨</span>
-        </div>
-        
         <header class="game-header">
             <div class="title-section">
-                <h1 class="game-title">🎮 2048</h1>
-                <p class="game-subtitle">🎯 合并数字，挑战极限</p>
+                <h1 class="game-title">2048</h1>
+                <p class="game-subtitle">合并数字，挑战极限</p>
             </div>
             <div class="score-section">
                 <div class="score-box">
@@ -51,27 +27,25 @@
 
         <div class="controls">
             <button class="new-game-btn" id="new-game-btn">
-                <span>🎲 新游戏</span>
+                <span>新游戏</span>
             </button>
         </div>
 
-        <div class="game-container" id="game-container">
-            <div class="game-tips">使用方向键或滑动来移动方块</div>
-        </div>
+        <div class="game-container" id="game-container"></div>
 
         <div class="game-over-overlay" id="game-over-overlay">
             <div class="game-over-content">
-                <h2 class="game-over-title">😅 游戏结束</h2>
+                <h2 class="game-over-title" id="game-over-title">游戏结束</h2>
                 <p class="game-over-score">最终分数: <span id="final-score">0</span></p>
-                <button class="try-again-btn" id="try-again-btn">🔄 再试一次</button>
+                <button class="try-again-btn" id="try-again-btn">再试一次</button>
             </div>
         </div>
 
         <div class="win-overlay" id="win-overlay">
             <div class="win-content">
                 <h2 class="win-title">🎉 恭喜通关!</h2>
-                <p class="win-message">🏆 你成功达到了 2048!</p>
-                <button class="continue-btn" id="continue-btn">🚀 继续挑战</button>
+                <p class="win-message">你成功达到了 2048!</p>
+                <button class="continue-btn" id="continue-btn">继续游戏</button>
             </div>
         </div>
 
@@ -79,20 +53,19 @@
             <div class="rules-section">
                 <h3 class="rules-title">📖 游戏规则</h3>
                 <ul class="rules-list">
-                    <li><strong>🎯 目标:</strong> 通过合并数字，最终得到 <span class="highlight">2048</span> 方块</li>
-                    <li><strong>🎮 移动:</strong> 使用 <span class="key">↑</span><span class="key">↓</span><span class="key">←</span><span class="key">→</span> 方向键或滑动屏幕</li>
-                    <li><strong>🔄 合并:</strong> 相同数字的方块碰撞时会合并成它们的和</li>
-                    <li><strong>📊 计分:</strong> 每次成功合并都会获得相应的分数奖励</li>
-                    <li><strong>🏁 结束:</strong> 当无法再移动任何方块时，游戏结束</li>
+                    <li><strong>目标:</strong> 通过合并数字，最终得到 <span class="highlight">2048</span> 方块</li>
+                    <li><strong>移动:</strong> 使用 <span class="key">↑</span><span class="key">↓</span><span class="key">←</span><span class="key">→</span> 方向键或滑动屏幕</li>
+                    <li><strong>合并:</strong> 相同数字的方块碰撞时会合并成它们的和</li>
+                    <li><strong>计分:</strong> 每次成功合并都会获得相应的分数奖励</li>
+                    <li><strong>结束:</strong> 当无法再移动任何方块时，游戏结束</li>
                 </ul>
             </div>
         </div>
 
         <footer class="game-footer">
-            <p>🎮 支持触屏滑动操作 | 用方向键控制</p>
+            <p>支持触屏滑动操作</p>
         </footer>
     </div>
-    <script src="../game-platform.js"></script>
     <script src="2048.js"></script>
 </body>
 </html>
