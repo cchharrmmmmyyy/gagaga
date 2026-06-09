@@ -13,6 +13,7 @@ const comboCountEl = document.getElementById('combo-count');
 const comboDisplay = document.getElementById('combo-display');
 const moveCountEl = document.getElementById('move-count');
 const maxNumberEl = document.getElementById('max-number');
+const achievementContainer = document.getElementById('achievement-container');
 
 let tiles = [];
 let score = 0;
@@ -31,12 +32,60 @@ let currentCombo = 0;
 let moveCount = 0;
 let maxNumber = 2;
 
-let bestScore = parseInt(localStorage.getItem('2048BestScore')) || 0;
-bestScoreEl.textContent = bestScore;
-undoCountEl.textContent = undoCount;
-comboCountEl.textContent = currentCombo;
-moveCountEl.textContent = moveCount;
-maxNumberEl.textContent = maxNumber;
+// 成就相关变量
+let unlockedAchievements = JSON.parse(localStorage.getItem('2048Achievements')) || [];
+
+// 成就列表
+const achievements = [
+    { id: 'num_64', icon: '🔲', title: '初露锋芒', desc: '达到 64', type: 'number-achievement', check: (s) => s >= 64 },
+    { id: 'num_128', icon: '📦', title: '小有所成', desc: '达到 128', type: 'number-achievement', check: (s) => s >= 128 },
+    { id: 'num_256', icon: '🎁', title: '渐入佳境', desc: '达到 256', type: 'number-achievement', check: (s) => s >= 256 },
+    { id: 'num_512', icon: '💎', title: '五五开', desc: '达到 512', type: 'number-achievement', check: (s) => s >= 512 },
+    { id: 'num_1024', icon: '🌟', title: '千载难逢', desc: '达到 1024', type: 'number-achievement', check: (s) => s >= 1024 },
+    { id: 'num_2048', icon: '🏆', title: '通关达成', desc: '达到 2048', type: 'milestone-achievement', check: (s) => s >= 2048 },
+    { id: 'num_4096', icon: '👑', title: '傲视群雄', desc: '达到 4096', type: 'milestone-achievement', check: (s) => s >= 4096 },
+    { id: 'combo_3', icon: '⚡', title: '三连击', desc: '连击 3 次', type: 'combo-achievement', check: () => currentCombo >= 3 },
+    { id: 'combo_5', icon: '🔥', title: '五连击', desc: '连击 5 次', type: 'combo-achievement', check: () => currentCombo >= 5 },
+    { id: 'score_1000', icon: '💯', title: '初试锋芒', desc: '分数达到 1000', type: 'score-achievement', check: () => score >= 1000 },
+    { id: 'score_5000', icon: '💰', title: '腰缠万贯', desc: '分数达到 5000', type: 'score-achievement', check: () => score >= 5000 },
+    { id: 'score_10000', icon: '💎', title: '富甲一方', desc: '分数达到 10000', type: 'score-achievement', check: () => score >= 10000 },
+];
+
+// 显示成就徽章
+function showAchievement(achievement) {
+    if (unlockedAchievements.includes(achievement.id)) return;
+
+    unlockedAchievements.push(achievement.id);
+    localStorage.setItem('2048Achievements', JSON.stringify(unlockedAchievements));
+
+    const badge = document.createElement('div');
+    badge.className = `achievement-badge ${achievement.type}`;
+    badge.innerHTML = `
+        <span class="achievement-icon">${achievement.icon}</span>
+        <div class="achievement-content">
+            <div class="achievement-title">${achievement.title}</div>
+            <div class="achievement-desc">${achievement.desc}</div>
+        </div>
+    `;
+
+    achievementContainer.appendChild(badge);
+
+    setTimeout(() => {
+        badge.style.animation = 'achievementSlideOut 0.5s ease forwards';
+        setTimeout(() => {
+            badge.remove();
+        }, 500);
+    }, 3000);
+}
+
+// 检测成就
+function checkAchievements() {
+    achievements.forEach(achievement => {
+        if (!unlockedAchievements.includes(achievement.id) && achievement.check()) {
+            showAchievement(achievement);
+        }
+    });
+}
 
 function createTile(value = 0) {
     const tile = document.createElement('div');
@@ -254,6 +303,9 @@ function moveTiles(direction) {
             currentCombo = 0;
             comboCountEl.textContent = currentCombo;
         }
+
+        // 检测成就
+        checkAchievements();
 
         if (!hasWon && !isContinuing) {
             checkWin();
