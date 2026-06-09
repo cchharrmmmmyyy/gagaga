@@ -138,32 +138,56 @@ body {
     cursor: not-allowed;
 }
 
-.game-info {
-    display: flex;
-    justify-content: space-around;
+/* 统计面板 */
+.stats-panel {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
     margin-bottom: 15px;
-    font-size: 13px;
+}
+
+.stat-item {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.stat-label {
+    display: block;
+    font-size: 11px;
     color: #888;
+    margin-bottom: 4px;
+    font-weight: 500;
 }
 
-.undo-info {
-    font-size: 13px;
-    color: #888;
-}
-
-#undo-count {
-    color: #f5576c;
-    font-weight: 600;
-}
-
-.combo-info {
-    font-size: 13px;
-    color: #888;
-}
-
-#combo-count {
+.stat-value {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
     color: #667eea;
-    font-weight: 600;
+}
+
+.stat-item:nth-child(1) .stat-value {
+    color: #667eea;
+}
+
+.stat-item:nth-child(2) .stat-value {
+    color: #f5576c;
+}
+
+.stat-item:nth-child(3) .stat-value {
+    color: #f093fb;
+}
+
+.stat-item:nth-child(4) .stat-value {
+    color: #764ba2;
 }
 
 .combo-display {
@@ -597,8 +621,22 @@ body {
         font-size: 14px;
     }
 
-    .undo-info {
-        font-size: 12px;
+    .stats-panel {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+
+    .stat-item {
+        padding: 8px 6px;
+    }
+
+    .stat-label {
+        font-size: 10px;
+    }
+
+    .stat-value {
+        font-size: 16px;
     }
 
     .game-container {
@@ -609,15 +647,6 @@ body {
 
     .tile {
         border-radius: 8px;
-    }
-
-    .game-info {
-        font-size: 12px;
-    }
-
-    .undo-info,
-    .combo-info {
-        font-size: 12px;
     }
 
     .combo-text {
