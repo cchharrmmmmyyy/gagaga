@@ -647,6 +647,203 @@ body {
     background: linear-gradient(135deg, #d0d0d0, #c0c0c0);
 }
 
+/* 反馈功能样式 */
+.feedback-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+    margin-top: 10px;
+}
+
+.feedback-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.feedback-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+    backdrop-filter: blur(5px);
+}
+
+.feedback-container {
+    background: white;
+    border-radius: 24px;
+    padding: 30px;
+    max-width: 450px;
+    width: 90%;
+    animation: feedbackSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes feedbackSlideIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.feedback-title {
+    text-align: center;
+    font-size: 26px;
+    margin-bottom: 25px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.feedback-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.feedback-type {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.type-label,
+.content-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+}
+
+.type-options {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.type-option {
+    flex: 1;
+    min-width: 100px;
+    cursor: pointer;
+}
+
+.type-option input[type="radio"] {
+    display: none;
+}
+
+.type-option span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, #f5f7fa, #e4e8ec);
+    border-radius: 12px;
+    font-size: 13px;
+    color: #666;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.type-option input[type="radio"]:checked + span {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-color: #667eea;
+    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+}
+
+.type-option:hover span {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.feedback-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.feedback-content textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    resize: vertical;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.feedback-content textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.char-count {
+    text-align: right;
+    font-size: 12px;
+    color: #999;
+}
+
+.feedback-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.feedback-submit-btn,
+.feedback-cancel-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.feedback-submit-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.feedback-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.feedback-cancel-btn {
+    background: linear-gradient(135deg, #e0e0e0, #d0d0d0);
+    color: #666;
+}
+
+.feedback-cancel-btn:hover {
+    background: linear-gradient(135deg, #d0d0d0, #c0c0c0);
+}
+
+.feedback-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
 .game-container {
     width: 100%;
     aspect-ratio: 1;
@@ -999,6 +1196,10 @@ body {
 .game-footer {
     margin-top: 15px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
 }
 
 .game-footer p {
@@ -1174,6 +1375,48 @@ body {
 
     .challenge-result-message {
         font-size: 14px;
+        padding: 10px;
+    }
+
+    .feedback-container {
+        padding: 20px;
+    }
+
+    .feedback-title {
+        font-size: 22px;
+    }
+
+    .type-options {
+        flex-direction: column;
+    }
+
+    .type-option {
+        min-width: 100%;
+    }
+
+    .type-option span {
+        font-size: 14px;
+        padding: 12px;
+    }
+
+    .feedback-content textarea {
+        min-height: 100px;
+        font-size: 14px;
+    }
+
+    .feedback-submit-btn,
+    .feedback-cancel-btn {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .game-footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .feedback-btn {
+        width: 100%;
         padding: 10px;
     }
 }
