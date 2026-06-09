@@ -33,9 +33,24 @@
                 <span>悔棋</span>
             </button>
         </div>
-        <div class="game-info">
-            <div class="undo-info">悔棋次数: <span id="undo-count">3</span></div>
-            <div class="combo-info">连击: <span id="combo-count">0</span></div>
+
+        <div class="stats-panel">
+            <div class="stat-item">
+                <span class="stat-label">移动次数</span>
+                <span class="stat-value" id="move-count">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">最大数字</span>
+                <span class="stat-value" id="max-number">2</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">连击数</span>
+                <span class="stat-value" id="combo-count">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">悔棋次数</span>
+                <span class="stat-value" id="undo-count">3</span>
+            </div>
         </div>
         <div class="combo-display" id="combo-display"></div>
 
