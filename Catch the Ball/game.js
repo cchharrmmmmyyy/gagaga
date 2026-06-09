@@ -1,10 +1,10 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const basketWidth = 70;
-const basketHeight = 20;
-const ballRadius = 14;
-const baseSpeed = 2.0; // ✅ 变慢了（原来 3.6）
+const basketWidth = 80;
+const basketHeight = 24;
+const ballRadius = 16;
+const baseSpeed = 2.0; // 已经改慢
 
 let basketX = (canvas.width - basketWidth) / 2;
 let rightPressed = false;
@@ -12,7 +12,7 @@ let leftPressed = false;
 let ballX = randomBallX();
 let ballY = ballRadius;
 let ballDY = baseSpeed;
-let ballColor = '#0095DD';
+let ballColor = '#3b82f6';
 let score = 0;
 let lives = 3;
 let gameOver = false;
@@ -28,41 +28,52 @@ function keyDownHandler(event) {
   } else if (event.key === 'Left' || event.key === 'ArrowLeft') {
     leftPressed = true;
   }
-
   if (event.key.toLowerCase() === 'p' && !gameOver) pause = !pause;
   if (event.key === ' ' && gameOver) restartGame();
 }
 
 function keyUpHandler(event) {
-  if (event.key === 'Right' || event.key === 'ArrowRight') {
-    rightPressed = false;
-  } else if (event.key === 'Left' || event.key === 'ArrowLeft') {
-    leftPressed = false;
-  }
+  if (event.key === 'Right' || event.key === 'ArrowRight') rightPressed = false;
+  if (event.key === 'Left' || event.key === 'ArrowLeft') leftPressed = false;
 }
 
+// 绘制篮子（圆角 + 渐变）
 function drawBasket() {
+  ctx.save();
   ctx.beginPath();
-  ctx.rect(basketX, canvas.height - basketHeight, basketWidth, basketHeight);
-  ctx.fillStyle = '#0095DD';
+  ctx.roundRect(basketX, canvas.height - basketHeight, basketWidth, basketHeight, 8);
+  ctx.fillStyle = '#2563eb';
+  ctx.shadowColor = '#93c5fd';
+  ctx.shadowBlur = 10;
   ctx.fill();
-  ctx.closePath();
+  ctx.restore();
 }
 
+// 绘制小球（渐变 + 光泽）
 function drawBall() {
+  ctx.save();
+  const gradient = ctx.createRadialGradient(ballX - 4, ballY - 4, 0, ballX, ballY, ballRadius);
+  gradient.addColorStop(0, '#93c5fd');
+  gradient.addColorStop(1, ballColor);
+  
   ctx.beginPath();
   ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
-  ctx.fillStyle = ballColor;
+  ctx.fillStyle = gradient;
   ctx.fill();
-  ctx.closePath();
+  ctx.restore();
 }
 
+// 美化文字
 function drawScore() {
+  ctx.font = 'bold 18px Arial';
+  ctx.fillStyle = '#1e293b';
+  
+  ctx.fillText(`🎯 分数: ${score}`, 15, 28);
+  ctx.fillText(`❤️ 生命: ${lives}`, 15, 54);
+  
   ctx.font = '16px Arial';
-  ctx.fillStyle = '#0095DD';
-  ctx.fillText(`Score: ${score}`, 8, 20);
-  ctx.fillText(`Lives: ${lives}`, 8, 40);
-  ctx.fillText('P: Pause  Space: Restart', 8, 60);
+  ctx.fillStyle = '#64748b';
+  ctx.fillText('P 暂停 | 空格重开', canvas.width - 140, 32);
 }
 
 function detectCollision() {
@@ -71,12 +82,12 @@ function detectCollision() {
     && ballX < basketX + basketWidth;
 
   if (caught) {
-    score += 1;
-    ballColor = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
-    ballDY = baseSpeed + score * 0.06; // ✅ 升级也变慢（原来 0.12）
+    score++;
+    ballColor = `hsl(${Math.random() * 360}, 75%, 60%)`;
+    ballDY = baseSpeed + score * 0.06;
     resetBall();
   } else if (ballY + ballRadius > canvas.height) {
-    lives -= 1;
+    lives--;
     if (lives <= 0) {
       gameOver = true;
       submitCatchScore();
@@ -89,11 +100,7 @@ function detectCollision() {
 function submitCatchScore() {
   if (leaderboardSubmitted || !window.GagagaPlatform) return;
   leaderboardSubmitted = true;
-  window.GagagaPlatform.submitScore(
-    'catch-the-ball',
-    { score },
-    `catch:${Date.now()}:${score}`
-  );
+  window.GagagaPlatform.submitScore('catch-the-ball', { score }, `catch:${Date.now()}:${score}`);
 }
 
 function randomBallX() {
@@ -109,7 +116,7 @@ function restartGame() {
   score = 0;
   lives = 3;
   ballDY = baseSpeed;
-  ballColor = '#0095DD';
+  ballColor = '#3b82f6';
   gameOver = false;
   pause = false;
   leaderboardSubmitted = false;
@@ -117,21 +124,28 @@ function restartGame() {
 }
 
 function moveBasket() {
-  if (rightPressed && basketX < canvas.width - basketWidth) {
-    basketX += 7;
-  } else if (leftPressed && basketX > 0) {
-    basketX -= 7;
-  }
+  const speed = 8;
+  if (rightPressed && basketX < canvas.width - basketWidth) basketX += speed;
+  if (leftPressed && basketX > 0) basketX -= speed;
 }
 
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // 渐变背景
+  const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  bgGradient.addColorStop(0, '#f0f9ff');
+  bgGradient.addColorStop(1, '#e0f2fe');
+  ctx.fillStyle = bgGradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   if (gameOver) {
-    ctx.font = '24px Arial';
-    ctx.fillStyle = '#0095DD';
-    ctx.fillText(`Game Over! Score: ${score}`, 50, canvas.height / 2);
-    ctx.fillText('Press Space to restart', 70, canvas.height / 2 + 35);
+    ctx.font = 'bold 28px Arial';
+    ctx.fillStyle = '#ef4444';
+    ctx.textAlign = 'center';
+    ctx.fillText('游戏结束', canvas.width / 2, canvas.height / 2 - 30);
+    ctx.font = '20px Arial';
+    ctx.fillStyle = '#1e293b';
+    ctx.fillText(`最终分数: ${score}`, canvas.width / 2, canvas.height / 2 + 10);
+    ctx.fillText('按空格重新开始', canvas.width / 2, canvas.height / 2 + 45);
     requestAnimationFrame(draw);
     return;
   }
@@ -141,7 +155,10 @@ function draw() {
   drawScore();
 
   if (pause) {
-    ctx.fillText('Paused - press P to continue', 95, canvas.height / 2);
+    ctx.font = 'bold 32px Arial';
+    ctx.fillStyle = '#3b82f6';
+    ctx.textAlign = 'center';
+    ctx.fillText('已暂停', canvas.width / 2, canvas.height / 2);
     requestAnimationFrame(draw);
     return;
   }
