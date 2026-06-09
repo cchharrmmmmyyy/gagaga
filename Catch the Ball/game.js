@@ -4,7 +4,7 @@ const ctx = canvas.getContext('2d');
 const basketWidth = 70;
 const basketHeight = 20;
 const ballRadius = 14;
-const baseSpeed = 3.6;
+const baseSpeed = 2.0; // ✅ 变慢了（原来 3.6）
 
 let basketX = (canvas.width - basketWidth) / 2;
 let rightPressed = false;
@@ -73,7 +73,7 @@ function detectCollision() {
   if (caught) {
     score += 1;
     ballColor = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
-    ballDY = baseSpeed + score * 0.12;
+    ballDY = baseSpeed + score * 0.06; // ✅ 升级也变慢（原来 0.12）
     resetBall();
   } else if (ballY + ballRadius > canvas.height) {
     lives -= 1;
