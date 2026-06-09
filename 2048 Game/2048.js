@@ -30,11 +30,19 @@ const resultRetry = document.getElementById('result-retry');
 const resultExit = document.getElementById('result-exit');
 
 let gameMode = 'classic'; // classic, timed, moves
+let displayedMode = 'classic'; // 当前显示的模式
 let challengeTimerInterval = null;
 let challengeStartTime = 0;
 let timeRemaining = 60;
 let movesRemaining = 30;
 let targetScore = 500;
+
+// 各模式最高分
+let bestScores = JSON.parse(localStorage.getItem('2048BestScores')) || {
+    classic: 0,
+    timed: 0,
+    moves: 0
+};
 
 let tiles = [];
 let score = 0;
@@ -204,6 +212,9 @@ function challengeSuccess() {
     const minutes = Math.floor(elapsed / 60);
     const seconds = elapsed % 60;
 
+    // 显示当前模式的最高分
+    updateDisplayedBestScore(gameMode);
+
     document.getElementById('challenge-result-title').textContent = '🎉 挑战成功!';
     document.getElementById('result-final-score').textContent = score;
     document.getElementById('result-target-score').textContent = targetScore;
@@ -225,6 +236,9 @@ function challengeFailed(reason) {
     const elapsed = Math.floor((Date.now() - challengeStartTime) / 1000);
     const minutes = Math.floor(elapsed / 60);
     const seconds = elapsed % 60;
+
+    // 显示当前模式的最高分
+    updateDisplayedBestScore(gameMode);
 
     document.getElementById('challenge-result-title').textContent = '😢 挑战失败';
     document.getElementById('result-final-score').textContent = score;
@@ -376,11 +390,28 @@ function addRandomTile() {
 function updateScore(points) {
     score += points;
     currentScoreEl.textContent = score;
-    if (score > bestScore) {
-        bestScore = score;
-        bestScoreEl.textContent = bestScore;
-        localStorage.setItem('2048BestScore', bestScore);
+    if (score > bestScores[gameMode]) {
+        bestScores[gameMode] = score;
+        localStorage.setItem('2048BestScores', JSON.stringify(bestScores));
+        // 如果当前显示的就是当前模式，更新显示
+        if (displayedMode === gameMode) {
+            bestScoreEl.textContent = bestScores[gameMode];
+        }
     }
+}
+
+// 更新显示的最高分
+function updateDisplayedBestScore(mode) {
+    displayedMode = mode;
+    bestScoreEl.textContent = bestScores[mode];
+
+    // 更新标签激活状态
+    document.querySelectorAll('.best-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.dataset.mode === mode) {
+            tab.classList.add('active');
+        }
+    });
 }
 
 function moveTiles(direction) {
@@ -675,6 +706,16 @@ resultExit.addEventListener('click', () => {
     challengeResultOverlay.style.display = 'none';
     initializeBoard();
 });
+
+// 最高分标签切换
+document.querySelectorAll('.best-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        updateDisplayedBestScore(tab.dataset.mode);
+    });
+});
+
+// 初始化最高分显示
+updateDisplayedBestScore('classic');
 
 // 初始化游戏
 initializeBoard();
