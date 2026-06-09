@@ -15,6 +15,27 @@ const moveCountEl = document.getElementById('move-count');
 const maxNumberEl = document.getElementById('max-number');
 const achievementContainer = document.getElementById('achievement-container');
 
+// 挑战模式相关变量
+const modeOverlay = document.getElementById('mode-overlay');
+const challengeBtn = document.getElementById('challenge-btn');
+const modeClose = document.getElementById('mode-close');
+const challengeInfo = document.getElementById('challenge-info');
+const challengeTimer = document.getElementById('challenge-timer');
+const challengeMoves = document.getElementById('challenge-moves');
+const timeRemainingEl = document.getElementById('time-remaining');
+const movesRemainingEl = document.getElementById('moves-remaining');
+const targetScoreEl = document.getElementById('target-score');
+const challengeResultOverlay = document.getElementById('challenge-result-overlay');
+const resultRetry = document.getElementById('result-retry');
+const resultExit = document.getElementById('result-exit');
+
+let gameMode = 'classic'; // classic, timed, moves
+let challengeTimerInterval = null;
+let challengeStartTime = 0;
+let timeRemaining = 60;
+let movesRemaining = 30;
+let targetScore = 500;
+
 let tiles = [];
 let score = 0;
 let hasWon = false;
@@ -121,6 +142,31 @@ function initializeBoard() {
     gameOverOverlay.style.display = 'none';
     winOverlay.style.display = 'none';
 
+    // 重置挑战模式
+    if (gameMode !== 'classic') {
+        if (challengeTimerInterval) {
+            clearInterval(challengeTimerInterval);
+            challengeTimerInterval = null;
+        }
+        timeRemaining = 60;
+        movesRemaining = 30;
+        targetScore = 500;
+
+        if (gameMode === 'timed') {
+            challengeStartTime = Date.now();
+            challengeTimerInterval = setInterval(updateTimer, 1000);
+            challengeTimer.style.display = 'flex';
+            challengeMoves.style.display = 'none';
+        } else if (gameMode === 'moves') {
+            challengeMoves.style.display = 'flex';
+            challengeTimer.style.display = 'none';
+        }
+
+        targetScoreEl.textContent = targetScore;
+        movesRemainingEl.textContent = movesRemaining;
+        timeRemainingEl.textContent = timeRemaining;
+    }
+
     for (let i = 0; i < 16; i++) {
         const tile = createTile();
         tiles.push(tile);
@@ -128,6 +174,106 @@ function initializeBoard() {
     }
     addRandomTile();
     addRandomTile();
+}
+
+// 更新计时器
+function updateTimer() {
+    const elapsed = Math.floor((Date.now() - challengeStartTime) / 1000);
+    timeRemaining = Math.max(0, 60 - elapsed);
+    timeRemainingEl.textContent = timeRemaining;
+
+    if (timeRemaining <= 10) {
+        timeRemainingEl.style.color = '#ff0000';
+    }
+
+    if (timeRemaining <= 0) {
+        clearInterval(challengeTimerInterval);
+        challengeTimerInterval = null;
+        challengeFailed('时间到！');
+    }
+}
+
+// 挑战成功
+function challengeSuccess() {
+    if (gameMode === 'timed' && challengeTimerInterval) {
+        clearInterval(challengeTimerInterval);
+        challengeTimerInterval = null;
+    }
+
+    const elapsed = Math.floor((Date.now() - challengeStartTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+
+    document.getElementById('challenge-result-title').textContent = '🎉 挑战成功!';
+    document.getElementById('result-final-score').textContent = score;
+    document.getElementById('result-target-score').textContent = targetScore;
+    document.getElementById('result-time').textContent = `${minutes}分${seconds}秒`;
+    document.getElementById('result-moves').textContent = moveCount;
+    document.getElementById('challenge-result-message').textContent = `太棒了！你成功达成了目标分数！`;
+
+    challengeResultOverlay.style.display = 'flex';
+    hideChallengeInfo();
+}
+
+// 挑战失败
+function challengeFailed(reason) {
+    if (challengeTimerInterval) {
+        clearInterval(challengeTimerInterval);
+        challengeTimerInterval = null;
+    }
+
+    const elapsed = Math.floor((Date.now() - challengeStartTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+
+    document.getElementById('challenge-result-title').textContent = '😢 挑战失败';
+    document.getElementById('result-final-score').textContent = score;
+    document.getElementById('result-target-score').textContent = targetScore;
+    document.getElementById('result-time').textContent = `${minutes}分${seconds}秒`;
+    document.getElementById('result-moves').textContent = moveCount;
+    document.getElementById('challenge-result-message').textContent = reason;
+
+    challengeResultOverlay.style.display = 'flex';
+    hideChallengeInfo();
+}
+
+// 显示挑战信息
+function showChallengeInfo() {
+    challengeInfo.style.display = 'flex';
+}
+
+// 隐藏挑战信息
+function hideChallengeInfo() {
+    challengeInfo.style.display = 'none';
+    challengeTimer.style.display = 'none';
+    challengeMoves.style.display = 'none';
+}
+
+// 开始挑战模式
+function startChallenge(mode) {
+    gameMode = mode;
+
+    // 根据难度调整目标
+    const difficulty = Math.random();
+    if (difficulty < 0.33) {
+        targetScore = 500;
+    } else if (difficulty < 0.66) {
+        targetScore = 1000;
+    } else {
+        targetScore = 1500;
+    }
+
+    if (mode === 'timed') {
+        timeRemaining = 60;
+        movesRemaining = 999; // 限时模式不限制步数
+    } else if (mode === 'moves') {
+        movesRemaining = 30;
+        timeRemaining = 999; // 限步模式不限制时间
+    }
+
+    modeOverlay.style.display = 'none';
+    initializeBoard();
+    showChallengeInfo();
 }
 
 // 显示连击效果
@@ -307,12 +453,43 @@ function moveTiles(direction) {
         // 检测成就
         checkAchievements();
 
+        // 挑战模式检查
+        if (gameMode === 'moves') {
+            movesRemaining--;
+            movesRemainingEl.textContent = movesRemaining;
+
+            if (movesRemaining <= 5) {
+                movesRemainingEl.style.color = '#ff0000';
+            }
+
+            if (score >= targetScore) {
+                challengeSuccess();
+                return;
+            } else if (movesRemaining <= 0) {
+                challengeFailed('步数用尽！');
+                return;
+            }
+        } else if (gameMode === 'timed') {
+            if (score >= targetScore) {
+                challengeSuccess();
+                return;
+            }
+        }
+
         if (!hasWon && !isContinuing) {
             checkWin();
         }
 
         if (!canMove()) {
-            gameOver();
+            if (gameMode !== 'classic') {
+                if (score >= targetScore) {
+                    challengeSuccess();
+                } else {
+                    challengeFailed('无法移动更多方块！');
+                }
+            } else {
+                gameOver();
+            }
         }
     }
 }
@@ -448,6 +625,56 @@ newGameBtn.addEventListener('click', initializeBoard);
 undoBtn.addEventListener('click', undo);
 document.addEventListener('keydown', handleKeyPress);
 gameContainer.addEventListener('touchstart', handleTouch);
+
+// 挑战模式事件监听
+challengeBtn.addEventListener('click', () => {
+    modeOverlay.style.display = 'flex';
+});
+
+modeClose.addEventListener('click', () => {
+    modeOverlay.style.display = 'none';
+});
+
+modeOverlay.addEventListener('click', (e) => {
+    if (e.target === modeOverlay) {
+        modeOverlay.style.display = 'none';
+    }
+});
+
+document.getElementById('mode-classic').addEventListener('click', () => {
+    if (challengeTimerInterval) {
+        clearInterval(challengeTimerInterval);
+        challengeTimerInterval = null;
+    }
+    hideChallengeInfo();
+    gameMode = 'classic';
+    modeOverlay.style.display = 'none';
+    initializeBoard();
+});
+
+document.getElementById('mode-timed').addEventListener('click', () => {
+    startChallenge('timed');
+});
+
+document.getElementById('mode-moves').addEventListener('click', () => {
+    startChallenge('moves');
+});
+
+resultRetry.addEventListener('click', () => {
+    challengeResultOverlay.style.display = 'none';
+    startChallenge(gameMode);
+});
+
+resultExit.addEventListener('click', () => {
+    if (challengeTimerInterval) {
+        clearInterval(challengeTimerInterval);
+        challengeTimerInterval = null;
+    }
+    hideChallengeInfo();
+    gameMode = 'classic';
+    challengeResultOverlay.style.display = 'none';
+    initializeBoard();
+});
 
 // 初始化游戏
 initializeBoard();
