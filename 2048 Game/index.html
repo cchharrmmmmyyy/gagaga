@@ -32,6 +32,9 @@
             <button class="undo-btn" id="undo-btn">
                 <span>悔棋</span>
             </button>
+            <button class="challenge-btn" id="challenge-btn">
+                <span>挑战模式</span>
+            </button>
         </div>
 
         <div class="stats-panel">
@@ -73,6 +76,47 @@
             </div>
         </div>
 
+        <!-- 挑战模式选择弹窗 -->
+        <div class="mode-overlay" id="mode-overlay">
+            <div class="mode-container">
+                <h2 class="mode-title">🎮 选择挑战模式</h2>
+                <div class="mode-options">
+                    <div class="mode-card" id="mode-classic">
+                        <div class="mode-icon">🎯</div>
+                        <div class="mode-name">经典模式</div>
+                        <div class="mode-desc">无限制，自由挑战</div>
+                    </div>
+                    <div class="mode-card" id="mode-timed">
+                        <div class="mode-icon">⏱️</div>
+                        <div class="mode-name">限时挑战</div>
+                        <div class="mode-desc">在规定时间内达成目标</div>
+                    </div>
+                    <div class="mode-card" id="mode-moves">
+                        <div class="mode-icon">🏃</div>
+                        <div class="mode-name">限步挑战</div>
+                        <div class="mode-desc">用有限步数达成目标</div>
+                    </div>
+                </div>
+                <button class="mode-close-btn" id="mode-close">取消</button>
+            </div>
+        </div>
+
+        <!-- 挑战模式信息 -->
+        <div class="challenge-info" id="challenge-info">
+            <div class="challenge-timer" id="challenge-timer" style="display: none;">
+                <span class="challenge-label">⏱️ 剩余时间</span>
+                <span class="challenge-value" id="time-remaining">60</span>
+            </div>
+            <div class="challenge-moves" id="challenge-moves" style="display: none;">
+                <span class="challenge-label">🏃 剩余步数</span>
+                <span class="challenge-value" id="moves-remaining">30</span>
+            </div>
+            <div class="challenge-target">
+                <span class="challenge-label">🎯 目标分数</span>
+                <span class="challenge-value" id="target-score">500</span>
+            </div>
+        </div>
+
         <div class="instructions">
             <div class="rules-section">
                 <h3 class="rules-title">📖 游戏规则</h3>
@@ -83,6 +127,36 @@
                     <li><strong>计分:</strong> 每次成功合并都会获得相应的分数奖励</li>
                     <li><strong>结束:</strong> 当无法再移动任何方块时，游戏结束</li>
                 </ul>
+            </div>
+        </div>
+
+        <!-- 挑战结果弹窗 -->
+        <div class="challenge-result-overlay" id="challenge-result-overlay">
+            <div class="challenge-result-content">
+                <h2 class="challenge-result-title" id="challenge-result-title">挑战结果</h2>
+                <div class="challenge-result-stats">
+                    <div class="result-stat">
+                        <span class="result-label">最终分数</span>
+                        <span class="result-value" id="result-final-score">0</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-label">目标分数</span>
+                        <span class="result-value" id="result-target-score">500</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-label">用时</span>
+                        <span class="result-value" id="result-time">0</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-label">步数</span>
+                        <span class="result-value" id="result-moves">0</span>
+                    </div>
+                </div>
+                <div class="challenge-result-message" id="challenge-result-message"></div>
+                <div class="challenge-result-buttons">
+                    <button class="result-retry-btn" id="result-retry">再试一次</button>
+                    <button class="result-exit-btn" id="result-exit">返回经典</button>
+                </div>
             </div>
         </div>
 
