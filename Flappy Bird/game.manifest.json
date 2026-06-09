@@ -5,10 +5,11 @@
   "leaderboard": {
     "type": "best",
     "fields": {
-      "score": { "type": "number", "required": true }
+      "coins": { "type": "number", "required": true }
     },
+    "accumulateFields": ["coins"],
     "sort": [
-      { "field": "score", "direction": "desc" }
+      { "field": "coins", "direction": "desc" }
     ]
   }
 }

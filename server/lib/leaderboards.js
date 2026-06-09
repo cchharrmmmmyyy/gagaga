@@ -82,10 +82,26 @@ function submit(game, user, body) {
   }
 
   const payload = validatePayload(config, body);
+  const accumulateFields = new Set(config.accumulateFields || []);
   return store.update((db) => {
     let entry = db.leaderboardEntries.find(
       (item) => item.gameId === game.manifest.id && item.userId === user.id,
     );
+    if (accumulateFields.size) {
+      if (!entry) {
+        entry = {
+          id: `score_${crypto.randomBytes(12).toString("hex")}`,
+          gameId: game.manifest.id,
+          userId: user.id,
+          payload: {},
+          createdAt: now,
+        };
+        db.leaderboardEntries.push(entry);
+      }
+      for (const field of accumulateFields) {
+        payload[field] = Number(entry.payload?.[field] || entry[field] || 0) + Number(payload[field] || 0);
+      }
+    }
     const candidate = { payload };
     const accepted = !entry || compare(candidate, entry, config.sort) < 0;
     if (accepted) {

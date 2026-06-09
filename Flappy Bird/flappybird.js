@@ -1,24 +1,34 @@
-const canvas = document.getElementById('game-canvas');
+﻿const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
+let canvasScale = 1;
+let viewWidth = window.innerWidth;
+let viewHeight = window.innerHeight;
 
-// ====== 画布尺寸 ======
+// ====== 鐢诲竷灏哄 ======
 function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  viewWidth = window.innerWidth;
+  viewHeight = window.innerHeight;
+  canvasScale = Math.max(1, window.devicePixelRatio || 1);
+  canvas.width = Math.floor(viewWidth * canvasScale);
+  canvas.height = Math.floor(viewHeight * canvasScale);
+  canvas.style.width = viewWidth + 'px';
+  canvas.style.height = viewHeight + 'px';
+  ctx.setTransform(canvasScale, 0, 0, canvasScale, 0, 0);
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-// ====== 配置 ======
+// ====== 閰嶇疆 ======
 const birdSize = 30;
 const gravity = 0.4;
 const lift = -9;
 const pipeWidth = 80;
 const pipeGap = 245;
 const pipeSpeed = 2.5;
+const maxDifficultyLevel = 6;
 const groundHeight = 50;
-const coinRadius = 10;
-const powerupSize = 28;
+const coinRadius = 20;
+const powerupSize = 56;
 const POWERUPS = {
   SHIELD: 'shield',
   DASH: 'dash',
@@ -35,22 +45,23 @@ const POWERUP_COLORS = {
   [POWERUPS.DASH]: '#EF5350',
   [POWERUPS.SHRINK]: '#AB47BC'
 };
+const PIXEL_FONT = '"Courier New", monospace';
 
-// 帧率归一化（参考网站做法）
-const PHYSICS_DT = 1000 / 60; // 16.67ms，基准 60fps
+// 甯х巼褰掍竴鍖栵紙鍙傝€冪綉绔欏仛娉曪級
+const PHYSICS_DT = 1000 / 60; // 16.67ms锛屽熀鍑?60fps
 let lastTimestamp = 0;
-let _dt = 1; // 当前帧的时间缩放因子
+let _dt = 1; // 褰撳墠甯х殑鏃堕棿缂╂斁鍥犲瓙
 
-// ====== UI 缩放 ======
+// ====== UI 缂╂斁 ======
 function uiScale() {
-  return Math.min(canvas.width, canvas.height) / 700;
+  return Math.min(viewWidth, viewHeight) / 700;
 }
 
-// ====== 游戏状态 ======
-const STATE = { START: 'START', COUNTDOWN: 'COUNTDOWN', PLAYING: 'PLAYING', PAUSED: 'PAUSED', GAME_OVER: 'GAME_OVER' };
-let state = STATE.START;
+// ====== 娓告垙鐘舵€?======
+const STATE = { ANNOUNCEMENT: 'ANNOUNCEMENT', START: 'START', COUNTDOWN: 'COUNTDOWN', PLAYING: 'PLAYING', PAUSED: 'PAUSED', GAME_OVER: 'GAME_OVER' };
+let state = STATE.ANNOUNCEMENT;
 
-// ====== 游戏变量 ======
+// ====== 娓告垙鍙橀噺 ======
 let birdX;
 let birdY;
 let birdSpeed = 0;
@@ -62,18 +73,24 @@ let coins = [];
 let coinCount = 0;
 let powerups = [];
 let activePowerups = {
-  [POWERUPS.SHIELD]: 0,
-  [POWERUPS.DASH]: 0,
-  [POWERUPS.SHRINK]: 0
+  [POWERUPS.SHIELD]: [],
+  [POWERUPS.DASH]: [],
+  [POWERUPS.SHRINK]: []
 };
 let highScore = parseInt(localStorage.getItem('flappyHighScore')) || 0;
 let leaderboardSubmitted = false;
 let groundOffset = 0;
 let clouds = [];
 
+function syncChromeButtons() {
+  const homeButton = document.getElementById('homeButton');
+  if (!homeButton) return;
+  homeButton.style.display = [STATE.COUNTDOWN, STATE.PLAYING, STATE.PAUSED].includes(state) ? 'none' : '';
+}
+
 function resetGameState() {
-  birdX = Math.floor(canvas.width / 4);
-  birdY = canvas.height / 2;
+  birdX = Math.floor(viewWidth / 4);
+  birdY = viewHeight / 2;
   birdSpeed = 0;
   pipes = [];
   pipeSpawnTimer = 0;
@@ -83,17 +100,17 @@ function resetGameState() {
   coinCount = 0;
   powerups = [];
   activePowerups = {
-    [POWERUPS.SHIELD]: 0,
-    [POWERUPS.DASH]: 0,
-    [POWERUPS.SHRINK]: 0
+    [POWERUPS.SHIELD]: [],
+    [POWERUPS.DASH]: [],
+    [POWERUPS.SHRINK]: []
   };
   leaderboardSubmitted = false;
   groundOffset = 0;
   clouds = [];
   for (let i = 0; i < 3; i++) {
     clouds.push({
-      x: Math.random() * canvas.width,
-      y: 30 + Math.random() * (canvas.height * 0.15),
+      x: Math.random() * viewWidth,
+      y: 30 + Math.random() * (viewHeight * 0.15),
       size: 25 + Math.random() * 20
     });
   }
@@ -101,7 +118,7 @@ function resetGameState() {
 
 resetGameState();
 
-// ====== 主题 ======
+// ====== 涓婚 ======
 function getTheme() {
   return document.documentElement.dataset.theme || 'light';
 }
@@ -110,28 +127,53 @@ function isDark() {
   return getTheme() === 'dark';
 }
 
-// ====== 背景 ======
-function drawBackground() {
-  const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height - groundHeight);
-  if (isDark()) {
-    skyGradient.addColorStop(0, '#0f0f23');
-    skyGradient.addColorStop(1, '#1a1a3e');
-  } else {
-    skyGradient.addColorStop(0, '#87CEEB');
-    skyGradient.addColorStop(1, '#E0F7FA');
+function pixelRect(x, y, width, height, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(Math.round(x), Math.round(y), Math.round(width), Math.round(height));
+}
+
+function pixelBox(x, y, width, height, fill, border = '#1B1B2F', borderSize = 4) {
+  pixelRect(x, y, width, height, border);
+  pixelRect(x + borderSize, y + borderSize, width - borderSize * 2, height - borderSize * 2, fill);
+}
+
+function pixelText(text, x, y, size, color, align = 'center') {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.font = `bold ${Math.round(size)}px ${PIXEL_FONT}`;
+  ctx.textAlign = align;
+  ctx.textBaseline = 'middle';
+  if (size >= 18) {
+    ctx.fillStyle = '#1B1B2F';
+    ctx.fillText(text, Math.round(x + 2), Math.round(y + 2));
   }
-  ctx.fillStyle = skyGradient;
-  ctx.fillRect(0, 0, canvas.width, canvas.height - groundHeight);
+  ctx.fillStyle = color;
+  ctx.fillText(text, Math.round(x), Math.round(y));
+  ctx.restore();
+}
+
+// ====== 鑳屾櫙 ======
+function drawBackground() {
+  pixelRect(0, 0, viewWidth, viewHeight - groundHeight, isDark() ? '#171738' : '#79D7F5');
+  pixelRect(0, Math.round(viewHeight * 0.18), viewWidth, Math.round(18 * uiScale()), isDark() ? '#202052' : '#A7ECFF');
+  pixelRect(0, Math.round(viewHeight * 0.34), viewWidth, Math.round(12 * uiScale()), isDark() ? '#24245C' : '#BDF3FF');
+
+  const mountainY = viewHeight - groundHeight - 56;
+  for (let x = -20; x < viewWidth; x += 96) {
+    pixelRect(x + 16, mountainY + 28, 64, 28, isDark() ? '#263057' : '#91BFD7');
+    pixelRect(x + 32, mountainY + 14, 32, 14, isDark() ? '#303968' : '#B9DCEB');
+  }
 }
 
 function drawClouds() {
-  ctx.fillStyle = isDark() ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)';
+  const cloudColor = isDark() ? 'rgba(255,255,255,0.12)' : '#F7FCFF';
+  const shadeColor = isDark() ? 'rgba(255,255,255,0.07)' : '#DDF6FF';
   clouds.forEach(cloud => {
-    ctx.beginPath();
-    ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
-    ctx.arc(cloud.x + cloud.size * 0.8, cloud.y - cloud.size * 0.3, cloud.size * 0.7, 0, Math.PI * 2);
-    ctx.arc(cloud.x + cloud.size * 1.5, cloud.y, cloud.size * 0.8, 0, Math.PI * 2);
-    ctx.fill();
+    const unit = Math.max(8, Math.round(cloud.size / 2));
+    pixelRect(cloud.x, cloud.y, unit * 4, unit, shadeColor);
+    pixelRect(cloud.x + unit, cloud.y - unit, unit * 3, unit, cloudColor);
+    pixelRect(cloud.x + unit * 2, cloud.y - unit * 2, unit * 2, unit, cloudColor);
+    pixelRect(cloud.x + unit * 4, cloud.y, unit * 2, unit, cloudColor);
   });
 }
 
@@ -139,114 +181,82 @@ function updateClouds() {
   clouds.forEach(cloud => {
     cloud.x -= 0.5 * _dt;
     if (cloud.x + cloud.size * 2 < 0) {
-      cloud.x = canvas.width + cloud.size;
-      cloud.y = 30 + Math.random() * (canvas.height * 0.15);
+      cloud.x = viewWidth + cloud.size;
+      cloud.y = 30 + Math.random() * (viewHeight * 0.15);
     }
   });
 }
 
 function drawGround() {
-  const groundGradient = ctx.createLinearGradient(0, canvas.height - groundHeight, 0, canvas.height);
-  if (isDark()) {
-    groundGradient.addColorStop(0, '#2d5a3d');
-    groundGradient.addColorStop(1, '#1a3d2a');
-  } else {
-    groundGradient.addColorStop(0, '#7CB342');
-    groundGradient.addColorStop(1, '#558B2F');
-  }
-  ctx.fillStyle = groundGradient;
-  ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
+  const groundY = viewHeight - groundHeight;
+  pixelRect(0, groundY, viewWidth, groundHeight, isDark() ? '#25442E' : '#68B344');
+  pixelRect(0, groundY, viewWidth, 8, isDark() ? '#3C8A45' : '#A2E85D');
+  pixelRect(0, groundY + 28, viewWidth, groundHeight - 28, isDark() ? '#5E3E24' : '#986337');
 
-  ctx.fillStyle = isDark() ? '#3a7a4a' : '#8BC34A';
-  for (let x = -groundOffset; x < canvas.width; x += 20) {
-    ctx.beginPath();
-    ctx.moveTo(x, canvas.height - groundHeight);
-    ctx.lineTo(x + 10, canvas.height - groundHeight - 15);
-    ctx.lineTo(x + 20, canvas.height - groundHeight);
-    ctx.fill();
+  for (let x = -groundOffset; x < viewWidth; x += 24) {
+    pixelRect(x, groundY + 8, 12, 12, isDark() ? '#316B37' : '#7DCE4F');
+    pixelRect(x + 12, groundY + 20, 12, 8, isDark() ? '#6A4529' : '#B8783C');
   }
 }
 
 function updateGround() {
-  groundOffset = (groundOffset + pipeSpeed * _dt) % 20;
+  groundOffset = (groundOffset + currentPipeSpeed() * _dt) % 20;
 }
 
-// ====== 鸟 ======
+// ====== 楦?======
 function drawBird(x, y, speed) {
   ctx.save();
-  const shrinkScale = activePowerups[POWERUPS.SHRINK] > 0 ? 0.68 : 1;
+  ctx.imageSmoothingEnabled = false;
+  const shieldLayers = activePowerups[POWERUPS.SHIELD].length;
+  const dashLayers = activePowerups[POWERUPS.DASH].length;
+  const shrinkLayers = activePowerups[POWERUPS.SHRINK].length;
+  const shrinkScale = Math.max(0.18, Math.pow(0.68, shrinkLayers));
   ctx.translate(x + birdSize / 2, y + birdSize / 2);
   ctx.rotate(Math.min(Math.max(speed * 0.1, -0.5), 1));
   ctx.scale(shrinkScale, shrinkScale);
 
-  if (activePowerups[POWERUPS.SHIELD] > 0) {
-    ctx.strokeStyle = 'rgba(41, 182, 246, 0.75)';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(0, 0, birdSize * 0.72, 0, Math.PI * 2);
-    ctx.stroke();
+  if (shieldLayers > 0) {
+    ctx.strokeStyle = '#7EE7FF';
+    ctx.lineWidth = 3;
+    for (let layer = 0; layer < Math.min(shieldLayers, 4); layer++) {
+      const size = birdSize * (1.55 + layer * 0.22);
+      ctx.strokeRect(Math.round(-size / 2), Math.round(-size / 2), Math.round(size), Math.round(size));
+    }
   }
 
-  if (activePowerups[POWERUPS.DASH] > 0) {
-    ctx.fillStyle = 'rgba(239, 83, 80, 0.28)';
-    ctx.beginPath();
-    ctx.moveTo(-birdSize * 0.9, 0);
-    ctx.lineTo(-birdSize * 1.8, -birdSize * 0.35);
-    ctx.lineTo(-birdSize * 1.8, birdSize * 0.35);
-    ctx.closePath();
-    ctx.fill();
+  if (dashLayers > 0) {
+    for (let layer = 0; layer < Math.min(dashLayers, 5); layer++) {
+      pixelRect(-birdSize * (1.6 + layer * 0.35), -6, birdSize * 0.7, 12, '#FF7043');
+      pixelRect(-birdSize * (2 + layer * 0.35), -3, birdSize * 0.4, 6, '#FFD166');
+    }
   }
 
-  ctx.fillStyle = '#FFD700';
-  ctx.beginPath();
-  ctx.arc(0, 0, birdSize / 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#FFA000';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.fillStyle = '#FFF';
-  ctx.beginPath();
-  ctx.arc(5, -3, 7, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#000';
-  ctx.beginPath();
-  ctx.arc(7, -3, 4, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#FFF';
-  ctx.beginPath();
-  ctx.arc(8, -4, 1.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = isDark() ? '#555' : '#FF5722';
-  ctx.beginPath();
-  ctx.moveTo(-5, 5);
-  ctx.lineTo(-15, 8);
-  ctx.lineTo(-5, 11);
-  ctx.closePath();
-  ctx.fill();
+  const px = 4;
+  pixelRect(-16, -12, 28, 24, '#6B3E1F');
+  pixelRect(-12, -16, 24, 8, '#FFE16A');
+  pixelRect(-16, -8, 32, 20, '#FFD23F');
+  pixelRect(-8, 8, 20, 8, '#EFA92A');
+  pixelRect(6, -8, 12, 12, '#FFFFFF');
+  pixelRect(10, -4, 4, 4, '#151515');
+  pixelRect(16, 0, 12, 8, '#FF7A2F');
+  pixelRect(20, 4, 8, 4, '#D94F1C');
+  pixelRect(-24, 0, 12, 12, '#F4B32F');
+  pixelRect(-20, 4, 8, 8, '#D68A1E');
+  pixelRect(-12, 12, px * 2, px, '#6B3E1F');
 
   ctx.restore();
 }
 
-// ====== 管道 ======
+// ====== 绠￠亾 ======
 function drawCoin(coin) {
   ctx.save();
   ctx.translate(coin.x, coin.y);
-  ctx.fillStyle = '#FFC107';
-  ctx.beginPath();
-  ctx.arc(0, 0, coinRadius, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#F57F17';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.fillStyle = '#FFF8E1';
-  ctx.font = 'bold 13px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('$', 0, 1);
+  pixelRect(-14, -18, 28, 36, '#8A4D0F');
+  pixelRect(-18, -14, 36, 28, '#8A4D0F');
+  pixelRect(-10, -14, 20, 28, '#FFD23F');
+  pixelRect(-14, -10, 28, 20, '#FFD23F');
+  pixelRect(-6, -10, 12, 20, '#FFF176');
+  pixelText('$', 0, 1, 19, '#FFF8B0');
   ctx.restore();
 }
 
@@ -254,45 +264,41 @@ function drawPowerup(powerup) {
   const half = powerupSize / 2;
   ctx.save();
   ctx.translate(powerup.x, powerup.y);
-  ctx.fillStyle = POWERUP_COLORS[powerup.type];
-  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.roundRect(-half, -half, powerupSize, powerupSize, 8);
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillStyle = '#FFF';
-  ctx.font = 'bold 16px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(POWERUP_LABELS[powerup.type], 0, 1);
+  pixelBox(-half, -half, powerupSize, powerupSize, POWERUP_COLORS[powerup.type], '#1B1B2F', 5);
+  pixelRect(-half + 8, -half + 8, powerupSize - 16, 8, 'rgba(255,255,255,0.28)');
+  pixelText(POWERUP_LABELS[powerup.type], 0, 2, 28, '#FFFFFF');
   ctx.restore();
 }
 
 function spawnCollectiblesForPipe(pipe) {
   const gapTop = pipe.height;
-  const gapBottom = pipe.height + pipeGap;
-  const centerY = gapTop + pipeGap / 2;
+  const gap = pipe.gap || pipeGap;
+  const gapBottom = pipe.height + gap;
+  const centerY = gapTop + gap / 2;
   const wave = Math.random() > 0.5 ? 1 : -1;
 
   coins.push({
     x: pipe.x + pipeWidth + 95,
-    y: Math.max(gapTop + 28, Math.min(gapBottom - 28, centerY + wave * 42)),
+    y: Math.max(gapTop + coinRadius + 8, Math.min(gapBottom - coinRadius - 8, centerY + wave * 42)),
     r: coinRadius
   });
 
   if (Math.random() < 0.45) {
     powerups.push({
       x: pipe.x + pipeWidth + 170,
-      y: Math.max(gapTop + 36, Math.min(gapBottom - 36, centerY - wave * 38)),
+      y: Math.max(gapTop + halfPowerupSize(), Math.min(gapBottom - halfPowerupSize(), centerY - wave * 38)),
       type: POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)]
     });
   }
 }
 
+function halfPowerupSize() {
+  return powerupSize / 2 + 8;
+}
+
 function getBirdRadius() {
   const baseRadius = birdSize / 2 * 0.8;
-  return activePowerups[POWERUPS.SHRINK] > 0 ? baseRadius * 0.65 : baseRadius;
+  return baseRadius * Math.max(0.18, Math.pow(0.65, activePowerups[POWERUPS.SHRINK].length));
 }
 
 function collectByDistance(item, radius) {
@@ -303,23 +309,27 @@ function collectByDistance(item, radius) {
 
 function activatePowerup(type) {
   if (type === POWERUPS.SHIELD) {
-    activePowerups[type] = Math.max(activePowerups[type], 600);
+    if (activePowerups[type].length >= 3) return;
+    activePowerups[type].push(600);
   } else if (type === POWERUPS.DASH) {
-    activePowerups[type] = Math.max(activePowerups[type], 300);
+    activePowerups[type].push(300);
   } else if (type === POWERUPS.SHRINK) {
-    activePowerups[type] = Math.max(activePowerups[type], 480);
+    activePowerups[type].push(480);
   }
 }
 
 function updatePowerupTimers() {
   Object.keys(activePowerups).forEach(type => {
-    activePowerups[type] = Math.max(0, activePowerups[type] - _dt);
+    if (type === POWERUPS.SHIELD) return;
+    activePowerups[type] = activePowerups[type]
+      .map(remaining => remaining - _dt)
+      .filter(remaining => remaining > 0);
   });
 }
 
 function updateCollectibles() {
   coins.forEach(coin => {
-    coin.x -= pipeSpeed * _dt;
+    coin.x -= currentPipeSpeed() * _dt;
     if (!coin.collected && collectByDistance(coin, coin.r)) {
       coin.collected = true;
       coinCount++;
@@ -329,7 +339,7 @@ function updateCollectibles() {
   coins = coins.filter(coin => !coin.collected && coin.x + coin.r > 0);
 
   powerups.forEach(powerup => {
-    powerup.x -= pipeSpeed * _dt;
+    powerup.x -= currentPipeSpeed() * _dt;
     if (!powerup.collected && collectByDistance(powerup, powerupSize * 0.55)) {
       powerup.collected = true;
       activatePowerup(powerup.type);
@@ -339,7 +349,7 @@ function updateCollectibles() {
 }
 
 function absorbPipeHit(pipe) {
-  if (activePowerups[POWERUPS.DASH] > 0) {
+  if (activePowerups[POWERUPS.DASH].length > 0) {
     pipe.destroyed = true;
     score += 2;
     coinCount += 1;
@@ -347,8 +357,8 @@ function absorbPipeHit(pipe) {
     return true;
   }
 
-  if (activePowerups[POWERUPS.SHIELD] > 0) {
-    activePowerups[POWERUPS.SHIELD] = 0;
+  if (activePowerups[POWERUPS.SHIELD].length > 0) {
+    activePowerups[POWERUPS.SHIELD].shift();
     pipe.destroyed = true;
     birdSpeed = lift * 0.45;
     return true;
@@ -358,46 +368,58 @@ function absorbPipeHit(pipe) {
 }
 
 function drawPipe(pipe) {
-  const topGradient = ctx.createLinearGradient(pipe.x, 0, pipe.x + pipeWidth, 0);
-  const bottomGradient = ctx.createLinearGradient(pipe.x, 0, pipe.x + pipeWidth, 0);
-  const colorMid = isDark() ? '#4CAF50' : '#66BB6A';
+  const gap = pipe.gap || pipeGap;
+  const pipeFill = isDark() ? '#3FB85A' : '#53D85D';
+  const pipeShade = isDark() ? '#24783F' : '#2FA344';
+  const pipeHighlight = isDark() ? '#75E088' : '#B7F56D';
 
-  topGradient.addColorStop(0, '#2E7D32');
-  topGradient.addColorStop(0.5, colorMid);
-  topGradient.addColorStop(1, '#2E7D32');
-  bottomGradient.addColorStop(0, '#2E7D32');
-  bottomGradient.addColorStop(0.5, colorMid);
-  bottomGradient.addColorStop(1, '#2E7D32');
+  function drawPipeBody(x, y, width, height, capAtBottom) {
+    pixelBox(x, y, width, height, pipeFill, '#173B25', 5);
+    pixelRect(x + 8, y + 5, 10, Math.max(0, height - 10), pipeHighlight);
+    pixelRect(x + width - 18, y + 5, 10, Math.max(0, height - 10), pipeShade);
+    const capY = capAtBottom ? y + height - 22 : y;
+    pixelBox(x - 6, capY, width + 12, 22, pipeFill, '#173B25', 5);
+    for (let brickY = y + 12; brickY < y + height - 16; brickY += 28) {
+      pixelRect(x + 8, brickY, width - 16, 3, 'rgba(23,59,37,0.35)');
+    }
+  }
 
-  ctx.fillStyle = topGradient;
-  ctx.fillRect(pipe.x, 0, pipeWidth, pipe.height);
-  ctx.fillStyle = bottomGradient;
-  ctx.fillRect(pipe.x, pipe.height + pipeGap, pipeWidth, canvas.height - pipe.height - pipeGap - groundHeight);
+  drawPipeBody(pipe.x, 0, pipeWidth, pipe.height, true);
+  drawPipeBody(pipe.x, pipe.height + gap, pipeWidth, viewHeight - pipe.height - gap - groundHeight, false);
+}
 
-  ctx.fillStyle = '#1B5E20';
-  ctx.fillRect(pipe.x - 3, pipe.height - 20, pipeWidth + 6, 20);
-  ctx.fillRect(pipe.x - 3, pipe.height + pipeGap, pipeWidth + 6, 20);
+function difficultyLevel() {
+  return Math.min(maxDifficultyLevel, Math.floor(score / 8));
+}
 
-  ctx.strokeStyle = isDark() ? '#2E7D32' : '#388E3C';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(pipe.x - 3, pipe.height - 20, pipeWidth + 6, 20);
-  ctx.strokeRect(pipe.x - 3, pipe.height + pipeGap, pipeWidth + 6, 20);
+function currentPipeSpeed() {
+  return pipeSpeed + difficultyLevel() * 0.12;
+}
+
+function currentPipeGap() {
+  return Math.max(210, pipeGap - difficultyLevel() * 5);
+}
+
+function currentPipeSpawnInterval() {
+  return Math.max(104, 120 - difficultyLevel() * 2);
 }
 
 function updatePipes() {
-  // 管道生成计时器（_dt 归一化到 60fps，120 = 2 秒）
+  // 绠￠亾鐢熸垚璁℃椂鍣紙_dt 褰掍竴鍖栧埌 60fps锛?20 = 2 绉掞級
   pipeSpawnTimer += _dt;
-  if (frame > 0 && pipeSpawnTimer >= 120) {
-    pipeSpawnTimer -= 120;
-    const maxPipe = canvas.height - pipeGap - groundHeight - 100;
+  const spawnInterval = currentPipeSpawnInterval();
+  if (frame > 0 && pipeSpawnTimer >= spawnInterval) {
+    pipeSpawnTimer -= spawnInterval;
+    const gap = currentPipeGap();
+    const maxPipe = viewHeight - gap - groundHeight - 100;
     const height = Math.random() * Math.max(maxPipe, 1) + 50;
-    const pipe = { x: canvas.width, height };
+    const pipe = { x: viewWidth, height, gap };
     pipes.push(pipe);
     spawnCollectiblesForPipe(pipe);
   }
 
   pipes.forEach(pipe => {
-    pipe.x -= pipeSpeed * _dt;
+    pipe.x -= currentPipeSpeed() * _dt;
     if (pipe.x + pipeWidth < birdX && !pipe.passed) {
       pipe.passed = true;
       score++;
@@ -408,15 +430,16 @@ function updatePipes() {
 }
 
 function checkCollision() {
-  if (birdY < 0 || birdY + birdSize > canvas.height - groundHeight) return true;
+  if (birdY < 0 || birdY + birdSize > viewHeight - groundHeight) return true;
 
   const birdCenterX = birdX + birdSize / 2;
   const birdCenterY = birdY + birdSize / 2;
   const birdRadius = getBirdRadius();
 
   for (const pipe of pipes) {
+    const gap = pipe.gap || pipeGap;
     if (birdCenterX + birdRadius < pipe.x || birdCenterX - birdRadius > pipe.x + pipeWidth) continue;
-    if (birdCenterY - birdRadius < pipe.height || birdCenterY + birdRadius > pipe.height + pipeGap) {
+    if (birdCenterY - birdRadius < pipe.height || birdCenterY + birdRadius > pipe.height + gap) {
       return !absorbPipeHit(pipe);
     }
   }
@@ -424,50 +447,38 @@ function checkCollision() {
   return false;
 }
 
-// ====== 分数 ======
+// ====== 鍒嗘暟 ======
 function drawScore() {
   ctx.save();
   const s = uiScale();
-  ctx.shadowColor = 'rgba(0,0,0,0.7)';
-  ctx.shadowBlur = 4;
-  ctx.fillStyle = '#FFF';
-  ctx.font = `bold ${Math.round(64 * s)}px Arial`;
-  ctx.textAlign = 'center';
-  ctx.fillText(score, canvas.width / 2, Math.round(55 * s));
+  pixelBox(viewWidth / 2 - Math.round(58 * s), Math.round(14 * s), Math.round(116 * s), Math.round(58 * s), '#FFE16A', '#1B1B2F', Math.max(3, Math.round(4 * s)));
+  pixelText(String(score), viewWidth / 2, Math.round(43 * s), Math.round(34 * s), '#FFFFFF');
 
-  ctx.shadowBlur = 3;
-  ctx.font = `bold ${Math.round(22 * s)}px Arial`;
-  ctx.textAlign = 'left';
-  ctx.fillStyle = '#FFD54F';
-  ctx.fillText('$ ' + coinCount, Math.round(24 * s), Math.round(44 * s));
+  pixelBox(Math.round(18 * s), Math.round(18 * s), Math.round(128 * s), Math.round(40 * s), '#5C3B22', '#1B1B2F', Math.max(3, Math.round(4 * s)));
+  pixelText('金币 ' + coinCount, Math.round(30 * s), Math.round(38 * s), Math.round(17 * s), '#FFD23F', 'left');
 
   let badgeX = Math.round(24 * s);
-  const badgeY = Math.round(76 * s);
+  const badgeY = Math.round(72 * s);
   Object.keys(activePowerups).forEach(type => {
-    if (activePowerups[type] <= 0) return;
-    const seconds = Math.ceil(activePowerups[type] / 60);
-    const badgeW = Math.round(74 * s);
-    const badgeH = Math.round(28 * s);
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = POWERUP_COLORS[type];
-    ctx.beginPath();
-    ctx.roundRect(badgeX, badgeY, badgeW, badgeH, Math.round(14 * s));
-    ctx.fill();
-    ctx.fillStyle = '#FFF';
-    ctx.font = `bold ${Math.round(15 * s)}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.fillText(POWERUP_LABELS[type] + ' ' + seconds + 's', badgeX + badgeW / 2, badgeY + Math.round(20 * s));
+    if (activePowerups[type].length <= 0) return;
+    const layers = activePowerups[type].length;
+    const badgeW = Math.round(108 * s);
+    const badgeH = Math.round(30 * s);
+    pixelBox(badgeX, badgeY, badgeW, badgeH, POWERUP_COLORS[type], '#1B1B2F', Math.max(2, Math.round(3 * s)));
+    const badgeText = type === POWERUPS.SHIELD
+      ? POWERUP_LABELS[type] + ' x' + layers
+      : POWERUP_LABELS[type] + ' x' + layers + ' ' + Math.ceil(Math.max(...activePowerups[type]) / 60) + 's';
+    pixelText(badgeText, badgeX + badgeW / 2, badgeY + badgeH / 2, Math.round(13 * s), '#FFFFFF');
     badgeX += badgeW + Math.round(8 * s);
   });
   ctx.restore();
 }
-
-// ====== 状态切换 ======
+// ====== 鐘舵€佸垏鎹?======
 function startPlaying() {
   state = STATE.COUNTDOWN;
   frame = 0;
   pipeSpawnTimer = 0;
-  birdY = canvas.height / 2;
+  birdY = viewHeight / 2;
   birdSpeed = 0;
   pipes = [];
   score = 0;
@@ -475,9 +486,9 @@ function startPlaying() {
   coinCount = 0;
   powerups = [];
   activePowerups = {
-    [POWERUPS.SHIELD]: 0,
-    [POWERUPS.DASH]: 0,
-    [POWERUPS.SHRINK]: 0
+    [POWERUPS.SHIELD]: [],
+    [POWERUPS.DASH]: [],
+    [POWERUPS.SHRINK]: []
   };
   leaderboardSubmitted = false;
 }
@@ -487,11 +498,11 @@ function goToStart() {
   resetGameState();
 }
 
-// ====== 倒计时 ======
+// ====== 鍊掕鏃?======
 function drawStartPowerupLegend(centerX, y, s) {
   const items = [
     { color: '#FFD54F', label: '$ 金币加分' },
-    { color: POWERUP_COLORS[POWERUPS.SHIELD], label: '盾 挡一次' },
+    { color: POWERUP_COLORS[POWERUPS.SHIELD], label: '盾 最多三层' },
     { color: POWERUP_COLORS[POWERUPS.DASH], label: '冲 撞碎管道' },
     { color: POWERUP_COLORS[POWERUPS.SHRINK], label: '小 缩小身体' }
   ];
@@ -500,9 +511,9 @@ function drawStartPowerupLegend(centerX, y, s) {
   const chipH = Math.round(28 * s);
 
   ctx.save();
-  ctx.font = `bold ${textSize}px Arial`;
+  ctx.font = `bold ${textSize}px ${PIXEL_FONT}`;
   const chipWidths = items.map(item => Math.round(ctx.measureText(item.label).width + 28 * s));
-  const maxRowW = canvas.width - Math.round(32 * s);
+  const maxRowW = viewWidth - Math.round(32 * s);
   const rows = [];
   let currentRow = [];
   let currentWidth = 0;
@@ -525,18 +536,48 @@ function drawStartPowerupLegend(centerX, y, s) {
     let x = centerX - row.width / 2;
     const rowY = y + rowIndex * (chipH + Math.round(8 * s));
     row.items.forEach(({ item, width }) => {
-      ctx.fillStyle = item.color;
-      ctx.beginPath();
-      ctx.roundRect(x, rowY, width, chipH, Math.round(14 * s));
-      ctx.fill();
-      ctx.fillStyle = '#FFF';
-      ctx.fillText(item.label, x + width / 2, rowY + chipH / 2);
+      pixelBox(x, rowY, width, chipH, item.color, '#1B1B2F', Math.max(2, Math.round(3 * s)));
+      pixelText(item.label, x + width / 2, rowY + chipH / 2, textSize, '#FFF');
       x += width + gap;
     });
   });
   ctx.restore();
 }
 
+function drawAnnouncementBoard(centerX, y, s) {
+  const lines = [
+    '金币和技能调整为像素风中等尺寸',
+    '技能可无上限叠加',
+    '护盾无时间限制，最多叠加三层',
+    '分数越高，管道会逐步变快变窄',
+    '金币排行榜改为累计金币',
+    '商店系统即将上线'
+  ];
+  const boardW = Math.min(viewWidth - Math.round(32 * s), Math.round(540 * s));
+  const boardH = Math.round(266 * s);
+  const boardX = centerX - boardW / 2;
+  const boardY = y - boardH / 2;
+  const btnW = Math.round(126 * s);
+  const btnH = Math.round(38 * s);
+  const btnX = centerX - btnW / 2;
+  const btnY = boardY + boardH - Math.round(52 * s);
+
+  ctx.save();
+  pixelRect(0, 0, viewWidth, viewHeight, 'rgba(0, 0, 0, 0.55)');
+  pixelBox(boardX, boardY, boardW, boardH, isDark() ? '#202052' : '#FFF3C4', '#1B1B2F', Math.max(5, Math.round(6 * s)));
+  pixelRect(boardX + Math.round(12 * s), boardY + Math.round(12 * s), boardW - Math.round(24 * s), Math.round(8 * s), isDark() ? '#363681' : '#FFD23F');
+  pixelText('更新公告', centerX, boardY + Math.round(38 * s), Math.round(24 * s), isDark() ? '#FFD23F' : '#E65100');
+
+  lines.forEach((line, index) => {
+    pixelText('▸ ' + line, boardX + Math.round(44 * s), boardY + Math.round((78 + index * 22) * s), Math.round(14 * s), isDark() ? '#F7FCFF' : '#2C2C38', 'left');
+  });
+
+  pixelBox(btnX, btnY, btnW, btnH, '#4CAF50', '#1B1B2F', Math.max(3, Math.round(4 * s)));
+  pixelText('已阅读', centerX, btnY + btnH / 2, Math.round(15 * s), '#FFFFFF');
+  ctx.restore();
+
+  window._announcementBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
+}
 function renderCountdown() {
   drawBackground();
   updateClouds();
@@ -547,32 +588,24 @@ function renderCountdown() {
   drawGround();
 
   ctx.fillStyle = 'rgba(0,0,0,0.25)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, viewWidth, viewHeight);
 
   const s = uiScale();
   const remaining = 210 - frame;
   ctx.textAlign = 'center';
 
   if (remaining > 150) {
-    ctx.fillStyle = '#FFF';
-    ctx.font = `bold ${Math.round(120 * s)}px Arial`;
-    ctx.fillText('3', canvas.width / 2, canvas.height / 2 + 10);
+    pixelText('3', viewWidth / 2, viewHeight / 2 + 10, Math.round(112 * s), '#FFFFFF');
   } else if (remaining > 90) {
-    ctx.fillStyle = '#FFF';
-    ctx.font = `bold ${Math.round(120 * s)}px Arial`;
-    ctx.fillText('2', canvas.width / 2, canvas.height / 2 + 10);
+    pixelText('2', viewWidth / 2, viewHeight / 2 + 10, Math.round(112 * s), '#FFFFFF');
   } else if (remaining > 30) {
-    ctx.fillStyle = '#FFF';
-    ctx.font = `bold ${Math.round(120 * s)}px Arial`;
-    ctx.fillText('1', canvas.width / 2, canvas.height / 2 + 10);
+    pixelText('1', viewWidth / 2, viewHeight / 2 + 10, Math.round(112 * s), '#FFFFFF');
   } else {
-    ctx.fillStyle = '#4CAF50';
-    ctx.font = `bold ${Math.round(90 * s)}px Arial`;
-    ctx.fillText('GO!', canvas.width / 2, canvas.height / 2 + 10);
+    pixelText('GO!', viewWidth / 2, viewHeight / 2 + 10, Math.round(82 * s), '#53D85D');
   }
 }
 
-// ====== 界面渲染 ======
+// ====== 鐣岄潰娓叉煋 ======
 function renderStartScreen() {
   drawBackground();
   updateClouds();
@@ -584,104 +617,69 @@ function renderStartScreen() {
   drawBird(birdX, bobY, 0);
 
   const s = uiScale();
+  pixelText('FLAPPY BIRD', viewWidth / 2, Math.round(viewHeight * 0.2), Math.round(46 * s), '#FFD23F');
 
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.3)';
-  ctx.shadowBlur = 10;
-  ctx.fillStyle = isDark() ? '#FFD700' : '#FFF';
-  ctx.font = `bold ${Math.round(64 * s)}px Arial`;
-  ctx.textAlign = 'center';
-  ctx.fillText('Flappy Bird', canvas.width / 2, Math.round(canvas.height * 0.2));
-  ctx.restore();
-
-  const boxY = canvas.height / 2;
-  ctx.fillStyle = isDark() ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-  const boxW = Math.round(300 * s);
-  const boxH = Math.round(130 * s);
-  const boxX = (canvas.width - boxW) / 2;
-  ctx.beginPath();
-  ctx.roundRect(boxX, boxY, boxW, boxH, Math.round(16 * s));
-  ctx.fill();
-
-  ctx.fillStyle = isDark() ? '#E0E0E0' : '#444';
-  ctx.font = `${Math.round(22 * s)}px Arial`;
-  ctx.textAlign = 'center';
-  ctx.fillText('点击或按空格键', canvas.width / 2, boxY + Math.round(50 * s));
-  ctx.fillText('开始游戏', canvas.width / 2, boxY + Math.round(86 * s));
-  drawStartPowerupLegend(canvas.width / 2, boxY + Math.round(150 * s), s);
+  const boxY = viewHeight / 2;
+  const boxW = Math.round(330 * s);
+  const boxH = Math.round(132 * s);
+  const boxX = (viewWidth - boxW) / 2;
+  pixelBox(boxX, boxY, boxW, boxH, isDark() ? '#202052' : '#FFF3C4', '#1B1B2F', Math.max(5, Math.round(6 * s)));
+  pixelText('点击或按空格键', viewWidth / 2, boxY + Math.round(46 * s), Math.round(20 * s), isDark() ? '#FFFFFF' : '#2C2C38');
+  pixelText('开始游戏', viewWidth / 2, boxY + Math.round(82 * s), Math.round(24 * s), '#53D85D');
 
   if (highScore > 0) {
-    ctx.fillStyle = isDark() ? '#FFD700' : '#E65100';
-    ctx.font = `bold ${Math.round(20 * s)}px Arial`;
-    ctx.fillText('\u{1F3C6} 最高分: ' + highScore, canvas.width / 2, boxY + Math.round(125 * s));
+    pixelText('最高分 ' + highScore, viewWidth / 2, boxY + Math.round(118 * s), Math.round(15 * s), '#FFD23F');
   }
+  drawStartPowerupLegend(viewWidth / 2, boxY + Math.round(154 * s), s);
+}
+function renderAnnouncementScreen() {
+  drawBackground();
+  updateClouds();
+  drawClouds();
+  updateGround();
+  drawGround();
+
+  const bobY = birdY + Math.sin(frame * 0.05) * 8;
+  drawBird(birdX, bobY, 0);
+  drawAnnouncementBoard(viewWidth / 2, viewHeight / 2, uiScale());
 }
 
 function renderGameOverOverlay() {
-  ctx.fillStyle = isDark() ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0.5)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  pixelRect(0, 0, viewWidth, viewHeight, isDark() ? 'rgba(0,0,0,0.68)' : 'rgba(0,0,0,0.5)');
 
   const s = uiScale();
+  const panelW = Math.round(360 * s);
+  const panelH = Math.round(260 * s);
+  const panelX = viewWidth / 2 - panelW / 2;
+  const panelY = viewHeight / 2 - Math.round(150 * s);
+  pixelBox(panelX, panelY, panelW, panelH, isDark() ? '#202052' : '#FFF3C4', '#1B1B2F', Math.max(5, Math.round(6 * s)));
 
-  ctx.fillStyle = '#FF5252';
-  ctx.font = `bold ${Math.round(56 * s)}px Arial`;
-  ctx.textAlign = 'center';
-  ctx.fillText('Game Over!', canvas.width / 2, canvas.height / 2 - Math.round(100 * s));
+  pixelText('GAME OVER', viewWidth / 2, panelY + Math.round(44 * s), Math.round(32 * s), '#FF5252');
+  pixelText('得分 ' + score, viewWidth / 2, panelY + Math.round(92 * s), Math.round(22 * s), '#FFFFFF');
+  pixelText('金币 ' + coinCount, viewWidth / 2, panelY + Math.round(126 * s), Math.round(18 * s), '#FFD23F');
+  pixelText('最高分 ' + highScore, viewWidth / 2, panelY + Math.round(156 * s), Math.round(18 * s), '#FFD23F');
 
-  ctx.fillStyle = '#FFF';
-  ctx.font = `bold ${Math.round(36 * s)}px Arial`;
-  ctx.fillText('得分: ' + score, canvas.width / 2, canvas.height / 2 - Math.round(30 * s));
-
-  ctx.fillStyle = '#FFD54F';
-  ctx.font = `bold ${Math.round(24 * s)}px Arial`;
-  ctx.fillText('$ 金币: ' + coinCount, canvas.width / 2, canvas.height / 2 + Math.round(2 * s));
-
-  ctx.fillStyle = '#FFD700';
-  ctx.font = `bold ${Math.round(28 * s)}px Arial`;
-  ctx.fillText('\u{1F3C6} 最高分: ' + highScore, canvas.width / 2, canvas.height / 2 + Math.round(35 * s));
-
-  const btnX = canvas.width / 2 - Math.round(120 * s);
-  const btnY = canvas.height / 2 + Math.round(82 * s);
-  const btnW = Math.round(240 * s);
-  const btnH = Math.round(60 * s);
-
-  const btnGrad = ctx.createLinearGradient(btnX, btnY, btnX, btnY + btnH);
-  btnGrad.addColorStop(0, '#4CAF50');
-  btnGrad.addColorStop(1, '#388E3C');
-  ctx.fillStyle = btnGrad;
-  ctx.beginPath();
-  ctx.roundRect(btnX, btnY, btnW, btnH, Math.round(30 * s));
-  ctx.fill();
-
-  ctx.strokeStyle = '#2E7D32';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.roundRect(btnX, btnY, btnW, btnH, Math.round(30 * s));
-  ctx.stroke();
-
-  ctx.fillStyle = '#FFF';
-  ctx.font = `bold ${Math.round(28 * s)}px Arial`;
-  ctx.fillText('重新开始', canvas.width / 2, btnY + Math.round(40 * s));
+  const btnX = viewWidth / 2 - Math.round(112 * s);
+  const btnY = panelY + Math.round(188 * s);
+  const btnW = Math.round(224 * s);
+  const btnH = Math.round(50 * s);
+  pixelBox(btnX, btnY, btnW, btnH, '#4CAF50', '#1B1B2F', Math.max(4, Math.round(5 * s)));
+  pixelText('重新开始', viewWidth / 2, btnY + btnH / 2, Math.round(21 * s), '#FFFFFF');
 
   window._restartBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
 }
-
 function renderPausedOverlay() {
-  ctx.fillStyle = isDark() ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.4)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+  pixelRect(0, 0, viewWidth, viewHeight, isDark() ? 'rgba(0,0,0,0.62)' : 'rgba(0,0,0,0.42)');
   const s = uiScale();
-
-  ctx.fillStyle = '#FFF';
-  ctx.font = `bold ${Math.round(52 * s)}px Arial`;
-  ctx.textAlign = 'center';
-  ctx.fillText('暂停中', canvas.width / 2, canvas.height / 2 - Math.round(15 * s));
-
-  ctx.font = `${Math.round(24 * s)}px Arial`;
-  ctx.fillText('按 P 或 Esc 继续', canvas.width / 2, canvas.height / 2 + Math.round(35 * s));
+  const boxW = Math.round(300 * s);
+  const boxH = Math.round(112 * s);
+  const boxX = viewWidth / 2 - boxW / 2;
+  const boxY = viewHeight / 2 - boxH / 2;
+  pixelBox(boxX, boxY, boxW, boxH, isDark() ? '#202052' : '#FFF3C4', '#1B1B2F', Math.max(5, Math.round(6 * s)));
+  pixelText('暂停中', viewWidth / 2, boxY + Math.round(42 * s), Math.round(28 * s), '#FFFFFF');
+  pixelText('按 P 或 Esc 继续', viewWidth / 2, boxY + Math.round(78 * s), Math.round(15 * s), '#FFD23F');
 }
-
-// ====== 游戏更新（所有物理乘以 _dt 适配帧率） ======
+// ====== 娓告垙鏇存柊锛堟墍鏈夌墿鐞嗕箻浠?_dt 閫傞厤甯х巼锛?======
 function update() {
   birdSpeed += gravity * _dt;
   birdY += birdSpeed * _dt;
@@ -705,13 +703,13 @@ function submitFlappyScore() {
   window.GagagaPlatform.submitScore('flappy-bird', { score, coins: coinCount }, `flappy:${Date.now()}:${score}:${coinCount}`);
 }
 
-// ====== 主循环 ======
+// ====== 涓诲惊鐜?======
 function gameLoop(timestamp) {
-  // 帧率归一化计算
+  // 甯х巼褰掍竴鍖栬绠?
   if (!lastTimestamp) lastTimestamp = timestamp;
   const rawDelta = timestamp - lastTimestamp;
   lastTimestamp = timestamp;
-  _dt = Math.min(rawDelta, 50) / PHYSICS_DT; // 最大 50ms 防止切标签后跳帧
+  _dt = Math.min(rawDelta, 50) / PHYSICS_DT; // 鏈€澶?50ms 闃叉鍒囨爣绛惧悗璺冲抚
 
   if (state === STATE.COUNTDOWN) {
     frame += _dt;
@@ -722,13 +720,17 @@ function gameLoop(timestamp) {
   } else if (state === STATE.PLAYING) {
     update();
     frame += _dt;
-  } else if (state === STATE.START) {
+  } else if (state === STATE.START || state === STATE.ANNOUNCEMENT) {
     frame += _dt;
   }
+  syncChromeButtons();
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, viewWidth, viewHeight);
 
   switch (state) {
+    case STATE.ANNOUNCEMENT:
+      renderAnnouncementScreen();
+      break;
     case STATE.START:
       renderStartScreen();
       break;
@@ -774,18 +776,24 @@ function gameLoop(timestamp) {
   requestAnimationFrame(gameLoop);
 }
 
-// ====== 输入处理 ======
+// ====== 杈撳叆澶勭悊 ======
 function handleClick(e) {
   const rect = canvas.getBoundingClientRect();
-  const clickX = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const clickY = (e.clientY - rect.top) * (canvas.height / rect.height);
+  const clickX = (e.clientX - rect.left) * (viewWidth / rect.width);
+  const clickY = (e.clientY - rect.top) * (viewHeight / rect.height);
 
   switch (state) {
+    case STATE.ANNOUNCEMENT:
+      const announcementBtn = window._announcementBtn;
+      if (announcementBtn && clickX >= announcementBtn.x && clickX <= announcementBtn.x + announcementBtn.w && clickY >= announcementBtn.y && clickY <= announcementBtn.y + announcementBtn.h) {
+        state = STATE.START;
+      }
+      break;
     case STATE.START:
       startPlaying();
       break;
     case STATE.PLAYING:
-      if (birdY > 0 && birdY < canvas.height - groundHeight) {
+      if (birdY > 0 && birdY < viewHeight - groundHeight) {
         birdSpeed = lift;
       }
       break;
@@ -807,11 +815,14 @@ function handleKeydown(e) {
 
   if (isSpace) {
     switch (state) {
+      case STATE.ANNOUNCEMENT:
+        state = STATE.START;
+        break;
       case STATE.START:
         startPlaying();
         break;
       case STATE.PLAYING:
-        if (birdY > 0 && birdY < canvas.height - groundHeight) {
+        if (birdY > 0 && birdY < viewHeight - groundHeight) {
           birdSpeed = lift;
         }
         break;

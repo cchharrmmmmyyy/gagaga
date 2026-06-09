@@ -201,8 +201,12 @@
     }
   }
 
-  function formatScore(row, strategy) {
+  function formatScore(row, gameConfig) {
+    const strategy = gameConfig?.strategy;
     if (strategy === 'matchRecord') return `${row.wins || 0}W`;
+    const primaryField = gameConfig?.primaryField || 'score';
+    if (primaryField === 'coins' && Number(row.coins) > 0) return `${Number(row.coins).toLocaleString()} coins`;
+    if (primaryField in row && Number(row[primaryField]) > 0) return Number(row[primaryField]).toLocaleString();
     if ('score' in row && Number(row.score) > 0) return Number(row.score).toLocaleString();
     if ('moves' in row && Number(row.moves) > 0) return `${row.moves} moves`;
     return '-';
@@ -226,7 +230,11 @@
 
     try {
       const result = await api(`/api/leaderboards/${encodeURIComponent(gameId)}?limit=10`);
-      const strategy = result.game.strategy;
+      const gameConfig = result.game || {};
+      const strategy = gameConfig.strategy;
+      const scoreHeading = gameConfig.primaryField === 'coins' ? 'Coins' : 'Score';
+      const scoreHeader = els.leaderboardBody?.closest('table')?.querySelector('thead th:nth-child(3)');
+      if (scoreHeader) scoreHeader.textContent = scoreHeading;
       if (!result.rows.length) {
         els.leaderboardBody.innerHTML = '<tr><td colspan="4">No records yet</td></tr>';
       } else {
@@ -234,7 +242,7 @@
           <tr>
             <td>${index + 1}</td>
             <td>${escapeHtml(row.username || 'Player')}</td>
-            <td>${escapeHtml(formatScore(row, strategy))}</td>
+            <td>${escapeHtml(formatScore(row, gameConfig))}</td>
             <td>${escapeHtml(formatExtra(row, strategy))}</td>
           </tr>
         `).join('');
