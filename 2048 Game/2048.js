@@ -7,6 +7,8 @@ const finalScoreEl = document.getElementById('final-score');
 const tryAgainBtn = document.getElementById('try-again-btn');
 const continueBtn = document.getElementById('continue-btn');
 const newGameBtn = document.getElementById('new-game-btn');
+const undoBtn = document.getElementById('undo-btn');
+const undoCountEl = document.getElementById('undo-count');
 
 let tiles = [];
 let score = 0;
@@ -14,8 +16,13 @@ let hasWon = false;
 let isGameOver = false;
 let isContinuing = false;
 
+// 悔棋相关变量
+let history = [];
+let undoCount = 3;
+
 let bestScore = parseInt(localStorage.getItem('2048BestScore')) || 0;
 bestScoreEl.textContent = bestScore;
+undoCountEl.textContent = undoCount;
 
 function createTile(value = 0) {
     const tile = document.createElement('div');
@@ -37,6 +44,10 @@ function initializeBoard() {
     hasWon = false;
     isGameOver = false;
     isContinuing = false;
+    history = [];
+    undoCount = 3;
+    undoCountEl.textContent = undoCount;
+    undoBtn.disabled = false;
     currentScoreEl.textContent = score;
     gameOverOverlay.style.display = 'none';
     winOverlay.style.display = 'none';
@@ -48,6 +59,49 @@ function initializeBoard() {
     }
     addRandomTile();
     addRandomTile();
+}
+
+// 保存当前状态到历史记录
+function saveState() {
+    const state = {
+        tiles: tiles.map(tile => parseInt(tile.textContent) || 0),
+        score: score
+    };
+    history.push(state);
+    // 最多保存10步历史
+    if (history.length > 10) {
+        history.shift();
+    }
+}
+
+// 悔棋函数
+function undo() {
+    if (history.length === 0 || undoCount <= 0 || isGameOver) return;
+
+    const previousState = history.pop();
+    undoCount--;
+    undoCountEl.textContent = undoCount;
+
+    // 恢复分数
+    score = previousState.score;
+    currentScoreEl.textContent = score;
+
+    // 恢复棋盘状态
+    for (let i = 0; i < 16; i++) {
+        tiles[i].textContent = previousState.tiles[i] || '';
+        tiles[i].className = 'tile';
+        if (previousState.tiles[i]) {
+            tiles[i].classList.add(`tile-${previousState.tiles[i]}`);
+            if (previousState.tiles[i] > 2048) {
+                tiles[i].classList.add('tile-super');
+            }
+        }
+    }
+
+    // 禁用按钮当悔棋次数用完
+    if (undoCount <= 0) {
+        undoBtn.disabled = true;
+    }
 }
 
 function addRandomTile() {
@@ -75,6 +129,9 @@ function updateScore(points) {
 
 function moveTiles(direction) {
     if (isGameOver) return;
+
+    // 保存当前状态用于悔棋
+    saveState();
 
     let hasMoved = false;
     for (let i = 0; i < 4; i++) {
@@ -243,6 +300,7 @@ continueBtn.addEventListener('click', () => {
     winOverlay.style.display = 'none';
 });
 newGameBtn.addEventListener('click', initializeBoard);
+undoBtn.addEventListener('click', undo);
 document.addEventListener('keydown', handleKeyPress);
 gameContainer.addEventListener('touchstart', handleTouch);
 

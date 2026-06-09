@@ -98,21 +98,29 @@ body {
 }
 
 .controls {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
 }
 
-.new-game-btn {
+.new-game-btn,
+.undo-btn {
+    flex: 1;
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
     border: none;
-    padding: 12px 28px;
+    padding: 12px 20px;
     border-radius: 50px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    width: 100%;
+}
+
+.undo-btn {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
 }
 
 .new-game-btn:hover {
@@ -120,8 +128,26 @@ body {
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
-.new-game-btn:active {
-    transform: translateY(0);
+.undo-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(245, 87, 108, 0.4);
+}
+
+.undo-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.undo-info {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 13px;
+    color: #888;
+}
+
+#undo-count {
+    color: #f5576c;
+    font-weight: 600;
 }
 
 .game-container {
@@ -504,6 +530,20 @@ body {
 
     .score-value {
         font-size: 18px;
+    }
+
+    .controls {
+        gap: 8px;
+    }
+
+    .new-game-btn,
+    .undo-btn {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+
+    .undo-info {
+        font-size: 12px;
     }
 
     .game-container {
