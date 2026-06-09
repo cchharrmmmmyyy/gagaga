@@ -11,6 +11,8 @@ const undoBtn = document.getElementById('undo-btn');
 const undoCountEl = document.getElementById('undo-count');
 const comboCountEl = document.getElementById('combo-count');
 const comboDisplay = document.getElementById('combo-display');
+const moveCountEl = document.getElementById('move-count');
+const maxNumberEl = document.getElementById('max-number');
 
 let tiles = [];
 let score = 0;
@@ -25,10 +27,16 @@ let undoCount = 3;
 // 连击相关变量
 let currentCombo = 0;
 
+// 统计相关变量
+let moveCount = 0;
+let maxNumber = 2;
+
 let bestScore = parseInt(localStorage.getItem('2048BestScore')) || 0;
 bestScoreEl.textContent = bestScore;
 undoCountEl.textContent = undoCount;
 comboCountEl.textContent = currentCombo;
+moveCountEl.textContent = moveCount;
+maxNumberEl.textContent = maxNumber;
 
 function createTile(value = 0) {
     const tile = document.createElement('div');
@@ -53,8 +61,12 @@ function initializeBoard() {
     history = [];
     undoCount = 3;
     currentCombo = 0;
+    moveCount = 0;
+    maxNumber = 2;
     undoCountEl.textContent = undoCount;
     comboCountEl.textContent = currentCombo;
+    moveCountEl.textContent = moveCount;
+    maxNumberEl.textContent = maxNumber;
     undoBtn.disabled = false;
     currentScoreEl.textContent = score;
     gameOverOverlay.style.display = 'none';
@@ -103,7 +115,10 @@ function showCombo(combo) {
 function saveState() {
     const state = {
         tiles: tiles.map(tile => parseInt(tile.textContent) || 0),
-        score: score
+        score: score,
+        moveCount: moveCount,
+        maxNumber: maxNumber,
+        currentCombo: currentCombo
     };
     history.push(state);
     // 最多保存10步历史
@@ -123,6 +138,14 @@ function undo() {
     // 恢复分数
     score = previousState.score;
     currentScoreEl.textContent = score;
+
+    // 恢复统计
+    moveCount = previousState.moveCount;
+    maxNumber = previousState.maxNumber;
+    currentCombo = previousState.currentCombo;
+    moveCountEl.textContent = moveCount;
+    maxNumberEl.textContent = maxNumber;
+    comboCountEl.textContent = currentCombo;
 
     // 恢复棋盘状态
     for (let i = 0; i < 16; i++) {
@@ -204,6 +227,23 @@ function moveTiles(direction) {
         renderBoard();
         addRandomTile();
         renderBoard();
+
+        // 更新统计
+        moveCount++;
+        moveCountEl.textContent = moveCount;
+
+        // 更新最大数字
+        let currentMax = 0;
+        for (let i = 0; i < 16; i++) {
+            const value = parseInt(tiles[i].textContent) || 0;
+            if (value > currentMax) {
+                currentMax = value;
+            }
+        }
+        if (currentMax > maxNumber) {
+            maxNumber = currentMax;
+            maxNumberEl.textContent = maxNumber;
+        }
 
         // 更新连击次数
         if (mergeCount >= 2) {
